@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./lib",
+    "paths":{
+      "jsoneditor":["master-extension/typings/jsoneditor"],
+      "chart.js":["master-extension/typings/chart.js"]
+    }
+  },
+  "include": [
+    "src/*",
+    "typings/**/*.d.ts",
+    "style/*"
+  ]
+}

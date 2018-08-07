@@ -1,0 +1,62 @@
+{
+  "name": "@neuro-mynerva/master-extension",
+  "version": "0.1.0",
+  "description": "NeuroMynerva Master Widget",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "homepage": "https://github.com/my_name/jupyterlab_myextension",
+  "bugs": {
+    "url": "https://github.com/my_name/jupyterlab_myextension/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": "bionet-lab",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/my_name/jupyterlab_myextension.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "watch": "tsc -w"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^0.16.0",
+    "@jupyterlab/apputils": "^0.16.4",
+    "@jupyterlab/mainmenu": "^0.5.3",
+    "@phosphor/coreutils": "^1.3.0",
+    "@phosphor/messaging": "^1.2.2",
+    "@phosphor/widgets": "^1.6.0",
+    "@types/ace": "0.0.39",
+    "@types/codemirror": "0.0.57",
+    "chart.js": "^2.7.2",
+    "izitoast": "^1.3.0",
+    "jquery": "^3.3.1",
+    "jsoneditor": "^5.17.1",
+    "mocha": "^5.2.0",
+    "perfect-scrollbar": "^1.4.0"
+  },
+  "devDependencies": {
+    "@jupyterlab/codemirror": "^0.16.3",
+    "@jupyterlab/filebrowser": "^0.16.3",
+    "@jupyterlab/json-extension": "^0.15.8",
+    "@jupyterlab/launcher": "^0.16.3",
+    "@jupyterlab/notebook": "^0.16.3",
+    "@types/jquery": "^3.3.2",
+    "react": "^15.6.2",
+    "react-dom": "^15.6.2",
+    "rimraf": "^2.6.1",
+    "typescript": "^2.9.2"
+  },
+  "jupyterlab": {
+    "extension": true
+  }
+}

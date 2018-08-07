@@ -1,0 +1,29 @@
+{
+  "name": "@neuro-mynerva/neu3d-extension",
+  "version": "0.1.0",
+  "description": "A JupyterLab extension for visualizing SWC files under the NeuroMynerva framework",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "watch": "tsc -w"
+  },
+  "author": "Tingkai Liu",
+  "license": "ISC",
+  "dependencies": {
+    "@jupyterlab/apputils": "^0.16.4",
+    "@jupyterlab/coreutils": "^1.1.3",
+    "@phosphor/signaling": "^1.2.2",
+    "@phosphor/widgets": "^1.6.0",
+    "izitoast": "^1.3.0",
+    "neu3d": "^1.0.4"
+  },
+  "devDependencies": {
+    "rimraf": "^2.6.2",
+    "typescript": "^2.9.2"
+  },
+  "jupyterlab": {
+    "extension": true
+  }
+}

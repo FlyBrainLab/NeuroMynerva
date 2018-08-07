@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "lerna run build",
+    "link": "lerna exec -- jupyter labextension link . --no-build",
+    "watch": "lerna run watch"
+  },
+  "author": "Tingkai Liu, Mehmet Kerem Turkcan, Mark Mazel",
+  "license": "MIT",
+  "devDependencies": {
+    "lerna": "^2.11.0",
+    "typescript": "^3.0.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

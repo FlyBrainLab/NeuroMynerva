@@ -1,0 +1,13 @@
+nodejs
+jupyterlab
+txaio
+twisted
+autobahn
+crochet
+service_identity
+autobahn-sync
+matplotlib
+h5py
+networkx
+flybrainlab
+neuroballad
