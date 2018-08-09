@@ -20,9 +20,9 @@ Start by opening a terminal and going to the parent folder of the repository whe
 You can just paste the following to your terminal.
 
 ```bash
-conda create -n neuromynerva python=3.6 nodejs jupyterlab cookiecutter git -c conda-forge -y
+conda create -n neuromynerva python=3.6 nodejs scipy pandas jupyterlab cookiecutter git -c conda-forge -y
 activate neuromynerva
-pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py networkx pypiwin32
+pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py networkx seaborn pypiwin32
 git clone https://github.com/FlyBrainLab/Neuroballad.git
 cd ./Neuroballad
 python setup.py develop
