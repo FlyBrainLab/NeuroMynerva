@@ -65,18 +65,19 @@ function activate(
       return widget;
     },
     isEnabled: () => {
-      let keys = Array.from((<any>restorer)._widgets.keys());
+      // let keys = Array.from((<any>restorer)._widgets.keys());
 
-      let nonexist = true;
+      // let nonexist = true;
 
-      keys.forEach(function(value) {
-        if((<string>value).startsWith(namespace))
-        {
-          nonexist = false;
-        }
-      });
+      // keys.forEach(function(value) {
+      //   if((<string>value).startsWith(namespace))
+      //   {
+      //     nonexist = false;
+      //   }
+      // });
 
-      return nonexist;
+      // return nonexist;
+      return false;
     }
   });
 

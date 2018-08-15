@@ -1,5 +1,5 @@
 import * as $ from "jquery";
-import { INeuroInfoSubWidget } from "./widget";
+import { INeuroInfoSubWidget, NeuroInfoWidget } from "./widget";
 import { Widget } from '@phosphor/widgets';
 import { JSONObject } from '@phosphor/coreutils';
 
@@ -12,8 +12,10 @@ const SUMMARY_IMG_ID = "info-panel-extra-img";
  * SummaryTable Information Constructor
  */
 export class SummaryTable extends Widget implements INeuroInfoSubWidget{
-  constructor() {
+  constructor(parent: NeuroInfoWidget) {
     super();
+
+    this.parentObj = parent;
 
     this.colorId = SUMMARY_NEU_ID;
     this.tabId = SUMMARY_TABLE_ID;
@@ -28,6 +30,14 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
     */
   reset() {
     this.node.innerHTML = "";
+    if (!this._hasData){
+      // let imgDiv = document.createElement("img");
+      // imgDiv.src = "../style/img/ffbo_logo.png";
+      // imgDiv.src = "https://ffbolab.neurogfx.fruitflybrain.org/flylablogo_basic.png";
+
+      // imgDiv.innerText = "Detailed neuron info to appear here ...";
+      // this.node.appendChild(imgDiv);
+    }
 
     let tabDiv = document.createElement('div');
     tabDiv.id = this.tabId;
@@ -39,7 +49,7 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
 
 
     let _div = document.createElement('div');
-
+    _div.style.display = "none";
     let _div2 = document.createElement("h4");
     _div2.innerText = "Confocal Image";
     _div.appendChild(_div2);
@@ -48,9 +58,11 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
     _div3.setAttribute("tryCtr", "0");
     _div3.setAttribute("maxTry", "1");
     _div.appendChild(_div3);
+
     extraTabDiv.appendChild(_div);
 
     _div = document.createElement('div');
+    _div.style.display = "none";
     _div2 = document.createElement("h4");
     _div2.innerText = "Segmentation";
     _div.appendChild(_div2);
@@ -62,6 +74,7 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
     extraTabDiv.appendChild(_div);
 
     _div = document.createElement('div');
+    _div.style.display = "none";
     _div2 = document.createElement("h4");
     _div2.innerText = "Skeleton";
     _div.appendChild(_div2);
@@ -95,8 +108,8 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
     let tableHtml = '<div> <p>Name :</p><p>' + objName;
 
     // FIXME: need to solve this communication problem with parent object 
-    // if (this.parentObj.isInWorkspace(<string>objRId)) {
-    if(true){
+    if (this.parentObj.isInWorkspace(<string>objRId)) {
+    // if(true){
       tableHtml += '<button class="btn btn-remove btn-danger" id="btn-remove-' + objName + '" name="' + objName + '" style="margin-left:20px;">-</button>';
     }
     else {
@@ -106,8 +119,12 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
     tableHtml += '</p></div>';
     if (objColor) {
       // add choose color
-      tableHtml += '<div><p>Choose Color:</p><p> <input class="color_inp"';
+      tableHtml += '<div><p>Choose Color:</p><p> <input class="color_inp" type="color"';
       tableHtml += 'name="neu_col" id="' + this.colorId + '" value="#' + objColor + '"/></p></div>';
+      $("#"+this.colorId).change((event) => {      
+        // this.parentObj._userAction.emit({ action: 'forward', content: { type: "NLP-forward", data: {color: }} });
+        console.log(event);
+      })
     }
     else {
       //do nothing;
@@ -178,6 +195,8 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
           document.getElementById(current_obj.extraImgId).style.display = "";
         }
       }
+    }else{
+      document.getElementById(this.extraImgId).style.display = "none";
     }
     this.setupCallbacks();
   }
@@ -195,8 +214,8 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
    * Elements for the widget
    */
   readonly container: HTMLElement;
-  
-  // private parentObj: InfoPanel;
+  private _hasData = false;
+  private parentObj: any;
   private htmlTemplate: string;
   private colorId: string;
 

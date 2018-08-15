@@ -1,7 +1,7 @@
 import { Message } from '@phosphor/messaging';
 
 import { Widget, PanelLayout } from '@phosphor/widgets';
-import { IClientSession, ClientSession, Dialog } from '@jupyterlab/apputils';
+import { IClientSession, ClientSession, Dialog, MainAreaWidget } from '@jupyterlab/apputils';
 import { UUID } from '@phosphor/coreutils';
 import { Signal, ISignal } from '@phosphor/signaling';
 import { JSONObject, PromiseDelegate } from '@phosphor/coreutils';
@@ -108,10 +108,8 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       type: 'ffbo-title',
       ...this.title.dataset
     };
-
     // create session and `initialize`
     this._commId = TEMPLATE_COMM_ID;
-
     if(options.path)
     {
       this._sessionOpts.path = options.path;
@@ -136,7 +134,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         this.JSONList = new JSONEditor(this.node, {});
         this.session.ready.then(()=>{
           this._onSessionReady();
-          this._ready.resolve(undefined);
+          this._ready.resolve(void 0);
         });
       })
     }
@@ -152,6 +150,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           this.session.initialize();
           this.session.propertyChanged.connect(this.onPathChanged, this);
           this.session.kernelChanged.connect(this.onKernelChanged, this);
+
           // Setup Main Panel
           this.id = 'FFBOLab-' + UUID.uuid4();
           this.title.label = '[NM Master]' + this.session.path;
@@ -168,7 +167,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           this.JSONList = new JSONEditor(this.node, {});
           this.session.ready.then(()=>{
             this._onSessionReady();
-            this._ready.resolve(undefined);
+            this._ready.resolve(void 0);
           });
         });
       });   
@@ -188,6 +187,11 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     }
     this._outSignal.emit({type: "Dispose"});
     
+    if(this.session.kernel)
+    {
+      this.session.kernel.dispose();
+    }
+
     // kill session
     if(this.session)
     {
@@ -288,10 +292,12 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     this.session.kernelChanged.connect(this._registerComm, this);
     this.session.statusChanged.connect(this._reComm, this);
     
-    return this._registerComm().then(() => {
-        // this.Neu3DWidget.userAction.connect(this._handleNeu3DActions, this);
-      if (VERBOSE) { console.log('ALL ready!!');}
-    })
+    // return this._registerComm().then(() => {
+    //     // this.Neu3DWidget.userAction.connect(this._handleNeu3DActions, this);
+    //   if (VERBOSE) { console.log('ALL ready!!');}
+    // })
+
+    return Promise.resolve(void 0);
   }
   
   /**
@@ -331,10 +337,14 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
   updateNotebook(nbk: NotebookPanel): void {
     nbk.session.kernelChanged.connect(
       (kernel) => {
+        console.log('kernel changed in notebook');
         if (VERBOSE) { console.log(`[NM Master] Notebook Kernel Changed for ${nbk.session.path}`);}
-        if(nbk.session.kernel.model)
+        if(nbk.session.kernel)
         {
-          this.session.changeKernel(nbk.session.kernel.model);
+          if(nbk.session.kernel.model && (this.session.kernel ? nbk.session.kernel.model != this.session.kernel.model : true))
+          {
+            this.session.changeKernel(nbk.session.kernel.model);
+          }
         }
       },
       this
@@ -389,6 +399,41 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     }
   }
 
+  private commMessageHandler(msg) {
+    console.log('['+msg.content.comm_id+'] '+msg.content.data);
+    let thisMsg = msg.content.data as JSONObject;
+    if (typeof thisMsg.widget == "undefined") {
+      return;
+    }
+    // dispatch messages to corresponding widgets for handling
+    switch (thisMsg.widget) {
+      case "NLP": {
+        if (VERBOSE) {console.log("{NLP emitted}");}
+        this._outSignal.emit({type: "NLP", data: thisMsg});
+        //this._outSignal.emit({type: "GFX", data: thisMsg});
+        break;
+      }
+      case "GFX":{
+        if (VERBOSE) {console.log("{GFX emitted}");}
+        this._outSignal.emit({type: "GFX", data: thisMsg});
+        //this._outSignal.emit({type: "NLP", data: thisMsg});
+        break;
+      }
+      case "INFO":{
+        if (VERBOSE) {console.log("{INFO emitted}");}
+        this._outSignal.emit({type: "INFO", data: thisMsg});
+        break;
+      }
+      case "JSONEditor":{
+        this.JSONList.set({ values: thisMsg.data as JSONObject });
+        break;
+      }
+      default: {
+        console.warn('message widget = ', thisMsg.widget, "not recognized!");
+      }
+    }
+  }
+
 
   /**
   * Register a Comm target on both Client and Server sides
@@ -396,59 +441,83 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
   private _registerComm(): Promise<void> {
     if(this.session.kernel)
     {
-      this.session.kernel.registerCommTarget(this._commId,(comm, commMsg)=>{
-        if (commMsg.content.target_name !== this._commId) {
-          return;
+      console.log(this.session.kernel.model);
+    }
+    if(this.session.kernel)
+    {
+      return this.session.kernel.requestCommInfo(void 0).then((info) => {
+        let tempComms = info.content.comms;
+        let found = '';
+        console.log(tempComms);
+        Object.keys(tempComms).forEach(element => {
+          console.log(tempComms[element].target_name);
+          if(tempComms[element].target_name == TEMPLATE_COMM_ID)
+          {
+            found = element;
+            console.log('DUPLICATE TARGET');
+            console.log(element);
+          }
+        });
+        if(found) {
+          let testComm = this.session.kernel.connectToComm(this._commId, found);
+          console.log(testComm);
+          testComm.onMsg = (msg) => {
+            this.commMessageHandler(msg);
+          };
+          testComm.onClose = (msg) => {
+            if (VERBOSE) { console.log('[NM] Comm Closed,', this._commId, msg.content.data); }
+          };
+
+          // TODO Python Safeguard: dup comm
+          let code = [
+            // 'from ipykernel.comm import Comm',
+            // '_FFBOLabcomm = Comm(target_name="' + this._commId + '")',
+            '_FFBOLabcomm.send(data="FFBOLab comm established")',
+            '_FFBOLabcomm.send(data="Generating FFBOLab Client...")',
+            // 'import flybrainlab as fbl',
+            // '_FFBOLABClient = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
+            'nm = _FFBOLABClient',
+          ].join('\n');
+          
+          // console.log('before requestExecute');
+          // console.log(this.session.kernel);
+          return this.session.kernel.requestExecute({ code: code }).done.then(() => {
+            window.FFBOLabsession = this.session;
+            // console.log('after requestExecute');
+          });
+
+          return Promise.resolve(void 0);
         }
-        comm.onMsg = (msg) => {
-          let thisMsg = msg.content.data as JSONObject;
-          if (typeof thisMsg.widget == "undefined") {
+        this.session.kernel.registerCommTarget(this._commId,(comm, commMsg)=>{
+          if (commMsg.content.target_name !== this._commId) {
             return;
           }
-          // dispatch messages to corresponding widgets for handling
-          switch (thisMsg.widget) {
-            case "NLP": {
-              if (VERBOSE) {console.log("{NLP emitted}");}
-              this._outSignal.emit({type: "NLP", data: thisMsg});
-              //this._outSignal.emit({type: "GFX", data: thisMsg});
-              break;
-            }
-            case "GFX":{
-              if (VERBOSE) {console.log("{GFX emitted}");}
-              this._outSignal.emit({type: "GFX", data: thisMsg});
-              //this._outSignal.emit({type: "NLP", data: thisMsg});
-              break;
-            }
-            case "INFO":{
-              if (VERBOSE) {console.log("{INFO emitted}");}
-              this._outSignal.emit({type: "INFO", data: thisMsg});
-              break;
-            }
-            case "JSONEditor":{
-              this.JSONList.set({ values: thisMsg.data as JSONObject });
-              break;
-            }
-            default: {
-              console.warn('message widget = ', thisMsg.widget, "not recognized!");
-            }
-          }
-        };
-        comm.onClose = (msg) => {
-          if (VERBOSE) { console.log('[NM] Comm Closed,', this._commId, msg.content.data); }
-        };
-      });
-      
-      let code = [
-        'from ipykernel.comm import Comm',
-        '_FFBOLabcomm = Comm(target_name="' + this._commId + '")',
-        '_FFBOLabcomm.send(data="FFBOLab comm established")',
-        '_FFBOLabcomm.send(data="Generating FFBOLab Client...")',
-        'import flybrainlab as fbl',
-        '_FFBOLABClient = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
-        'nm = _FFBOLABClient',
-      ].join('\n');
-      return this.session.kernel.requestExecute({ code: code }).done.then(() => {
-        window.FFBOLabsession = this.session;
+          comm.onMsg = (msg) => {
+            this.commMessageHandler(msg);
+          };
+          comm.onClose = (msg) => {
+            if (VERBOSE) { console.log('[NM] Comm Closed,', this._commId, msg.content.data); }
+          };
+        });
+        
+        // TODO Python Safeguard: dup comm
+        let code = [
+          'from ipykernel.comm import Comm',
+          '_FFBOLabcomm = Comm(target_name="' + this._commId + '")',
+          '_FFBOLabcomm.send(data="FFBOLab comm established")',
+          '_FFBOLabcomm.send(data="Generating FFBOLab Client...")',
+          'import flybrainlab as fbl',
+          '_FFBOLABClient = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
+          'nm = _FFBOLABClient',
+        ].join('\n');
+        
+        // console.log('before requestExecute');
+        // console.log(this.session.kernel);
+
+        return this.session.kernel.requestExecute({ code: code }).done.then(() => {
+          window.FFBOLabsession = this.session;
+          // console.log('after requestExecute');
+        });
       });
     }
     return Promise.resolve(void 0);
@@ -466,7 +535,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       return new ClientSession({
         manager,
         path: options.path || DEFAULT_SESSION_OPTS.path,
-        name: "FFBOLab",
+        name: "FFBOLab: " + options.path,
         type: options.type,
         kernelPreference: options.kernelPreference || {
           shouldStart: true,
@@ -607,9 +676,9 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       'simulate',
       this._createButton('fa-fw fa-play-circle', 'Simulate Circuit', 'jp-SearchBar-Simulate',
         () => {
-          //this.session.kernel.requestExecute({ code: '_FFBOLABClient.sendExecuteReceiveResults("auto")' });
+          this.session.kernel.requestExecute({ code: '_FFBOLABClient.sendExecuteReceiveResults("auto")' });
           // window.neurogfxWidget.contentWindow.postMessage({ messageType: "simulate", data: {} }, '*');
-          this._outSignal.emit({type: "GFX", data: { messageType: "simulate", data: {} }});
+          //this._outSignal.emit({type: "GFX", data: { messageType: "simulate", data: {} }});
         }
       )
     );
@@ -721,6 +790,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       'kernelStatus',
       Toolbar.createKernelStatusItem(this.session)
     );
+
   }
 
   _createButton(icon: string, tooltip: string, className: string, func: () => void): ToolbarButton {

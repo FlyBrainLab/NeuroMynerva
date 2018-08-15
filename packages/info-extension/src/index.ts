@@ -5,7 +5,6 @@ import { JSONExt } from '@phosphor/coreutils';
 
 const VERBOSE = false;
 
-
 /**
  * Tracker for restoring layout of NeuroInfoWidget
  */
@@ -24,8 +23,8 @@ export default tracker;
 namespace CommandIDs {
   export
     const open = 'NeuroMynerva:info-open';
-  export
-    const maximize = 'NeuroMynerva:info-max';
+  // export
+  //   const maximize = 'NeuroMynerva:info-max';
 }
 
 /**
@@ -58,7 +57,8 @@ function activate(
       }
       if (!widget.isAttached) {
         // Attach the widget to the main work area if it's not there
-        shell.addToMainArea(widget);
+        shell.addToRightArea(widget);
+        // shell.addToMainArea(widget);
       } else {
         // Refresh widget
         widget.update();
@@ -69,58 +69,60 @@ function activate(
       return widget;
     },
     isEnabled: () => {
-      let keys = Array.from((<any>restorer)._widgets.keys());
+      // let keys = Array.from((<any>restorer)._widgets.keys());
 
-      let nonexist = true;
+      // let nonexist = true;
 
-      keys.forEach(function (value) {
-        if ((<string>value).startsWith(namespace)) {
-          nonexist = false;
-        }
-      });
+      // keys.forEach(function (value) {
+      //   if ((<string>value).startsWith(namespace)) {
+      //     nonexist = false;
+      //   }
+      // });
 
-      return nonexist;
+      // return nonexist;
+      return false;
     }
   });
 
-  // Add an application command
-  commands.addCommand(CommandIDs.maximize, {
-    label: 'Toggle Info Focus',
-    execute: () => {
-      // console.log(widget);
-      if(widget.node.classList.contains('panel-fullscreen')) {
-        widget.node.classList.remove('panel-fullscreen');
-      }
-      else {
-        widget.node.classList.add('panel-fullscreen');
-      }
-    },
-    isEnabled: () => {
-      let keys = Array.from((<any>restorer)._widgets.keys());
-      if (VERBOSE) { console.log(keys);}
+  // // Add an application command
+  // commands.addCommand(CommandIDs.maximize, {
+  //   label: 'Toggle Info Focus',
+  //   execute: () => {
+  //     // console.log(widget);
+  //     // if(widget.node.classList.contains('panel-fullscreen')) {
+  //     //   widget.node.classList.remove('panel-fullscreen');
+  //     // }
+  //     // else {
+  //     //   widget.node.classList.add('panel-fullscreen');
+  //     // }
+  //     window.JLabApp.commands.execute('application:toggle-mode');
+  //   },
+  //   isEnabled: () => {
+  //     let keys = Array.from((<any>restorer)._widgets.keys());
+  //     if (VERBOSE) { console.log(keys);}
 
-      let nonexist = true;
+  //     let nonexist = true;
 
-      keys.forEach(function(value) {
-        if((<string>value).startsWith(namespace))
-        {
-          nonexist = false;
-        }
-      });
+  //     keys.forEach(function(value) {
+  //       if((<string>value).startsWith(namespace))
+  //       {
+  //         nonexist = false;
+  //       }
+  //     });
 
-      return nonexist;
-    }
-  });
+  //     return nonexist;
+  //   }
+  // });
 
   // Populate Command Palette
   populatePalette(palette);
 
 
-  app.contextMenu.addItem({
-    command: CommandIDs.maximize,
-    selector: '.jp-FFBOLabInfo',
-    rank: 0
-  });
+  // app.contextMenu.addItem({
+  //   command: CommandIDs.maximize,
+  //   selector: '.jp-FFBOLabInfo',
+  //   rank: 0
+  // });
   
   // Track and restore the widget state
   restorer.restore(tracker, {

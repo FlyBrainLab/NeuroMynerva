@@ -45,12 +45,13 @@ export
     fullscreenToggle.className = 'NM-fullsize-button';
     fullscreenToggle.onclick = (e) => {
       e.preventDefault();
-      if(this.node.classList.contains('panel-fullscreen')) {
-        this.node.classList.remove('panel-fullscreen');
-      }
-      else {
-        this.node.classList.add('panel-fullscreen');
-      }
+    //   if(this.node.classList.contains('panel-fullscreen')) {
+    //     this.node.classList.remove('panel-fullscreen');
+    //   }
+    //   else {
+    //     this.node.classList.add('panel-fullscreen');
+    //   }
+      window.JLabApp.commands.execute('application:toggle-mode');
     };
     fullscreenToggle.appendChild(toggleIcon);
     this.node.appendChild(fullscreenToggle);
@@ -147,6 +148,7 @@ export
     super.dispose();
     this._isDisposed = true;
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:neurogfx-open');
+    window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-gfx');
     if (this._isDisposed) {
       if (VERBOSE) {console.log('[NM GFX] disposed');}
     }

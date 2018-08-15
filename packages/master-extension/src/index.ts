@@ -22,8 +22,15 @@ import '../style/index.css';
 import '../style/izitoast.min.css';
 import '../style/jsoneditor.css';
 import '../style/perfectscrollbar.css';
+import { NotebookPanel } from '@jupyterlab/notebook';
 
 const VERBOSE = false;
+
+/**
+ * The class name for the FFBOLab icon in the default theme.
+ */
+const FFBO_ICON_CLASS = 'jp-FFBOIcon';
+
 
 declare global {
   interface Window {
@@ -164,6 +171,10 @@ function createMenu(app: JupyterLab, menu: IMainMenu): void {
   menu.addMenu(FFBOMenu.menu, { rank: 5 });
 
   FFBOMenu.addGroup(
+    [{ command: 'apputils:reset' }],
+    2
+  );
+  FFBOMenu.addGroup(
     [{ command: CommandIDs.toggleInfo }, { command: CommandIDs.toggle3d }, { command: CommandIDs.toggleGfx }],
     1
   );
@@ -259,25 +270,30 @@ function addCommands(
       }
       // Activate the widget
       if (VERBOSE) { console.log('fallthrough: activate');}
-      widget.activate();
+      // widget.activate();
       app.commands.execute('docmanager:open', {
         path: widget.session.path,
         kernel: widget.session.kernel.model
       })
       .then((_nbk) => {
-        widget.updateNotebook(_nbk);
-        _nbk.ready.then(() => {
+        // _nbk.ready.then(() => {
+        _nbk.revealed.then(() => {
+          widget.updateNotebook(_nbk);
           // widget.activate();
           app.shell.activateById(widget.id);
-          if (VERBOSE) { console.log(document.activeElement);}
+          // commands.execute(CommandIDs.panelLayout);
+          if (VERBOSE) { 
+            console.log(document.activeElement);
+          }
         });
       })
-      .catch(() => {
+      .catch((error) => {
         console.error('[NM] Failed to open notebook with given path: {' + widget.session.path + '}');
+        console.error(error);
       });
 
       // focus on master
-      mainWidget.node.focus();
+      widget.activate();
       window.FFBOLabTracker = tracker;
       window.FFBOLabWidget = widget;
       window.JLabApp = app;
@@ -308,8 +324,9 @@ function addCommands(
       }
       else
       {
-        _widget.resolve(void 0);
+        _widget = Promise.resolve(void 0);
       }
+      return _widget;
     }
   });
 
@@ -351,7 +368,24 @@ function addCommands(
       }
       commands.notifyCommandChanged(CommandIDs.toggleInfo);
     },
-    isToggled: () => nonexist_info,
+    isToggled: () => {
+      let keys = Array.from((<any>restorer)._widgets.keys());
+      if (VERBOSE) { console.log(keys);}
+
+      let toggle = true;
+
+      keys.forEach(function(value) {
+        if((<string>value).startsWith('NeuroMynerva-info'))
+        {
+          // if(!(<any>restorer)._widgets.get(value).isDisposed)
+          // {
+            toggle = false;
+          // }
+        }
+      });
+
+      return !toggle;
+    },
   });
 
   commands.addCommand(CommandIDs.toggle3d, {
@@ -364,9 +398,12 @@ function addCommands(
         nonexist_3d = true;
 
         keys.forEach(function(value) {
-          if((<string>value).startsWith('NeuroMynerva-info'))
+          if((<string>value).startsWith('NeuroMynerva-neu3d'))
           {
-            nonexist_3d = false;
+            // if(!(<any>restorer)._widgets.get(value).isDisposed)
+            // {
+              nonexist_3d = false;
+            // }
           }
         });
   
@@ -387,7 +424,24 @@ function addCommands(
       }
       commands.notifyCommandChanged(CommandIDs.toggle3d);
     },
-    isToggled: () => nonexist_3d,
+    isToggled: () => {
+      let keys = Array.from((<any>restorer)._widgets.keys());
+      if (VERBOSE) { console.log(keys);}
+
+      let toggle = true;
+
+      keys.forEach(function(value) {
+        if((<string>value).startsWith('NeuroMynerva-neu3d'))
+        {
+          // if(!(<any>restorer)._widgets.get(value).isDisposed)
+          // {
+            toggle = false;
+          // }
+        }
+      });
+
+      return !toggle;
+    },
   });
 
   commands.addCommand(CommandIDs.toggleGfx, {
@@ -422,17 +476,34 @@ function addCommands(
       }
       commands.notifyCommandChanged(CommandIDs.toggleGfx);
     },
-    isToggled: () => nonexist_gfx,
+    isToggled: () => {
+      let keys = Array.from((<any>restorer)._widgets.keys());
+      if (VERBOSE) { console.log(keys);}
+
+      let toggle = true;
+
+      keys.forEach(function(value) {
+        if((<string>value).startsWith('NeuroMynerva-gfx'))
+        {
+          // if(!(<any>restorer)._widgets.get(value).isDisposed)
+          // {
+            toggle = false;
+          // }
+        }
+      });
+
+      return !toggle;
+    },
   });
 
   commands.addCommand(CommandIDs.panelLayout, {
     label: 'Load Panel Layout',
     execute: () => {
       if (VERBOSE) { console.log('attempt restore');}
-      let startJSON = '{"main":{"dock":{"type":"split-area","orientation":"vertical","sizes":[0.5,0.5],"children":[{"type":"split-area","orientation":"horizontal","sizes":[0.5,0.5],"children":[{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva:NeuroMynerva"';
-      let endJSON = ']},{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva-info:NeuroMynerva-info"]}]},{"type":"split-area","orientation":"horizontal","sizes":[0.5,0.5],"children":[{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva-neu3d:NeuroMynerva-neu3d"]},{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva-gfx:NeuroMynerva-gfx"]}]}]},"mode":"multiple-document","current":"notebook:Untitled33.ipynb"},"left":{"collapsed":true,"widgets":["filebrowser","running-sessions","command-palette","tab-manager"]},"right":{"collapsed":true,"widgets":[]}}';
+      let startJSON = '{"main":{"dock":{"type":"split-area","orientation":"vertical","sizes":[0.5,0.5],"children":[{"type":"split-area","orientation":"horizontal","sizes":[0.5,0.5],"children":[{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva:NeuroMynerva"]}';
+      let endJSON = ',{"type":"split-area","orientation":"horizontal","sizes":[0.5,0.5],"children":[{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva-neu3d:NeuroMynerva-neu3d"]},{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva-gfx:NeuroMynerva-gfx"]}]}]},"mode":"multiple-document","current":"notebook:Untitled33.ipynb"},"left":{"collapsed":true,"widgets":["filebrowser","running-sessions","command-palette","tab-manager"]},"right":{"collapsed":true,"widgets":["NeuroMynerva-info:NeuroMynerva-info"]}}';
 
-      let widgetArr = ['NeuroMynerva:NeuroMynerva', "NeuroMynerva-neu3d:NeuroMynerva-neu3d", "NeuroMynerva-info:NeuroMynerva-info", "NeuroMynerva-gfx:NeuroMynerva-gfx", "filebrowser","running-sessions","command-palette","tab-manager"];
+      let widgetArr = ['NeuroMynerva:NeuroMynerva', "NeuroMynerva-neu3d:NeuroMynerva-neu3d", "NeuroMynerva-info:NeuroMynerva-info", "NeuroMynerva-gfx:NeuroMynerva-gfx", "filebrowser","running-sessions","command-palette","tab-manager","extensionmanager.main-view"];
       if (VERBOSE) { console.log(window.FFBOLabrestorer._widgets);}
 
       let keys = Array.from(window.FFBOLabrestorer._widgets.keys());
@@ -442,9 +513,22 @@ function addCommands(
       keys.forEach(function(value) {
         if((widgetArr.indexOf(<string>value)) < 0)
         {
-          startJSON += ',' + '"' + <string>value + '"';
+          if(dehydrated == '')
+          {
+            startJSON += ',{"type":"tab-area","currentIndex":0,"widgets":["' + <string>value + '"';
+            dehydrated = 'added';
+          }
+          else
+          {
+            startJSON += ',' + '"' + <string>value + '"';
+          }
         }
       });
+      
+      if(dehydrated != '')
+      {
+        startJSON += ']}]}';
+      }
 
       dehydrated = startJSON + endJSON;
       const {main, left, right} = JSON.parse(dehydrated);
@@ -465,9 +549,9 @@ function addCommands(
     execute: () => {
       if (VERBOSE) { console.log('attempt restore');}
       let startJSON = '{"main":{"dock":{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva:NeuroMynerva"';
-      let endJSON = ',"NeuroMynerva-info:NeuroMynerva-info","NeuroMynerva-neu3d:NeuroMynerva-neu3d","NeuroMynerva-gfx:NeuroMynerva-gfx"]},"mode":"multiple-document","current":"notebook:Untitled59.ipynb"},"left":{"collapsed":true,"widgets":["filebrowser","running-sessions","command-palette","tab-manager"]},"right":{"collapsed":true,"widgets":[]}}';
+      let endJSON = ',"NeuroMynerva-neu3d:NeuroMynerva-neu3d","NeuroMynerva-gfx:NeuroMynerva-gfx"]},"mode":"multiple-document","current":"notebook:Untitled59.ipynb"},"left":{"collapsed":true,"widgets":["filebrowser","running-sessions","command-palette","tab-manager"]},"right":{"collapsed":true,"widgets":["NeuroMynerva-info:NeuroMynerva-info"]}}';
 
-      let widgetArr = ['NeuroMynerva:NeuroMynerva', "NeuroMynerva-neu3d:NeuroMynerva-neu3d", "NeuroMynerva-info:NeuroMynerva-info", "NeuroMynerva-gfx:NeuroMynerva-gfx", "filebrowser","running-sessions","command-palette","tab-manager"];
+      let widgetArr = ['NeuroMynerva:NeuroMynerva', "NeuroMynerva-neu3d:NeuroMynerva-neu3d", "NeuroMynerva-info:NeuroMynerva-info", "NeuroMynerva-gfx:NeuroMynerva-gfx", "filebrowser","running-sessions","command-palette","tab-manager","extensionmanager.main-view"];
       if (VERBOSE) { console.log(window.FFBOLabrestorer._widgets);}
 
       let keys = Array.from(window.FFBOLabrestorer._widgets.keys());
@@ -499,13 +583,14 @@ function addCommands(
   commands.addCommand(CommandIDs.maximize, {
     label: 'Toggle Master Focus',
     execute: () => {
-      if (VERBOSE) { console.log(widget);}
-      if(widget.node.classList.contains('panel-fullscreen')) {
-        widget.node.classList.remove('panel-fullscreen');
-      }
-      else {
-        widget.node.classList.add('panel-fullscreen');
-      }
+      // if (VERBOSE) { console.log(widget);}
+      // if(widget.node.classList.contains('panel-fullscreen')) {
+      //   widget.node.classList.remove('panel-fullscreen');
+      // }
+      // else {
+      //   widget.node.classList.add('panel-fullscreen');
+      // }
+      window.JLabApp.commands.execute('application:toggle-mode');
     }
   });
 
@@ -557,13 +642,79 @@ function addCommands(
    */
   commands.addCommand(CommandIDs.createNew, {
     execute: () => {
-      // // createNotebook().then(_notebook => {
-      //   notebook = _notebook;
-      // }).then(()=>{
-        createMynerva();
-      // })
+      widget = new FFBOLabWidget({manager: services.sessions});
+      let mainWidget = widget;
+      let _neu3d = commands.execute('NeuroMynerva:neu3d-open').then((widget:IFFBOChildWidget) => {
+        widget.connect(mainWidget.outSignal);
+        mainWidget.connectChild(widget.outSignal);
+        if (VERBOSE) { console.log('[NM] Connected To [Neu3D]');}
+        nonexist_3d = true;
+        commands.notifyCommandChanged(CommandIDs.toggle3d);
+      });
+      let _neurogfx = commands.execute('NeuroMynerva:neurogfx-open').then((widget:IFFBOChildWidget) => {
+        widget.connect(mainWidget.outSignal);
+        if (VERBOSE) { console.log(widget);}
+        nonexist_gfx = true;
+        commands.notifyCommandChanged(CommandIDs.toggleGfx);
+      });
+      let _info = commands.execute('NeuroMynerva:info-open').then((widget:IFFBOChildWidget) => {
+        widget.connect(mainWidget.outSignal);
+        mainWidget.connectChild(widget.outSignal);
+        if (VERBOSE) { console.log('[NM] Connected To [Info]');}
+        window.ps = new PerfectScrollbar(".jp-FFBOLabInfo");
+        nonexist_info = true;
+        commands.notifyCommandChanged(CommandIDs.toggleInfo);
+      });
+  
+      Promise.all([_neu3d, _neurogfx, _info, widget.ready]).then(() => {
+        widget.propogateSession();
+      });
+  
+      return widget.ready.then(() => {
+        if (VERBOSE) { console.log('MASTER cascade');}
+  
+        if (!tracker.has(widget)) {
+          // Track the state of the widget for later restoration
+          if (VERBOSE) { console.log('!has widget');}
+          tracker.add(widget);
+        } else {
+          // Refresh widget
+          if (VERBOSE) { console.log('else: update');}
+          widget.update();
+        }
+        // Activate the widget
+        if (VERBOSE) { console.log('fallthrough: activate');}
+        // widget.activate();
+        app.commands.execute('docmanager:open', {
+          path: widget.session.path,
+          kernel: widget.session.kernel.model
+        })
+        .then((_nbk) => {
+          _nbk.revealed.then(() => {
+            widget.updateNotebook(_nbk);
+            if (VERBOSE) { 
+              console.log(document.activeElement);
+            }
+            // focus on master
+            // widget.activate();
+            window.FFBOLabTracker = tracker;
+            window.FFBOLabWidget = widget;
+            window.JLabApp = app;
+            app.shell.activateById(widget.id);
+            commands.execute(CommandIDs.panelLayout);
+            // window.ps = new PerfectScrollbar(".jp-FFBOLabMaster");
+          });
+        })
+        .catch((error) => {
+          console.error('[NM] Failed to open notebook with given path: {' + widget.session.path + '}');
+          console.error(error);
+        });
+      return widget;
+      });
     },
-    label: 'Create New Workspace'
+    // label: 'Create New Workspace',
+    label: 'Create New',
+    iconClass: FFBO_ICON_CLASS
   });
 
   /**
@@ -598,8 +749,8 @@ function addCommands(
   if (launcher) {
     launcher.add({
       command: CommandIDs.createNew,
-      kernelIconUrl: '../style/img/ffbo_logo.png',
-      category: 'FFBO'
+      category: 'FFBO',
+      rank: 0
     });
   }
 }

@@ -3,7 +3,7 @@ import { Signal, ISignal } from '@phosphor/signaling';
 import { UUID } from '@phosphor/coreutils';
 import { Message } from '@phosphor/messaging';
 import { PromiseDelegate, JSONObject } from '@phosphor/coreutils';
-import { IFFBOChildWidget, IFFBOLabWidget } from 'master-extension/lib';
+import { IFFBOChildWidget, IFFBOLabWidget, FFBOLabModel } from 'master-extension/lib';
 
 import { ConnSVG } from './conn_svg';
 import { SummaryTable } from './summary_table';
@@ -67,12 +67,12 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     
     // current info panel object name
     this.name = undefined;
-
+    this.data = undefined;
     // instantiate sub panels
     let layout = this.layout = new PanelLayout();
     this.connSVG = new ConnSVG();
-    this.summaryTable = new SummaryTable();
-    this.connTable = new ConnTable();
+    this.summaryTable = new SummaryTable(this);
+    this.connTable = new ConnTable(this);
     layout.addWidget(this.summaryTable);
     layout.addWidget(this.connSVG);
     layout.addWidget(this.connTable);
@@ -80,6 +80,12 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     this._initialize(); 
   }
 
+  /**
+   * Redraw values after show
+   */
+  onAfterShow(){
+    this.redraw();
+  }
   /**
    * A signal that emits user action in info panel to listener
    */
@@ -105,6 +111,7 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     super.dispose();
     this._isDisposed = true;
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:info-open');
+    window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-info');
     if (this._isDisposed) {
       if (VERBOSE) {console.log('[NM Info] disposed');}
     }
@@ -149,6 +156,9 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
         this.onMasterMessage(value.data);
       }
     }
+    else if(value.type == "model") {
+      this.onModelChanged((<any>value.data).sender, (<any>value.data).value);
+    }
     else if(value.type == "session") {
       let localPath = (<string>value.data).split(".ipynb")[0]
       this.title.label = '[Info] ' + localPath;
@@ -182,7 +192,9 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
   /**
   * Respond to FFBOLabModel Changed <DUMMY>
   */
-  onModelChanged(): void {
+  onModelChanged(sender: FFBOLabModel, value: JSONObject): void {
+    this.model = sender;
+    this.connTable.redraw();
     return; 
   }
 
@@ -193,69 +205,63 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     return this._ready.promise;
   }
   
+  private _parseData(obj: JSONObject): void{
+    let _data = obj.data as JSONObject;
+    let data = _data.data as JSONObject;
+    let new_name = ('uname' in <JSONObject>data['summary']) ? (<JSONObject>data['summary'])['uname'] : (<JSONObject>data['summary'])['name'];
+    this.data = data;
+    if (this.name != new_name){
+      this._isDirty = true;
+      this.name = <string>new_name;
+    }
+    return 
+  }
   /**
    * Update data of info panel
    * @param obj data returned from neuroArch
    */
   updateData(obj: JSONObject): void {
-    let _data = obj.data as JSONObject;
-    let data = _data.data  as JSONObject;
+    this._parseData(obj);
+    this.redraw();
+  }
+  
+  /**
+   * redraw info panel with current data
+   */
+  redraw():void{
+    if (this.data == undefined){
+      return;
+    }
     
-    let new_name = ('uname' in <JSONObject>data['summary']) ? (<JSONObject>data['summary'])['uname'] : (<JSONObject>data['summary'])['name'];
-    new_name = <string>new_name;
-    if (this.name === new_name) {
+    if (!this._isDirty) {
       /** do not update if the object already exists, just show */
       this.show();
       return;
     }
     else {
-      this.name = new_name;
-      if ('connectivity' in data) { // synapse data does not have connectivity
-        this.connSVG.updateData(<JSONObject>data['connectivity']);
-        this.connTable.updateData(<JSONObject>data['connectivity']);
-        this.summaryTable.updateData(<JSONObject>data['summary']);
+      if ('connectivity' in this.data) { // synapse data does not have connectivity
+        this.connSVG.updateData(<JSONObject>this.data['connectivity']);
+        this.connTable.updateData(<JSONObject>this.data['connectivity']);
+        this.summaryTable.updateData(<JSONObject>this.data['summary']);
         this.show(); //show all
       }
       else {
         this.connSVG.hide();
         this.connTable.hide();
-        this.summaryTable.updateData(<JSONObject>data['summary']);
+        this.summaryTable.updateData(<JSONObject>this.data['summary']);
         this.summaryTable.show();
       }
     }
 
     // FIXME: return old data format
 
-    let summaryData = <JSONObject>data['summary'];
-    let connData = <JSONObject>data['connectivity'];
+    let summaryData = <JSONObject>this.data['summary'];
+    let connData = <JSONObject>this.data['connectivity'];
 
     this.connSVG.updateData(connData);
     this.summaryTable.updateData(summaryData);
     this.connTable.updateData(connData);
-
-    // FIXME: error checking _data
-    // delete (<JSONObject>_data.data)['summary'];
-    // delete (<any>_data.data)['connectivity']['pre']['summary'];
-    // delete (<any>_data.data)['connectivity']['post']['summary'];
-
-
-    // let key = "";
-    // let temp: JSONObject = {};
-    // for(key in (<any>_data.data)['connectivity']['pre']['details'].reverse() as JSONObject)
-    // {
-    //   temp[(<any>_data.data)['connectivity']['pre']['details'][key]['name']] = (<any>_data.data)['connectivity']['pre']['details'][key]['number'];
-
-    // }
-    // (<any>_data.data)['connectivity']['pre'] = temp;
-    // temp = {};
-    // for(key in (<any>_data.data)['connectivity']['post']['details'].reverse() as JSONObject)
-    // {
-    //   temp[(<any>_data.data)['connectivity']['post']['details'][key]['name']] = (<any>_data.data)['connectivity']['post']['details'][key]['number'];
-
-    // }
-    // (<any>_data.data)['connectivity']['post'] = temp;
   }
-  
   /**
    * Handle update requests for the widget.
    */
@@ -272,7 +278,10 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
    * @returns {bool} if object in workspace
   */
   isInWorkspace(rid: string): boolean {
-
+    if(this.model)
+    {
+      return (this.model.value.hasOwnProperty(rid));
+    }
     return false;
   }
   /** FIXME:
@@ -304,8 +313,11 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
   /**
    * The Elements associated with the widget.
    */
+  private model: FFBOLabModel;
   private name: string;
+  private data: any;
   private _ready = new PromiseDelegate<void>();
+  private _isDirty = false;
   private _isDisposed = false;
   private _isConnected = false;
   private _userAction = new Signal<this, object>(this);

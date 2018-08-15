@@ -180,6 +180,13 @@ body{
     overflow: scroll;
 }
 
+.jp-FFBOIcon {
+    /* background-image: var(--jp-icon-ffbo-lab); */
+    background-image: url('img/ffbo_logo.png');
+    /* background-image: var(--jp-icon-terminal); */
+    
+}
+
 .ffbolab-button svg{
     color: rgb(97, 97, 97) !important;
 }

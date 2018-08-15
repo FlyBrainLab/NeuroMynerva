@@ -45,13 +45,20 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
     fullscreenToggle.onclick = (e) => {
       e.preventDefault();
 
-      if(this.node.classList.contains('panel-fullscreen')) {
-        this.node.classList.remove('panel-fullscreen');
-      }
-      else {
-        this.node.classList.add('panel-fullscreen');
-      }
-      this.neu3D.onWindowResize();
+      // if(this.node.classList.contains('panel-fullscreen')) {
+      //   this.node.classList.remove('panel-fullscreen');
+      // }
+      // else {
+      //   this.node.classList.add('panel-fullscreen');
+      // }
+
+      // let displayVal = getComputedStyle(this.node, null).getPropertyValue('display');
+      // if (displayVal != 'none') {
+      //   this.neu3D.onWindowResize();
+      // }
+      
+      // this.neu3D.onWindowResize();
+      window.JLabApp.commands.execute('application:toggle-mode');
     };
     fullscreenToggle.appendChild(toggleIcon);
     this.node.appendChild(fullscreenToggle);
@@ -95,9 +102,9 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
     });
 
     // load widget only when window is ready
-    this._isInitialized = this._initialize();
+    this._isInitialized = false;
   }
-  
+
   /**
    * Check if DOM element is correctly added
    */
@@ -133,9 +140,11 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
     // setup callbacks to expose canvas events to widget
     this._setupCallbacks();
 
+    var currentAdultJSON = JSON.parse(JSON.stringify(neu3DAdultJSON));
     // add initial mesh, default to adult mesh
     this.neu3D.addJson({
-      ffbo_json: neu3DAdultJSON,
+      // ffbo_json: neu3DAdultJSON,
+      ffbo_json: currentAdultJSON,
       showAfterLoadAll: true
     });
 
@@ -252,6 +261,13 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
 
   }
 
+  onAfterAttach(msg: Message): void {
+    super.onAfterAttach(msg);
+    if(!this._isInitialized) {
+      this._isInitialized = this._initialize();
+    }
+  }
+
   /**
    * A signal that emits user action in neu3D canvas to listener
    */
@@ -293,6 +309,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
     super.dispose();
     this._isDisposed = true;
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:neu3d-open');
+    window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-3d');
     if (this._isDisposed) {
       console.log('[FFBOLab Neu3D] disposed');
     }
@@ -350,15 +367,15 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
    * Handle update requests for the widget.
    */
   onUpdateRequest(msg: Message): void {
-    if (!this._isInitialized){
-      this._isInitialized = this._initialize();
-    }
     let displayVal = getComputedStyle(this.node, null).getPropertyValue('display');
     if (displayVal != 'none') {
       this.neu3D.onWindowResize();
       super.onUpdateRequest(msg);
     }
-    
+    if(this.isAttached && !this._isInitialized)
+    {
+      this._isInitialized = this._initialize();
+    }
   }
 
   /**
@@ -373,6 +390,10 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
       this.neu3D.onWindowResize();
       super.onUpdateRequest(msg);
       //console.log(msg);
+    }
+    if(this.isAttached && !this._isInitialized)
+    {
+      this._isInitialized = this._initialize();
     }
     // else {
     //   console.log('display none found!');

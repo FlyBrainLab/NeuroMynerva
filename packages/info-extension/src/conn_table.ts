@@ -5,7 +5,7 @@ import "jquery.tabulator";
 import { Signal, ISignal } from '@phosphor/signaling';
 import { Widget } from '@phosphor/widgets';
 import { Message } from '@phosphor/messaging';
-import { INeuroInfoSubWidget } from "./widget";
+import { INeuroInfoSubWidget, NeuroInfoWidget } from "./widget";
 
 const TABULATOR_ID = "tabulator";
 
@@ -14,8 +14,10 @@ const TABULATOR_ID = "tabulator";
 */
 export class ConnTable extends Widget implements INeuroInfoSubWidget{
   
-  constructor(){
+  constructor(parent: NeuroInfoWidget) {
     super();
+
+    this.parentObj = parent;
 
     let tableDiv = document.createElement('div');
     tableDiv.id = TABULATOR_ID;
@@ -41,6 +43,13 @@ export class ConnTable extends Widget implements INeuroInfoSubWidget{
     super.onUpdateRequest(msg);
   }
 
+  redraw(): void {
+    let div = document.getElementById(TABULATOR_ID);
+    if (!div.innerHTML){
+      return;
+    }
+    $("#" + TABULATOR_ID).tabulator("redraw", true);
+  }
   /**
    * Update Connectivity Data
    * @param connData 
@@ -97,35 +106,60 @@ export class ConnTable extends Widget implements INeuroInfoSubWidget{
           title: "In Workspace",
           field: "inworkspace",
           align: "center",
-          editor: "select",
-          editorParams: {
-            "true": "True",
-            "false": "False"
-          },
+          // editor: "select",
+          // editorParams: {
+          //   "true": "True",
+          //   "false": "False"
+          // },
           headerFilter: true,
           headerFilterParams: {
             "true": "True",
             "false": "False"
           },
           formatter: (cell, formatterParams) => {
-            if (cell.getValue() == true) {
+            if (this.parentObj.isInWorkspace(cell.getValue()[0]) == true) {
               return "<i class='fa fa-minus-circle' > </i>";
             } else {
               return "<i class='fa fa-plus-circle' > </i>";
             }
           },
-          cellClick: (e, cell) => {
-            var neuName = <string>cell.getData().name;
-            if (!cell.getValue()) { // not in workspace
-              this._addRemoveSignal.emit({ action: 'addByUname', content: { name: neuName }});
+          cellClick: (e,cell) => {
+            console.log(e,cell);
+            // var neuName = <string>cell.getData().name;
+            if (!this.parentObj.isInWorkspace(cell.getValue()[0])) { // not in workspace
+              this.parentObj._userAction.emit({ action: 'model-add', content: {rid: cell.getValue()[0], data: { name: cell.getValue()[1] }} });
+
+              let code = [
+                "res = {}",
+                "res['verb'] = 'add'",
+                "res['query']= [{'action': {'method': {'query': {'uname': '" + cell.getValue()[1] + "'}}},",
+                                "'object': {'class': ['Neuron', 'Synapse']}}]",
+                "result = _FFBOLABClient.executeNAquery(res)",
+              ].join('\n');
+            
+              this.parentObj._userAction.emit({ action: 'execute', content: { code: code } });
+              // this._addRemoveSignal.emit({ action: 'addByUname', content: { name: neuName }});
+              // $("#" + TABULATOR_ID).tabulator("redraw", true);
               return;
-            } else {
-              this._addRemoveSignal.emit({ action: 'removeByUname', content: { name: neuName}});
+            } else {  
+              this.parentObj._userAction.emit({ action: 'model-remove', content: {rid: cell.getValue()[0]} });
+              let code = [
+                "res = {}",
+                "res['verb'] = 'remove'",
+                "res['query']= [{'action': {'method': {'query': {'uname': '" + cell.getValue()[1] + "'}}},",
+                                "'object': {'class': ['Neuron', 'Synapse']}}]",
+                "result = _FFBOLABClient.executeNAquery(res)",
+              ].join('\n');
+
+              this.parentObj._userAction.emit({ action: 'execute', content: { code: code } });
+              // $("#" + TABULATOR_ID).tabulator("redraw", true);
+              // this._addRemoveSignal.emit({ action: 'removeByUname', content: { name: neuName}});
               return;
             }
           },
         },
-        { title: "Name", field: "name", align: "center", headerFilter: true, headerFilterPlaceholder: "filter name" },
+        { title: "Name", field: "name", align: "center", headerFilter: true, headerFilterPlaceholder: "filter name", 
+        },
         {
           title: "Direction", field: "direction", align: "center", editor: "select", editorParams: { "pre": "Pre", "post": "Post" }, headerFilter: true, headerFilterParams: { "pre": "Pre", "post": "Post" }
         },
@@ -149,7 +183,7 @@ export class ConnTable extends Widget implements INeuroInfoSubWidget{
         neuron_data['name'] = item['name'];
         neuron_data['number'] = item['number'];
         neuron_data['direction'] = dir;
-        neuron_data['inworkspace'] = null; // this is undefined for now
+        neuron_data['inworkspace'] = [item.rid, item.name]; // this is undefined for now
         new_data.push(neuron_data);
       }
     }
@@ -173,6 +207,7 @@ export class ConnTable extends Widget implements INeuroInfoSubWidget{
   /**
    * Elements associated with this object
    */
+  private parentObj: any;
   readonly container : HTMLElement;
   private _addRemoveSignal = new Signal<this, object>(this);
 }

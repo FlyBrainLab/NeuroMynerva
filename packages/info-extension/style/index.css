@@ -165,6 +165,7 @@ body{
 .jp-FFBOLabInfo {
     text-align: center;
     overflow: scroll;
+    background: white;
 }
 
 .ffbolab-button svg{
