@@ -18,6 +18,7 @@ const DEFAULT_CLASS = "jp-FFBOLabInfo";
 const SUMMARY_TABLE_ID = "info-panel-summary-table";
 const CONN_SVG_ID = "info-panel-conn";
 const CONN_TABLE_ID = "info-panel-conn-table";
+const SUMMARY_NEU_ID = "info-panel-summary-neu-col";
 
 /**
  * An interface for NeuroInfo sub widgets
@@ -83,6 +84,7 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
   /**
    * Redraw values after show
    */
+  //FIXME: IS THIS NEEDED?
   onAfterShow(){
     this.redraw();
   }
@@ -110,8 +112,18 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
 
     super.dispose();
     this._isDisposed = true;
+    if(this._inSignal)
+    {
+      this._inSignal.disconnect(this._handleParentActions, this);
+    }
+    Signal.disconnectAll(this._userAction);
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:info-open');
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-info');
+    window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+      let newFetch = _fetch;
+      newFetch['info'] = false;
+      window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+    });
     if (this._isDisposed) {
       if (VERBOSE) {console.log('[NM Info] disposed');}
     }
@@ -131,6 +143,10 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
    */
   connect(inSignal: ISignal<IFFBOLabWidget, object>): void {
     if (VERBOSE) { console.log('[NM INFO] Connected');}
+    if(this._inSignal)
+    {
+      this._inSignal.disconnect(this._handleParentActions, this);
+    }
     inSignal.connect(this._handleParentActions, this);
     this._isConnected = true;
   }
@@ -155,6 +171,11 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
       {
         this.onMasterMessage(value.data);
       }
+    }
+    else if(value.type == "INFO-forward")
+    {
+      console.log(value);
+      this.summaryTable.updateColor((<any>value.data).rid, (<any>value.data).color);
     }
     else if(value.type == "model") {
       this.onModelChanged((<any>value.data).sender, (<any>value.data).value);
@@ -224,7 +245,7 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     this._parseData(obj);
     this.redraw();
   }
-  
+
   /**
    * redraw info panel with current data
    */
@@ -232,6 +253,7 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     if (this.data == undefined){
       return;
     }
+    // console.log(this.data);
     
     if (!this._isDirty) {
       /** do not update if the object already exists, just show */
@@ -240,10 +262,13 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     }
     else {
       if ('connectivity' in this.data) { // synapse data does not have connectivity
+        this.connSVG.show();
         this.connSVG.updateData(<JSONObject>this.data['connectivity']);
+        this.connTable.show();
         this.connTable.updateData(<JSONObject>this.data['connectivity']);
+        this.summaryTable.show();
         this.summaryTable.updateData(<JSONObject>this.data['summary']);
-        this.show(); //show all
+        // this.show(); //show all
       }
       else {
         this.connSVG.hide();
@@ -255,12 +280,12 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
 
     // FIXME: return old data format
 
-    let summaryData = <JSONObject>this.data['summary'];
-    let connData = <JSONObject>this.data['connectivity'];
+    // let summaryData = <JSONObject>this.data['summary'];
+    // let connData = <JSONObject>this.data['connectivity'];
 
-    this.connSVG.updateData(connData);
-    this.summaryTable.updateData(summaryData);
-    this.connTable.updateData(connData);
+    // this.connSVG.updateData(connData);
+    // this.summaryTable.updateData(summaryData);
+    // this.connTable.updateData(connData);
   }
   /**
    * Handle update requests for the widget.
@@ -289,7 +314,17 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
    *
    * @param {string} uname -  uname of target object (neuron/synapse)
    */
-  addByUname(uname: string): any {
+  addByUname(name: string, rid:string): any {
+    this._userAction.emit({ action: 'model-add', content: {rid: rid, data: { name: name }} });
+    let code = [
+      "res = {}",
+      "res['verb'] = 'add'",
+      "res['query']= [{'action': {'method': {'query': {'uname': '" + name + "'}}},",
+                      "'object': {'class': ['Neuron', 'Synapse']}}]",
+      "result = _FFBOLABClient.executeNAquery(res)",
+    ].join('\n');
+  
+    this._userAction.emit({ action: 'execute', content: { code: code } });
     return;
   }
   /** FIXME:
@@ -297,7 +332,17 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
    *
    * @param {string} uname -  uname of target object (neuron/synapse)
    */
-  removeByUname(uname: string): any {
+  removeByUname(name: string, rid: string): any {
+    this._userAction.emit({ action: 'model-remove', content: {rid: rid} });
+    let code = [
+      "res = {}",
+      "res['verb'] = 'remove'",
+      "res['query']= [{'action': {'method': {'query': {'uname': '" + name + "'}}},",
+                      "'object': {'class': ['Neuron', 'Synapse']}}]",
+      "result = _FFBOLABClient.executeNAquery(res)",
+    ].join('\n');
+
+    this._userAction.emit({ action: 'execute', content: { code: code } });
     return;
   }
   /** FIXME:
@@ -321,6 +366,7 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
   private _isDisposed = false;
   private _isConnected = false;
   private _userAction = new Signal<this, object>(this);
+  private _inSignal: ISignal<IFFBOLabWidget, object>;
   
   readonly connSVG: ConnSVG;
   readonly summaryTable: SummaryTable;

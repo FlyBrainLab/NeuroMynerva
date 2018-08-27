@@ -86,6 +86,20 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
     extraTabDiv.appendChild(_div);
   }
 
+  updateColor(rid: string, color: string)
+  {
+    let colorPicker = this.node.querySelector('#'+this.colorId) as HTMLInputElement;
+    // console.log(color);
+    this.color = '#' + color;
+    if(colorPicker)
+    {
+      if(colorPicker.dataset.rid == rid)
+      {
+        colorPicker.value = '#' + color;
+      }
+    }
+  }
+
   /**
    * SummaryTable Information Update
    *
@@ -102,33 +116,38 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
       objName = (<string>objName).split("--")[0] + " to " + (<string>objName).split("--")[1];
     }
     let objRId = data['rid'];
-    // FIXME: need to solve this communication problem with parent object 
+
     // let objColor = this.parentObj.getAttr(<string>objRId, 'color');
-    let objColor = "ffffff"
+
+    let objColor = "#ffffff";
+    if(this.color)
+    {
+      objColor = this.color;
+    }
+
     let tableHtml = '<div> <p>Name :</p><p>' + objName;
 
     // FIXME: need to solve this communication problem with parent object 
     if (this.parentObj.isInWorkspace(<string>objRId)) {
     // if(true){
-      tableHtml += '<button class="btn btn-remove btn-danger" id="btn-remove-' + objName + '" name="' + objName + '" style="margin-left:20px;">-</button>';
+      tableHtml += '<button class="btn btn-remove btn-danger" id="btn-remove-' + objName + '" name="' + objName + '" data-rid="'+ objRId +'" style="margin-left:20px;">-</button>';
+      tableHtml += '</p></div>';
+      if (objColor) {
+        // add choose color
+        tableHtml += '<div><p>Choose Color:</p><p> <input class="color_inp_show" type="color"';
+        tableHtml += 'name="neu_col" id="' + this.colorId + '" value="' + objColor + '" data-rid="'+ objRId +'"/></p></div>';
+      }
     }
     else {
-      tableHtml += '<button class="btn btn-add btn-success" id="btn-add-' + objName + '" name="' + objName + '" style="margin-left:20px;">+</button>';
+      tableHtml += '<button class="btn btn-add btn-success" id="btn-add-' + objName + '" name="' + objName + '" data-rid="'+ objRId +'" style="margin-left:20px;">+</button>';
+      tableHtml += '</p></div>';
+      if (objColor) {
+        // add choose color
+        tableHtml += '<div><p>Choose Color:</p><p> <input class="color_inp_hide" type="color"';
+        tableHtml += 'name="neu_col" id="' + this.colorId + '" value="' + objColor + '" data-rid="'+ objRId +'"/></p></div>';
+      }
     }
     // tableHtml += '<button class="btn btn-add btn-success" id="btn-add-' + objName + '" name="' + objName + '" style="margin-left:20px;">+</button>';
-    tableHtml += '</p></div>';
-    if (objColor) {
-      // add choose color
-      tableHtml += '<div><p>Choose Color:</p><p> <input class="color_inp" type="color"';
-      tableHtml += 'name="neu_col" id="' + this.colorId + '" value="#' + objColor + '"/></p></div>';
-      $("#"+this.colorId).change((event) => {      
-        // this.parentObj._userAction.emit({ action: 'forward', content: { type: "NLP-forward", data: {color: }} });
-        console.log(event);
-      })
-    }
-    else {
-      //do nothing;
-    }
     let displayKeys = ['class', 'vfb_id', 'data_source', 'transgenic_lines', 'transmitters', 'expresses'];
     for (let key of displayKeys) {
       if (!(key in data) || data[key] == 0) {
@@ -205,9 +224,51 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
    * Setup Callback for add remove button
    */
   setupCallbacks() {
-    let that = this;
-      // FIXME: redo this better
-    this.node.getElementsByTagName("button")[0].setAttribute("onClick", "if (this.className.search('add') != -1) {that.parentObj.addByUname((<HTMLImageElement>this).name);}else {that.parentObj.removeByUname((<HTMLImageElement>this).name);}");
+    // FIXME: redo this better
+    let infoWidget = this.parentObj;
+    let infoBtn = this.node.getElementsByTagName("button")[0];
+    let colorPicker = this.node.querySelector('#' + SUMMARY_NEU_ID) as HTMLElement;
+    // console.log(infoBtn);
+    if(infoBtn)
+    {
+      infoBtn.onclick = (event) => {
+        // console.log(event);
+        if(infoBtn.className.search('add') != -1)
+        {
+          // console.log('added');
+          infoWidget.addByUname(infoBtn.name, infoBtn.dataset.rid);
+          infoBtn.className = "btn btn-remove btn-danger";
+          infoBtn.id = "btn-remove-" + infoBtn.name;
+          infoBtn.innerText = '-';
+          colorPicker.className = 'color_inp_show';
+        }
+        else
+        {
+          // console.log('removed');
+          infoWidget.removeByUname(infoBtn.name, infoBtn.dataset.rid);
+          infoBtn.className = "btn btn-add btn-success";
+          infoBtn.id = "btn-add-" + infoBtn.name;
+          infoBtn.innerText = '+';
+          colorPicker.className = 'color_inp_hide';
+        }
+      }
+    }
+
+    // console.log(colorPicker);
+    // console.log(colorPicker.dataset.rid);
+    let infoColor;
+    if(colorPicker)
+    {
+      let infoRid = colorPicker.dataset.rid;
+      colorPicker.onchange = (event) => {
+        // console.log(event);
+        // console.log((event.target as HTMLInputElement).value);
+        infoColor = (event.target as HTMLInputElement).value;
+        (<any>infoWidget)._userAction.emit({action:'forward', target: 'NLP-forward', content: { command: 'color', rid: infoRid, color: infoColor}});
+        this.color = infoColor;
+      };
+    }
+    // this.node.getElementsByTagName("button")[0].setAttribute("onClick", "if (this.className.search('add') != -1) {that.parentObj.addByUname((<HTMLImageElement>this).name);}else {that.parentObj.removeByUname((<HTMLImageElement>this).name);}");
   }
 
   /**
@@ -215,13 +276,14 @@ export class SummaryTable extends Widget implements INeuroInfoSubWidget{
    */
   readonly container: HTMLElement;
   private _hasData = false;
-  private parentObj: any;
+  private parentObj: NeuroInfoWidget;
   private htmlTemplate: string;
   private colorId: string;
 
   public tableDOM: HTMLElement;
   public tabId: string;
   public extraImgId: string;
+  public color: string;
 }
 
 

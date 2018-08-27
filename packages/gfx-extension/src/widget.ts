@@ -132,6 +132,10 @@ export
    */
   connect(inSignal: ISignal<IFFBOLabWidget, object>): void {
     if (VERBOSE) { console.log('[NM GFX] Connected');}
+    if(this._inSignal)
+    {
+      this._inSignal.disconnect(this._handleParentActions, this);
+    }
     inSignal.connect(this._handleParentActions, this);
     this._isConnected = true;
   }
@@ -147,8 +151,17 @@ export
     delete (this._iframe);
     super.dispose();
     this._isDisposed = true;
+    if(this._inSignal)
+    {
+      this._inSignal.disconnect(this._handleParentActions, this);
+    }
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:neurogfx-open');
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-gfx');
+    window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+      let newFetch = _fetch;
+      newFetch['gfx'] = false;
+      window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+    });
     if (this._isDisposed) {
       if (VERBOSE) {console.log('[NM GFX] disposed');}
     }
@@ -211,5 +224,6 @@ export
   private _blocker: HTMLDivElement;
   private _isDisposed = false;
   private _isConnected = false;
+  private _inSignal: ISignal<IFFBOLabWidget, object>;
 
 };

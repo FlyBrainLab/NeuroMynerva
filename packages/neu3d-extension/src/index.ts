@@ -42,6 +42,15 @@ function activate(
   commands.addCommand(CommandIDs.open, {
     label: 'Create Neu3D',
     execute: () => {
+      window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+        let newFetch = _fetch;
+        if(!_fetch)
+        {
+          newFetch = {};
+        }
+        newFetch['neu3d'] = true;
+        window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+      });
       if (VERBOSE) {console.log('[NM NEU3D] OPEN call');}
       if (!widget || widget.isDisposed) {
         // Create a new widget if one does not exist

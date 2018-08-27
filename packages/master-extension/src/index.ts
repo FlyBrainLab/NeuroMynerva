@@ -23,6 +23,7 @@ import '../style/izitoast.min.css';
 import '../style/jsoneditor.css';
 import '../style/perfectscrollbar.css';
 import { NotebookPanel } from '@jupyterlab/notebook';
+import { IStateDB } from '@jupyterlab/coreutils';
 
 const VERBOSE = false;
 
@@ -54,7 +55,7 @@ const tracker: JupyterLabPlugin<InstanceTracker<FFBOLabWidget>> = {
   activate,
   id: '@jupyterlab/FFBOLab-extension:plugin',
   autoStart: true,
-  requires: [ICommandPalette, ILayoutRestorer, IMainMenu],
+  requires: [ICommandPalette, ILayoutRestorer, IMainMenu, IStateDB],
   optional: [ILauncher]
 };
 
@@ -108,6 +109,7 @@ function activate(app: JupyterLab,
   palette: ICommandPalette,
   restorer: ILayoutRestorer,
   menu: IMainMenu,
+  state: IStateDB,
   launcher: ILauncher
 ): InstanceTracker<FFBOLabWidget> {
   if (VERBOSE) { console.log('[NM Master] NeuroMynerva extension activated!');}
@@ -119,7 +121,7 @@ function activate(app: JupyterLab,
   window.JLabApp = app;
 
   // Add commands to command palette
-  addCommands(widget, app, services, tracker, restorer, launcher);
+  addCommands(widget, app, services, tracker, restorer, launcher, state, namespace);
 
   createMenu(app, menu);
 
@@ -191,6 +193,8 @@ function addCommands(
   tracker: InstanceTracker<FFBOLabWidget>,
   restorer: ILayoutRestorer,
   launcher: ILauncher,
+  state: IStateDB,
+  namespace: string
 ): void {
   const { commands, shell } = app;
 
@@ -225,80 +229,203 @@ function addCommands(
   function createMynerva(path?: string): Promise<FFBOLabWidget> {
     widget = new FFBOLabWidget({manager: services.sessions, path: path});
     let mainWidget = widget;
-    let _neu3d = commands.execute('NeuroMynerva:neu3d-open').then((widget:IFFBOChildWidget) => {
-      widget.connect(mainWidget.outSignal);
-      mainWidget.connectChild(widget.outSignal);
-      if (VERBOSE) { console.log('[NM] Connected To [Neu3D]');}
-      nonexist_3d = true;
-      commands.notifyCommandChanged(CommandIDs.toggle3d);
-    });
-    let _neurogfx = commands.execute('NeuroMynerva:neurogfx-open').then((widget:IFFBOChildWidget) => {
-      widget.connect(mainWidget.outSignal);
-      if (VERBOSE) { console.log(widget);}
-      nonexist_gfx = true;
-      commands.notifyCommandChanged(CommandIDs.toggleGfx);
-    });
-    let _info = commands.execute('NeuroMynerva:info-open').then((widget:IFFBOChildWidget) => {
-      widget.connect(mainWidget.outSignal);
-      mainWidget.connectChild(widget.outSignal);
-      if (VERBOSE) { console.log('[NM] Connected To [Info]');}
-      window.ps = new PerfectScrollbar(".jp-FFBOLabInfo");
-      nonexist_info = true;
-      commands.notifyCommandChanged(CommandIDs.toggleInfo);
-    });
+    return state.fetch('ffbo:state').then(_fetch => {
+      // console.log(_fetch);
+      // console.log(_fetch['neu3d']);
+      // console.log(_fetch['neu3d'] != false);
+      // console.log(_fetch['gfx']);
+      // console.log(_fetch['gfx'] != false);
+      // console.log(_fetch['info']);
+      // console.log(_fetch['info'] != false);
+      if(_fetch)
+      {
+        let _neu3d;
+        let _neurogfx;
+        let _info;
 
-    Promise.all([_neu3d, _neurogfx, _info, widget.ready]).then(() => {
-      widget.propogateSession();
-    });
+        if(_fetch['neu3d'] != false)
+        {
+          // console.log('[MASTER] Neu3D: NEW');
+          _neu3d = commands.execute('NeuroMynerva:neu3d-open').then((widget:IFFBOChildWidget) => {
+            widget.connect(mainWidget.outSignal);
+            mainWidget.connectChild(widget.outSignal);
+            if (VERBOSE) { console.log('[NM] Connected To [Neu3D]');}
+            nonexist_3d = true;
+            commands.notifyCommandChanged(CommandIDs.toggle3d);
+          });
+        }
+        else
+        {
+          _neu3d = Promise.resolve(void 0);
+        }
 
-    return widget.ready.then(() => {
-      if (VERBOSE) { console.log('MASTER cascade');}
+        if(_fetch['gfx'] != false)
+        {
+          // console.log('[MASTER] GFX: NEW');
+          _neurogfx = commands.execute('NeuroMynerva:neurogfx-open').then((widget:IFFBOChildWidget) => {
+            widget.connect(mainWidget.outSignal);
+            if (VERBOSE) { console.log(widget);}
+            nonexist_gfx = true;
+            commands.notifyCommandChanged(CommandIDs.toggleGfx);
+          });
+        }
+        else
+        {
+          _neurogfx = Promise.resolve(void 0);
+        }
 
-      if (!tracker.has(widget)) {
-        // Track the state of the widget for later restoration
-        if (VERBOSE) { console.log('!has widget');}
-        tracker.add(widget);
-      }
-      if (!widget.isAttached) {
-        // Attach the widget to the main work area if it's not there
-        if (VERBOSE) { console.log('!isAttached');}
-        shell.addToMainArea(widget);
-      } else {
-        // Refresh widget
-        if (VERBOSE) { console.log('else: update');}
-        widget.update();
-      }
-      // Activate the widget
-      if (VERBOSE) { console.log('fallthrough: activate');}
-      // widget.activate();
-      app.commands.execute('docmanager:open', {
-        path: widget.session.path,
-        kernel: widget.session.kernel.model
-      })
-      .then((_nbk) => {
-        // _nbk.ready.then(() => {
-        _nbk.revealed.then(() => {
-          widget.updateNotebook(_nbk);
-          // widget.activate();
-          app.shell.activateById(widget.id);
-          // commands.execute(CommandIDs.panelLayout);
-          if (VERBOSE) { 
-            console.log(document.activeElement);
-          }
+        if(_fetch['info'] != false)
+        {
+          // console.log('[MASTER] INFO: NEW');
+          _info = commands.execute('NeuroMynerva:info-open').then((widget:IFFBOChildWidget) => {
+            widget.connect(mainWidget.outSignal);
+            mainWidget.connectChild(widget.outSignal);
+            if (VERBOSE) { console.log('[NM] Connected To [Info]');}
+            window.ps = new PerfectScrollbar(".jp-FFBOLabInfo");
+            nonexist_info = true;
+            commands.notifyCommandChanged(CommandIDs.toggleInfo);
+          });
+        }
+        else
+        {
+          _info = Promise.resolve(void 0);
+        }
+
+        Promise.all([_neu3d, _neurogfx, _info, widget.ready]).then(() => {
+          widget.propogateSession();
+          commands.notifyCommandChanged(CommandIDs.toggle3d);
+          commands.notifyCommandChanged(CommandIDs.toggleGfx);
+          commands.notifyCommandChanged(CommandIDs.toggleInfo);
         });
-      })
-      .catch((error) => {
-        console.error('[NM] Failed to open notebook with given path: {' + widget.session.path + '}');
-        console.error(error);
-      });
-
-      // focus on master
-      widget.activate();
-      window.FFBOLabTracker = tracker;
-      window.FFBOLabWidget = widget;
-      window.JLabApp = app;
-      window.ps = new PerfectScrollbar(".jp-FFBOLabMaster");
-      return widget;
+    
+        return widget.ready.then(() => {
+          if (VERBOSE) { console.log('MASTER cascade');}
+    
+          if (!tracker.has(widget)) {
+            // Track the state of the widget for later restoration
+            if (VERBOSE) { console.log('!has widget');}
+            tracker.add(widget);
+          }
+          if (!widget.isAttached) {
+            // Attach the widget to the main work area if it's not there
+            if (VERBOSE) { console.log('!isAttached');}
+            shell.addToMainArea(widget);
+          } else {
+            // Refresh widget
+            if (VERBOSE) { console.log('else: update');}
+            widget.update();
+          }
+          // Activate the widget
+          if (VERBOSE) { console.log('fallthrough: activate');}
+          // widget.activate();
+          app.commands.execute('docmanager:open', {
+            path: widget.session.path,
+            kernel: widget.session.kernel.model
+          })
+          .then((_nbk) => {
+            // _nbk.ready.then(() => {
+            _nbk.revealed.then(() => {
+              widget.updateNotebook(_nbk);
+              // widget.activate();
+              app.shell.activateById(widget.id);
+              // commands.execute(CommandIDs.panelLayout);
+              if (VERBOSE) { 
+                console.log(document.activeElement);
+              }
+            });
+          })
+          .catch((error) => {
+            console.error('[NM] Failed to open notebook with given path: {' + widget.session.path + '}');
+            console.error(error);
+          });
+    
+          // focus on master
+          widget.activate();
+          window.FFBOLabTracker = tracker;
+          window.FFBOLabWidget = widget;
+          window.JLabApp = app;
+          window.ps = new PerfectScrollbar(".jp-FFBOLabMaster");
+          return widget;
+        });
+      }
+      else
+      {
+        let _neu3d = commands.execute('NeuroMynerva:neu3d-open').then((widget:IFFBOChildWidget) => {
+          widget.connect(mainWidget.outSignal);
+          mainWidget.connectChild(widget.outSignal);
+          if (VERBOSE) { console.log('[NM] Connected To [Neu3D]');}
+          nonexist_3d = true;
+          commands.notifyCommandChanged(CommandIDs.toggle3d);
+        });
+        let _neurogfx = commands.execute('NeuroMynerva:neurogfx-open').then((widget:IFFBOChildWidget) => {
+          widget.connect(mainWidget.outSignal);
+          if (VERBOSE) { console.log(widget);}
+          nonexist_gfx = true;
+          commands.notifyCommandChanged(CommandIDs.toggleGfx);
+        });
+        let _info = commands.execute('NeuroMynerva:info-open').then((widget:IFFBOChildWidget) => {
+          widget.connect(mainWidget.outSignal);
+          mainWidget.connectChild(widget.outSignal);
+          if (VERBOSE) { console.log('[NM] Connected To [Info]');}
+          window.ps = new PerfectScrollbar(".jp-FFBOLabInfo");
+          nonexist_info = true;
+          commands.notifyCommandChanged(CommandIDs.toggleInfo);
+        });
+    
+        Promise.all([_neu3d, _neurogfx, _info, widget.ready]).then(() => {
+          widget.propogateSession();
+        });
+    
+        return widget.ready.then(() => {
+          if (VERBOSE) { console.log('MASTER cascade');}
+    
+          if (!tracker.has(widget)) {
+            // Track the state of the widget for later restoration
+            if (VERBOSE) { console.log('!has widget');}
+            tracker.add(widget);
+          }
+          if (!widget.isAttached) {
+            // Attach the widget to the main work area if it's not there
+            if (VERBOSE) { console.log('!isAttached');}
+            shell.addToMainArea(widget);
+          } else {
+            // Refresh widget
+            if (VERBOSE) { console.log('else: update');}
+            widget.update();
+          }
+          // Activate the widget
+          if (VERBOSE) { console.log('fallthrough: activate');}
+          // widget.activate();
+          app.commands.execute('docmanager:open', {
+            path: widget.session.path,
+            kernel: widget.session.kernel.model
+          })
+          .then((_nbk) => {
+            // _nbk.ready.then(() => {
+            _nbk.revealed.then(() => {
+              widget.updateNotebook(_nbk);
+              // widget.activate();
+              app.shell.activateById(widget.id);
+              // commands.execute(CommandIDs.panelLayout);
+              if (VERBOSE) { 
+                console.log(document.activeElement);
+              }
+            });
+          })
+          .catch((error) => {
+            console.error('[NM] Failed to open notebook with given path: {' + widget.session.path + '}');
+            console.error(error);
+          });
+    
+          // focus on master
+          widget.activate();
+          window.FFBOLabTracker = tracker;
+          window.FFBOLabWidget = widget;
+          window.JLabApp = app;
+          window.ps = new PerfectScrollbar(".jp-FFBOLabMaster");
+          return widget;
+        });
+      }
     });
   }
 
@@ -337,7 +464,7 @@ function addCommands(
   commands.addCommand(CommandIDs.toggleInfo, {
     label: 'Info Panel Widget',
     execute: () => {
-      if(widget) {
+      if(widget && !widget.isDisposed) {
         let keys = Array.from((<any>restorer)._widgets.keys());
         if (VERBOSE) { console.log(keys);}
   
@@ -355,6 +482,7 @@ function addCommands(
           commands.execute('NeuroMynerva:info-open').then((child:IFFBOChildWidget) => {
             child.connect(widget.outSignal);
             widget.connectChild(child.outSignal);
+            widget.propogateSession();
             if (VERBOSE) { console.log('[NM] Connected To [Info]');}
             window.ps = new PerfectScrollbar(".jp-FFBOLabInfo");
           });
@@ -391,7 +519,7 @@ function addCommands(
   commands.addCommand(CommandIDs.toggle3d, {
     label: 'Neu3D Widget',
     execute: () => {
-      if(widget) {
+      if(widget && !widget.isDisposed) {
         let keys = Array.from((<any>restorer)._widgets.keys());
         if (VERBOSE) { console.log(keys);}
   
@@ -412,6 +540,7 @@ function addCommands(
           commands.execute('NeuroMynerva:neu3d-open').then((child:IFFBOChildWidget) => {
             child.connect(widget.outSignal);
             widget.connectChild(child.outSignal);
+            widget.propogateSession();
             if (VERBOSE) { console.log('[NM] Connected To [Neu3D]');}
           });
         }
@@ -447,7 +576,7 @@ function addCommands(
   commands.addCommand(CommandIDs.toggleGfx, {
     label: 'NeuroGFX Widget',
     execute: () => {
-      if(widget) {
+      if(widget && !widget.isDisposed) {
         let keys = Array.from((<any>restorer)._widgets.keys());
         if (VERBOSE) { console.log(keys);}
   
@@ -464,6 +593,7 @@ function addCommands(
         {
           commands.execute('NeuroMynerva:neurogfx-open').then((child:IFFBOChildWidget) => {
             child.connect(widget.outSignal);
+            widget.propogateSession();
         if (VERBOSE) { console.log(widget);}
           });
         }
@@ -500,38 +630,92 @@ function addCommands(
     label: 'Load Panel Layout',
     execute: () => {
       if (VERBOSE) { console.log('attempt restore');}
-      let startJSON = '{"main":{"dock":{"type":"split-area","orientation":"vertical","sizes":[0.5,0.5],"children":[{"type":"split-area","orientation":"horizontal","sizes":[0.5,0.5],"children":[{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva:NeuroMynerva"]}';
-      let endJSON = ',{"type":"split-area","orientation":"horizontal","sizes":[0.5,0.5],"children":[{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva-neu3d:NeuroMynerva-neu3d"]},{"type":"tab-area","currentIndex":0,"widgets":["NeuroMynerva-gfx:NeuroMynerva-gfx"]}]}]},"mode":"multiple-document","current":"notebook:Untitled33.ipynb"},"left":{"collapsed":true,"widgets":["filebrowser","running-sessions","command-palette","tab-manager"]},"right":{"collapsed":true,"widgets":["NeuroMynerva-info:NeuroMynerva-info"]}}';
 
-      let widgetArr = ['NeuroMynerva:NeuroMynerva', "NeuroMynerva-neu3d:NeuroMynerva-neu3d", "NeuroMynerva-info:NeuroMynerva-info", "NeuroMynerva-gfx:NeuroMynerva-gfx", "filebrowser","running-sessions","command-palette","tab-manager","extensionmanager.main-view"];
+      let rightArr = ["NeuroMynerva-info:NeuroMynerva-info"]
+      let leftArr = ["filebrowser","running-sessions","command-palette","tab-manager","extensionmanager.main-view"];
       if (VERBOSE) { console.log(window.FFBOLabrestorer._widgets);}
 
       let keys = Array.from(window.FFBOLabrestorer._widgets.keys());
       if (VERBOSE) { console.log(keys);}
 
-      let dehydrated = '';
+      const prefArr = [['NeuroMynerva:'],[],['NeuroMynerva-neu3d:'],['NeuroMynerva-gfx:']];
+      // let count = 0;
+      let widgetArr = [[],[],[],[]];
+      let extraIndex = 1;
+
       keys.forEach(function(value) {
-        if((widgetArr.indexOf(<string>value)) < 0)
+        if((leftArr.indexOf(<string>value)) < 0 && (rightArr.indexOf(<string>value)) < 0)
         {
-          if(dehydrated == '')
-          {
-            startJSON += ',{"type":"tab-area","currentIndex":0,"widgets":["' + <string>value + '"';
-            dehydrated = 'added';
-          }
-          else
-          {
-            startJSON += ',' + '"' + <string>value + '"';
+          let foundPreference = false;
+          prefArr.forEach(function(element, index) {
+            element.forEach(function(innerEle, innerIdx) {
+              if(!foundPreference && typeof innerEle == 'string' && (<string>value).startsWith(<string>innerEle))
+              {
+                // console.log(innerEle, index);
+                foundPreference = true;
+                widgetArr[index].push(value);
+              }
+            });
+          });
+
+          if(!foundPreference) {
+            widgetArr[extraIndex].push(value);
           }
         }
       });
-      
-      if(dehydrated != '')
+
+      let finalArr = [];
+      let currShift = [];
+      let len = widgetArr.length;
+
+      for(let i = 0; i < len; i++)
       {
-        startJSON += ']}]}';
+        currShift = widgetArr.shift();
+        if(currShift.length > 0)
+        {
+          finalArr.push(currShift);
+        }
+      }
+      let count = finalArr.length;
+      // console.log(finalArr);
+
+      let testMain = {dock: {}};
+      let testLayout = testMain.dock;
+
+      if(count == 1)
+      {
+        commands.execute(CommandIDs.tabLayout);
+        return;
+      }
+      else if(count == 2)
+      {
+        pushTabArea(pushTabArea(createHorizontal(testLayout, 2), finalArr[0]), finalArr[1]);
+      }
+      else if(count == 3)
+      {
+        // pushTabArea(pushTabArea(pushTabArea(createHorizontal(testLayout, 3), finalArr[0]), finalArr[1]), finalArr[2]);
+        let tempRoot = createHorizontal(testLayout, 2);
+        pushTabArea(pushTabArea(pushVertical(tempRoot, 2), finalArr[0]), finalArr[1]);
+        pushTabArea(tempRoot, finalArr[2]);
+      }
+      else if(count >= 4)
+      {
+        let tempRoot = createVertical(testLayout, 2);
+        pushTabArea(pushTabArea(pushHorizontal(tempRoot, 2), finalArr[0]), finalArr[1]);
+        pushTabArea(pushTabArea(pushHorizontal(tempRoot, 2), finalArr[2]), finalArr[3]);
+      }
+      else
+      {
+        console.error('RESTORE FAILED, NO WIDGETS FOUND!');
+        return;
       }
 
-      dehydrated = startJSON + endJSON;
-      const {main, left, right} = JSON.parse(dehydrated);
+      const left = JSON.parse('{"collapsed":true,"widgets":["filebrowser","running-sessions","command-palette","tab-manager"]}');
+      const right = JSON.parse('{"collapsed":true,"widgets":["NeuroMynerva-info:NeuroMynerva-info"]}');
+      const main = testMain;
+
+      // console.warn(testMain);
+      // const {main, left, right} = JSON.parse(dehydrated);
       const fresh = false;
       const mainArea = window.FFBOLabrestorer._rehydrateMainArea(main);
       const leftArea = window.FFBOLabrestorer._rehydrateSideArea(left);
@@ -667,6 +851,7 @@ function addCommands(
       });
   
       Promise.all([_neu3d, _neurogfx, _info, widget.ready]).then(() => {
+        state.save('ffbo:state', {info: true, gfx: true, neu3d: true});
         widget.propogateSession();
       });
   
@@ -763,4 +948,37 @@ function populatePalette(palette: ICommandPalette): void {
   [
     CommandIDs.closeAndShutdown
   ].forEach(command => { palette.addItem({ command, category }); });
+}
+
+function createVertical(root, num) {
+  let tempArr = Array(num);
+  tempArr.fill(1/num);
+  Object.assign(root, {type: 'split-area', orientation: 'vertical', sizes:tempArr, children: []});
+return root.children;
+}
+
+function createHorizontal(root, num) {
+  let tempArr = Array(num);
+  tempArr.fill(1/num);
+  Object.assign(root, {type: 'split-area', orientation: 'horizontal', sizes:tempArr, children: []});
+return root.children;
+}
+
+function pushVertical(root, num) {
+  let tempArr = Array(num);
+  tempArr.fill(1/num);
+  let tempReturn = root.push({type: 'split-area', orientation: 'vertical', sizes:tempArr, children: []});
+  return root[tempReturn -1].children;
+}
+
+function pushHorizontal(root, num) {
+  let tempArr = Array(num);
+  tempArr.fill(1/num);
+  let tempReturn = root.push({type: 'split-area', orientation: 'horizontal', sizes:tempArr, children: []});
+  return root[tempReturn -1].children;
+}
+
+function pushTabArea(root, widgetArr) {
+  root.push({type: 'tab-area', currentIndex: 0, widgets: widgetArr});
+  return root;
 }

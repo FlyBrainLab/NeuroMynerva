@@ -85,7 +85,7 @@ export class ConnTable extends Widget implements INeuroInfoSubWidget{
     // check if div exists in dom
     let tabulatorDiv = document.getElementById(divId);
     if (!tabulatorDiv){
-      console.error("[Info ConnTable] Parent Div does not exist yet.");
+      // console.error("[Info ConnTable] Parent Div does not exist yet.");
       return;
     }else{
       tabulatorDiv.innerHTML = "";
@@ -127,31 +127,12 @@ export class ConnTable extends Widget implements INeuroInfoSubWidget{
             console.log(e,cell);
             // var neuName = <string>cell.getData().name;
             if (!this.parentObj.isInWorkspace(cell.getValue()[0])) { // not in workspace
-              this.parentObj._userAction.emit({ action: 'model-add', content: {rid: cell.getValue()[0], data: { name: cell.getValue()[1] }} });
-
-              let code = [
-                "res = {}",
-                "res['verb'] = 'add'",
-                "res['query']= [{'action': {'method': {'query': {'uname': '" + cell.getValue()[1] + "'}}},",
-                                "'object': {'class': ['Neuron', 'Synapse']}}]",
-                "result = _FFBOLABClient.executeNAquery(res)",
-              ].join('\n');
-            
-              this.parentObj._userAction.emit({ action: 'execute', content: { code: code } });
-              // this._addRemoveSignal.emit({ action: 'addByUname', content: { name: neuName }});
+              this.parentObj.addByUname(cell.getValue()[1], cell.getValue()[0]);
               // $("#" + TABULATOR_ID).tabulator("redraw", true);
+              // this._addRemoveSignal.emit({ action: 'addByUname', content: { name: neuName }});
               return;
-            } else {  
-              this.parentObj._userAction.emit({ action: 'model-remove', content: {rid: cell.getValue()[0]} });
-              let code = [
-                "res = {}",
-                "res['verb'] = 'remove'",
-                "res['query']= [{'action': {'method': {'query': {'uname': '" + cell.getValue()[1] + "'}}},",
-                                "'object': {'class': ['Neuron', 'Synapse']}}]",
-                "result = _FFBOLABClient.executeNAquery(res)",
-              ].join('\n');
-
-              this.parentObj._userAction.emit({ action: 'execute', content: { code: code } });
+            } else {
+              this.parentObj.removeByUname(cell.getValue()[1], cell.getValue()[0]);
               // $("#" + TABULATOR_ID).tabulator("redraw", true);
               // this._addRemoveSignal.emit({ action: 'removeByUname', content: { name: neuName}});
               return;
@@ -207,7 +188,7 @@ export class ConnTable extends Widget implements INeuroInfoSubWidget{
   /**
    * Elements associated with this object
    */
-  private parentObj: any;
+  private parentObj: NeuroInfoWidget;
   readonly container : HTMLElement;
   private _addRemoveSignal = new Signal<this, object>(this);
 }

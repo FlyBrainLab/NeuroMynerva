@@ -209,3 +209,7 @@ body{
     bottom: 0 !important;
     overflow: hidden !important;
 }
+
+.color_inp_hide {
+    display: none !important;
+}

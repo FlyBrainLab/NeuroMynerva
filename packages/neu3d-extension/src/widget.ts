@@ -92,7 +92,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
             transitionIn: 'bounceInLeft',
             position: 'topLeft',
           });
-      }
+        }
       if (event.data.messageType == 'NLPquery') {
         neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.executeNLPquery(query="' + event.data.query +'"); _FFBOLabcomm.send(data=_FFBOLABres)' }});        
       }
@@ -176,6 +176,10 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
    */
   connect(inSignal: ISignal<IFFBOLabWidget, object>): void {
     // console.log('[NEU3D] Connected');
+    if(this._inSignal)
+    {
+      this._inSignal.disconnect(this._handleParentActions, this);
+    }
     inSignal.connect(this._handleParentActions, this);
     this._isConnected = true;
   }
@@ -189,6 +193,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
   _setupCallbacks():void {
     this.neu3D.on('click', (data: JSONObject) => {
       this._userAction.emit({action:'execute', content: { code: '_FFBOLABClient.getInfo("' + data.value + '")' } });
+      this._userAction.emit({action: 'forward', target: 'INFO-forward', content: {rid: data.value, color: this.neu3D.meshDict[data.value as string].color.getHexString()}});
     });
 
     // this.neu3D.on('pinned', (id: string) => {
@@ -286,6 +291,15 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
       //console.log("{NLP received}");
       this.onMasterMessage(value.data);
     }
+    else if(value.type == "NLP-forward")
+    {
+      // console.log('[NEU3D] Received FORWARD:');
+      // console.log(value.data);
+      if((value.data as any).command == "color")
+      {
+        this.neu3D.setColor((value.data as any).rid, (value.data as any).color);
+      }
+    }
     else if(value.type == "session") {
       let localPath = (<string>value.data).split(".ipynb")[0]
       this.title.label = '[Neu3D] ' + localPath;
@@ -308,8 +322,18 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
     delete (this.neu3D);
     super.dispose();
     this._isDisposed = true;
+    if(this._inSignal)
+    {
+      this._inSignal.disconnect(this._handleParentActions, this);
+    }
+    Signal.disconnectAll(this._userAction);
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:neu3d-open');
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-3d');
+    window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+      let newFetch = _fetch;
+      newFetch['neu3d'] = false;
+      window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+    });
     if (this._isDisposed) {
       console.log('[FFBOLab Neu3D] disposed');
     }
@@ -410,4 +434,5 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
   private _isInitialized = false;
   public neu3D: Neu3D;
   private _userAction = new Signal<this, object>(this);
+  private _inSignal: ISignal<IFFBOLabWidget, object>;
 };

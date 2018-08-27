@@ -46,6 +46,15 @@ function activate(
   commands.addCommand(CommandIDs.open, {
     label: 'Create Info',
     execute: () => {
+      window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+        let newFetch = _fetch;
+        if(!_fetch)
+        {
+          newFetch = {};
+        }
+        newFetch['info'] = true;
+        window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+      });
       if (!widget || widget.isDisposed) {
         // Create a new widget if one does not exist
         widget = new NeuroInfoWidget();

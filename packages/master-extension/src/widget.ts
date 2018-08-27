@@ -211,7 +211,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     this._isDisposed = true;
     
     // Signal.clearData(this);
-    // Signal.disconnectAll(this._outSignal);
+    Signal.disconnectAll(this._outSignal);
     // Signal.disconnectAll(this);
     
     if (this._isDisposed){
@@ -597,6 +597,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
   
   _createToolbar(): Toolbar<Widget> {
     let toolbar = new Toolbar();
+    toolbar.node.style.height = 'var(--jp-private-toolbar-height)';
     this._populateToolBar(toolbar);
     //toolbar.node.classList.add("jp-NotebookPanel-toolbar");
     return toolbar;
