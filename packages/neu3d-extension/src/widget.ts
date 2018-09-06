@@ -74,6 +74,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
     let neu3dwidget = this;
     window.addEventListener('message', function(event) {
       // console.log(event.data);
+      console.log("[NM Neu3D] Input:", event.data.data);
       if (event.data.messageType == 'text') {
         console.log("[NM Neu3D] message:", event.data.data);
       }
@@ -101,6 +102,9 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
       }
       if (event.data.messageType == 'NLPaddByUname') {
         neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname("' + event.data.uname +'");' }});        
+      }
+      if (event.data.messageType == 'NLPremoveByUname') {
+        neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname("' + event.data.uname +'", verb="remove");' }});        
       }
       if (event.data.messageType == 'Execute') {
         neu3dwidget._userAction.emit({action:'execute', content: { code: event.data.content }});        
