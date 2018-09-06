@@ -96,8 +96,14 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
       if (event.data.messageType == 'NLPquery') {
         neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.executeNLPquery(query="' + event.data.query +'"); _FFBOLabcomm.send(data=_FFBOLABres)' }});        
       }
-      if (event.data.messageType == 'NLPtag') {
+      if (event.data.messageType == 'NLPloadTag') {
         neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.loadTag("' + event.data.tag +'"); _FFBOLabcomm.send(data=_FFBOLABres)' }});        
+      }
+      if (event.data.messageType == 'NLPaddByUname') {
+        neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname("' + event.data.uname +'");' }});        
+      }
+      if (event.data.messageType == 'Execute') {
+        neu3dwidget._userAction.emit({action:'execute', content: { code: event.data.content }});        
       }
     });
 
