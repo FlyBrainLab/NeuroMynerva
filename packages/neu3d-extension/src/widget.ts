@@ -101,10 +101,13 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget{
         neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.loadTag("' + event.data.tag +'"); _FFBOLabcomm.send(data=_FFBOLABres)' }});        
       }
       if (event.data.messageType == 'NLPaddByUname') {
-        neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname("' + event.data.uname +'");' }});        
+        neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname +']);' }});        
       }
       if (event.data.messageType == 'NLPremoveByUname') {
-        neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname("' + event.data.uname +'", verb="remove");' }});        
+        neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname +'], verb="remove");' }});        
+      }
+      if (event.data.messageType == 'loadExperimentConfig') {
+        neu3dwidget._userAction.emit({action:'execute', content: { code: '_FFBOLABres = _FFBOLABClient.loadExperimentConfig("""' + event.data.config +'""");' }});        
       }
       if (event.data.messageType == 'Execute') {
         neu3dwidget._userAction.emit({action:'execute', content: { code: event.data.content }});        

@@ -677,7 +677,10 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       'simulate',
       this._createButton('fa-fw fa-play-circle', 'Simulate Circuit', 'jp-SearchBar-Simulate',
         () => {
-          this.session.kernel.requestExecute({ code: '_FFBOLABClient.sendExecuteReceiveResults("auto")' });
+          // this.session.kernel.requestExecute({ code: '_FFBOLABClient.sendExecuteReceiveResults("auto")' });
+          window.neurogfxWidget.contentWindow.postMessage({ messageType: "getExperimentConfig", data: {} }, '*');
+          this.session.kernel.requestExecute({ code: '_FFBOLABClient.initiateExperiments()' });
+          
           // window.neurogfxWidget.contentWindow.postMessage({ messageType: "simulate", data: {} }, '*');
           //this._outSignal.emit({type: "GFX", data: { messageType: "simulate", data: {} }});
         }
@@ -692,7 +695,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           {
             this.session.kernel.requestExecute({ code: '_FFBOLABClient.runLayouting("frontend", model="simple")' });
           }
-          //window.neurogfxWidget.contentWindow.postMessage({ messageType: "simulate", data: {} }, '*');
+          //window.neurogfxWidget.contentWindow.postMessage({ messageType: "getExperimentConfig", data: {} }, '*');
         }
       )
     );
