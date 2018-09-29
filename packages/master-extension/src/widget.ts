@@ -507,8 +507,10 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           '_FFBOLabcomm.send(data="FFBOLab comm established")',
           '_FFBOLabcomm.send(data="Generating FFBOLab Client...")',
           'import flybrainlab as fbl',
-          '_FFBOLABClient = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
+          '_FBLAdult = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
+          '_FFBOLABClient = _FBLAdult',
           'nm = _FFBOLABClient',
+          "_FBLLarva = fbl.Client(FFBOLabcomm = _FFBOLabcomm, url = u'wss://neuronlp.fruitflybrain.org:9020/ws')",
         ].join('\n');
         
         // console.log('before requestExecute');
