@@ -1,6 +1,7 @@
 import Neu3D = require('neu3d');
 import { Signal, ISignal } from '@phosphor/signaling';
 import { neu3DAdultJSON } from './adult_mesh';
+// import { neu3DLarvaJSON } from './larva_mesh';
 import { Widget } from '@phosphor/widgets';
 import { UUID } from '@phosphor/coreutils';
 import { Message } from '@phosphor/messaging';

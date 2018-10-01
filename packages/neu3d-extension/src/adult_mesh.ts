@@ -1,6 +1,7 @@
 /**
- * Exports only the mesh required to render adult NLP
+ * Exports only the mesh required to render adult NLP.
  */
+
 export var neu3DAdultJSON = {
     "al_l": {
         "filename": "https://cdn.rawgit.com/fruitflybrain/ffbo.lib/master/mesh/al_l.json",
