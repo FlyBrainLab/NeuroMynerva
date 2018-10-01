@@ -303,7 +303,9 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
         undefined,
         {  "globalCenter": { 'x': 0, 'y': -250, 'z': 0 }, 
            "enablePositionReset": true, 
-           "resetPosition": { 'x': 54655.7431422481, 'y': 39426.92341342993, 'z': -174729.78082825127 } },
+           "resetPosition": { 'x': 54655.7431422481, 'y': 39426.92341342993, 'z': -174729.78082825127 },
+           "upSign": -1.,
+        },
         false);
       // setup callbacks to expose canvas events to widget
       this._setupCallbacks();
