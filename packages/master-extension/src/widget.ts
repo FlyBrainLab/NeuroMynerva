@@ -476,7 +476,8 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
             '_FFBOLabcomm.send(data="Generating FFBOLab Client...")',
             // 'import flybrainlab as fbl',
             // '_FFBOLABClient = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
-            'nm = _FFBOLABClient',
+            'nm = []',
+            'nm.append(_FFBOLABClient)',
           ].join('\n');
           
           // console.log('before requestExecute');
@@ -509,8 +510,11 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           'import flybrainlab as fbl',
           '_FBLAdult = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
           '_FFBOLABClient = _FBLAdult',
-          'nm = _FFBOLABClient',
-          "_FBLLarva = fbl.Client(FFBOLabcomm = _FFBOLabcomm, url = u'wss://neuronlp.fruitflybrain.org:9020/ws')",
+          'nm = []',
+          'nm.append(_FBLAdult)',
+          "_FBLLarva = fbl.Client(FFBOLabcomm = _FFBOLabcomm, legacy = True, url = u'wss://neuronlp.fruitflybrain.org:9020/ws')",
+          'nm.append(_FBLLarva)',
+          'nm_client = 0'
         ].join('\n');
         
         // console.log('before requestExecute');
@@ -750,6 +754,18 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           }
           // window.FFBOLabsession.kernel.requestExecute({ code: '_FFBOLABClient.updateBackend(type = "SingleNeuron",data = """' + SingleNeuronStr + '""")' });
           this._outSignal.emit({type: "INFO", data: "save"});
+        }
+      )
+    );
+
+    toolbar.addItem(
+      'workspace-switch',
+      this._createButton('fa-fw exchange-alt', 'Switch Workspace', 'jp-SearchBar-Settings',
+        () => {
+          if(this.session.kernel)
+          {
+            this.session.kernel.requestExecute({ code: 'nm_client = 1 - nm_client; _FFBOLABClient = nm[nm_client]' });
+          }
         }
       )
     );
