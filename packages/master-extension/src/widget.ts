@@ -54,6 +54,7 @@ export
   * FFBOLabModel
   */
   readonly model: FFBOLabModel;
+  species: string;
 
   readonly session: IClientSession | null;
 
@@ -99,6 +100,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     super();
     this.node.tabIndex = -1;
     let model = new FFBOLabModel();
+    this.species = "adult";
     
     model.valueChanged.connect(this.onModelChanged, this);
     this.model = model;
@@ -762,9 +764,16 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       'workspace-switch',
       this._createButton('fa-fw exchange-alt', 'Switch Workspace', 'jp-SearchBar-Settings',
         () => {
-          if(this.session.kernel)
-          {
+          if (this.session.kernel) {
             this.session.kernel.requestExecute({ code: 'nm_client = 1 - nm_client; _FFBOLABClient = nm[nm_client]' });
+            if (this.species == "adult") {
+              this.species = "larva";
+              this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva'}}});
+            }
+            else {
+              this.species = "adult";
+              this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult'}}});
+            }
           }
         }
       )
@@ -840,6 +849,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
   private _outSignal = new Signal<this, object>(this);
 
   readonly model: FFBOLabModel;
+  public species: any;
   public session: ClientSession;
   private toolbar: Toolbar<Widget>;
 
