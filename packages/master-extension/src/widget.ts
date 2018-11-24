@@ -415,8 +415,8 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         this._outSignal.emit({type: "NLP", data: thisMsg});
 
         if ("info" in (thisMsg.data as any)) {
-          if ("success" in (thisMsg.data as any).info && (thisMsg.data as any).info.success == "Finished fetching all results from database" || (thisMsg.data as any).info.success == "Finished processing command")
-          // && (thisMsg.data as any).info == "Finished fetching all results from database"
+          //if ("success" in (thisMsg.data as any).info && (thisMsg.data as any).info.success == "Finished fetching all results from database" || (thisMsg.data as any).info.success == "Finished processing command")
+          if ("success" in (thisMsg.data as any).info && (thisMsg.data as any).info.success != "Fetching results from NeuroArch")
           {
             console.log("[MODEL] sent");
             this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
