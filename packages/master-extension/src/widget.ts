@@ -421,7 +421,6 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
             console.log("[MODEL] sent");
             this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
             this.JSONList.set(this.model.names);
-            console.log((thisMsg.data as any).info);
           }
         }
         //this._outSignal.emit({type: "GFX", data: thisMsg});

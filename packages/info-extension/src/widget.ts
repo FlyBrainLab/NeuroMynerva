@@ -169,7 +169,9 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
       }
       else
       {
-        this.onMasterMessage(value.data);
+        if(this.isVisible) {
+          this.onMasterMessage(value.data);
+        }
       }
     }
     else if(value.type == "INFO-forward")
@@ -178,7 +180,6 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
       this.summaryTable.updateColor((<any>value.data).rid, (<any>value.data).color);
     }
     else if(value.type == "model") {
-      console.log("[MODEL] received by {info}");
       this.onModelChanged((<any>value.data).sender, (<any>value.data).value);
     }
     else if(value.type == "session") {

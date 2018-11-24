@@ -113,7 +113,6 @@ export
       this.onMasterMessage(value.data);
     }
     else if(value.type == "model") {
-      console.log("[MODEL] received by {gfx}");
       this.onModelChanged((<any>value.data).sender, (<any>value.data).value);
     }
     else if(value.type == "session") {
