@@ -102,7 +102,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     let model = new FFBOLabModel();
     this.species = "adult";
     
-    model.valueChanged.connect(this.onModelChanged, this);
+    //model.valueChanged.connect(this.onModelChanged, this);
     this.model = model;
     this._sessionOpts = options;
 
@@ -276,6 +276,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
   * Change model displayed in JSON
   */
   onModelChanged(sender: FFBOLabModel, value: JSONObject): void {
+    console.log("[MODEL] sent from original onModelChanged THIS IS BAD");
     this._outSignal.emit({type: 'model', data: {sender: sender, value: value}});
     this.JSONList.set(this.model.names);
     return;
@@ -402,7 +403,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
   }
 
   private commMessageHandler(msg) {
-    console.log('['+msg.content.comm_id+'] '+msg.content.data);
+    console.log('['+msg.content.comm_id+'] ', msg.content.data);
     let thisMsg = msg.content.data as JSONObject;
     if (typeof thisMsg.widget == "undefined") {
       return;
@@ -412,6 +413,17 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       case "NLP": {
         if (VERBOSE) {console.log("{NLP emitted}");}
         this._outSignal.emit({type: "NLP", data: thisMsg});
+
+        if ("info" in (thisMsg.data as any)) {
+          if ("success" in (thisMsg.data as any).info && (thisMsg.data as any).info.success == "Finished fetching all results from database")
+          // && (thisMsg.data as any).info == "Finished fetching all results from database"
+          {
+            console.log("[MODEL] sent");
+            this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
+            this.JSONList.set(this.model.names);
+            console.log((thisMsg.data as any).info);
+          }
+        }
         //this._outSignal.emit({type: "GFX", data: thisMsg});
         break;
       }
@@ -762,7 +774,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.addItem(
       'workspace-switch',
-      this._createButton('fa-fw exchange-alt', 'Switch Workspace', 'jp-SearchBar-Settings',
+      this._createButton('fas fa-toggle-on', 'Switch Workspace', 'jp-SearchBar-Settings',
         () => {
           if (this.session.kernel) {
             this.session.kernel.requestExecute({ code: 'nm_client = 1 - nm_client; _FFBOLABClient = nm[nm_client]' });
