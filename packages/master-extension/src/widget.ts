@@ -441,6 +441,10 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         this.JSONList.set({ values: thisMsg.data as JSONObject });
         break;
       }
+      case "popout": {
+        this._makePopup(thisMsg.data as string);
+        break;
+      }
       default: {
         console.warn('message widget = ', thisMsg.widget, "not recognized!");
       }
@@ -847,6 +851,12 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     btn.node.classList.add('ffbolab-button');
     btn.node.appendChild(i);
     return btn;
+  }
+
+  _makePopup(contents: string) {
+    let newWindow = open('about:blank', 'example', 'width=300, height=300');
+    newWindow.document.head.insertAdjacentHTML('afterend','<base href="localhost:8888">')
+    newWindow.document.body.innerHTML = (contents);
   }
   /**
   * The Elements associated with the widget.
