@@ -12,7 +12,7 @@
   "author": "Tingkai Liu",
   "license": "ISC",
   "dependencies": {
-    "@jupyterlab/apputils": "^0.17.2",
+    "@jupyterlab/apputils": "^0.19.1",
     "@jupyterlab/coreutils": "^2.0.2",
     "@phosphor/signaling": "^1.2.2",
     "@phosphor/widgets": "^1.6.0",
