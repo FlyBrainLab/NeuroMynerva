@@ -66,6 +66,8 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
       ...this.title.dataset
     };
     
+    this.querySupressed = false;
+
     // current info panel object name
     this.name = undefined;
     this.data = undefined;
@@ -134,6 +136,10 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
    * @param msg 
    */
   onActivateRequest(msg: Message): void {
+    if (this.querySupressed) {
+      this.querySupressed = false;
+      this.onMasterMessage(this.lastQuery);
+    }
     super.onActivateRequest(msg);
     // this.node.focus();
   }
@@ -171,6 +177,10 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
       {
         if(this.isVisible) {
           this.onMasterMessage(value.data);
+        }
+        else {
+          this.querySupressed = true;
+          this.lastQuery = value.data;
         }
       }
     }
@@ -293,6 +303,10 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
    * Handle update requests for the widget.
    */
   onUpdateRequest(msg: Message): void {
+    if (this.querySupressed) {
+      this.querySupressed = false;
+      this.onMasterMessage(this.lastQuery);
+    }
     super.onUpdateRequest(msg);
   }
 
@@ -363,6 +377,8 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
   private model: FFBOLabModel;
   private name: string;
   private data: any;
+  private querySupressed: boolean;
+  private lastQuery: any;
   private _ready = new PromiseDelegate<void>();
   private _isDirty = false;
   private _isDisposed = false;
