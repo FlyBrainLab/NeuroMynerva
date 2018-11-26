@@ -442,7 +442,15 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         break;
       }
       case "popout": {
-        this._makePopup(thisMsg.data as string);
+        let tempHeight = NaN;
+        let tempWidth = NaN;
+        if ('height' in thisMsg) {
+          tempHeight = thisMsg.height as number;
+        }
+        if ('width' in thisMsg) {
+          tempWidth = thisMsg.width as number;
+        }
+        this._makePopup(thisMsg.data as string, tempWidth, tempHeight);
         break;
       }
       default: {
@@ -853,8 +861,14 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     return btn;
   }
 
-  _makePopup(contents: string) {
-    let newWindow = open('about:blank', 'example', 'width=300, height=300');
+  _makePopup(contents: string, width, height) {
+    if (isNaN(width)) {
+      width = 300;
+    }
+    if (isNaN(height)) {
+      height = 300;
+    }
+    let newWindow = open('about:blank', 'example', 'width='+width+', height='+height);
     newWindow.document.head.insertAdjacentHTML('afterend','<base href="localhost:8888">')
     newWindow.document.body.innerHTML = (contents);
   }
