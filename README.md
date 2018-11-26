@@ -22,7 +22,7 @@ You can just paste the following to your terminal.
 ```bash
 conda create -n neuromynerva python=3.6 nodejs jupyterlab cookiecutter git -c conda-forge -y
 activate neuromynerva
-pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py networkx pypiwin32
+pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py networkx pypiwin32 seaborn
 cd ./FFBOLab/ffbolabNeuroballad
 python setup.py develop
 cd ../flybrainlab
