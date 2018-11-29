@@ -693,7 +693,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.insertItem(0,
       'compile',
-      this._createButton('fa-fw fa-code', 'Compile Circuit', 'jp-SearchBar-Compile',
+      this._createButton('fas fa-code', 'Compile Circuit', 'jp-SearchBar-Compile',
         () => {
           if (VERBOSE) { console.log('[NM Master] compiling')}
           if(this.session.kernel)
@@ -706,7 +706,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.addItem(
       'simulate',
-      this._createButton('fa-fw fa-play-circle', 'Simulate Circuit', 'jp-SearchBar-Simulate',
+      this._createButton('fas fa-play-circle', 'Simulate Circuit', 'jp-SearchBar-Simulate',
         () => {
           // this.session.kernel.requestExecute({ code: '_FFBOLABClient.sendExecuteReceiveResults("auto")' });
           window.neurogfxWidget.contentWindow.postMessage({ messageType: "getExperimentConfig", data: {} }, '*');
@@ -720,7 +720,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.addItem(
       'layoutview',
-      this._createButton('fa-fw fa-share-alt-square', 'Layout Circuit without Synapses', 'jp-SearchBar-Layout',
+      this._createButton('fas fa-share-alt-square', 'Layout Circuit without Synapses', 'jp-SearchBar-Layout',
         () => {
           if(this.session.kernel)
           {
@@ -733,7 +733,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.addItem(
       'layout',
-      this._createButton('fa-fw fa-share-alt', 'Layout Circuit', 'jp-SearchBar-Layout',
+      this._createButton('fas fa-share-alt', 'Layout Circuit', 'jp-SearchBar-Layout',
         () => {
           if(this.session.kernel)
           {
@@ -746,7 +746,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.addItem(
       'plotter',
-      this._createButton('fa-fw fa-chart-area', 'Toggle Plotter', 'jp-SearchBar-Plotter',
+      this._createButton('fas fa-chart-area', 'Toggle Plotter', 'jp-SearchBar-Plotter',
         () => {
           //window.neurogfxWidget.contentWindow.postMessage({ messageType: "togglePlotter", data: {} }, '*');
           this._outSignal.emit({type: "GFX", data: { messageType: "togglePlotter", data: {} }});
@@ -756,7 +756,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.addItem(
       'settings',
-      this._createButton('fa-fw fa-list-alt', 'Experiment Settings', 'jp-SearchBar-Settings',
+      this._createButton('fas fa-list-alt', 'Experiment Settings', 'jp-SearchBar-Settings',
         () => {
           if(this.session.kernel)
           {
@@ -768,7 +768,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
     toolbar.addItem(
       'syncer',
-      this._createButton('fa-fw fa-pen-square', 'Sync Variable', 'jp-SearchBar-Sync',
+      this._createButton('fas fa-pen-square', 'Sync Variable', 'jp-SearchBar-Sync',
         () => {
           // TODO: SingleNeuronStr handling
           var wholeCircuitStr = JSON.stringify(window.FFBOLabWidget.JSONList.get());
@@ -849,15 +849,16 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
   _createButton(icon: string, tooltip: string, className: string, func: () => void): ToolbarButton {
     let btn = new ToolbarButton({
+      iconClassName: icon,
       className: className,
       onClick: func,
       tooltip: tooltip
-    });
+    } as any);
 
-    let i = document.createElement('i');
-    i.classList.add('fa', ...icon.split(' '));
-    btn.node.classList.add('ffbolab-button');
-    btn.node.appendChild(i);
+    // let i = document.createElement('i');
+    // i.classList.add('fa', ...icon.split(' '));
+    // btn.node.classList.add('ffbolab-button');
+    // btn.node.appendChild(i);
     return btn;
   }
 
