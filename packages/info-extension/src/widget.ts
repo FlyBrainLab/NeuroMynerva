@@ -228,6 +228,7 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
   onModelChanged(sender: FFBOLabModel, value: JSONObject): void {
     this.model = sender;
     this.connTable.redraw();
+    this.redraw();
     return; 
   }
 
