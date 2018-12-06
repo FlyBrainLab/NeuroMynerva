@@ -101,6 +101,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     this.node.tabIndex = -1;
     let model = new FFBOLabModel();
     this.species = "adult";
+    this.workspaceData = {adult: {model: '', data: ''}, larva: {model: '', data: ''}};
     
     //model.valueChanged.connect(this.onModelChanged, this);
     this.model = model;
@@ -381,6 +382,18 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         this._outSignal.emit({type: value.target, data: value.content});
         break;
       }
+      case 'state':{
+        console.log('[STATE?]');
+        console.log(<any>value.content);
+        console.log((<any>value.content).species == 'larva');
+        if((<any>value.content).species == 'larva') {
+          this.workspaceData.larva.data = (<any>value.content).data;
+        }
+        else {
+          this.workspaceData.adult.data = (<any>value.content).data;
+        }
+        break;
+      }
       default : {
         console.warn('action [', value.action, '] not recognized' )
         break;
@@ -416,7 +429,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
         if ("info" in (thisMsg.data as any)) {
           //if ("success" in (thisMsg.data as any).info && (thisMsg.data as any).info.success == "Finished fetching all results from database" || (thisMsg.data as any).info.success == "Finished processing command")
-          if ("success" in (thisMsg.data as any).info && (thisMsg.data as any).info.success != "Fetching results from NeuroArch")
+          if (("success" in (thisMsg.data as any).info && (thisMsg.data as any).info.success != "Fetching results from NeuroArch") || "timeout" in (thisMsg.data as any).info)
           {
             console.log("[MODEL] sent");
             this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
@@ -451,6 +464,40 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           tempWidth = thisMsg.width as number;
         }
         this._makePopup(thisMsg.data as string, tempWidth, tempHeight);
+        break;
+      }
+      case 'import':{
+        console.log('[IMPORT]');
+        console.log(thisMsg);
+        if (thisMsg.species == "larva") {
+          this.session.kernel.requestExecute({ code: 'nm_client = 1; _FFBOLABClient = nm[1]' });
+          this.species = "larva";
+          if(thisMsg.data != '')
+          {
+            this.model.value = thisMsg.model as any;
+            this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva', state: thisMsg.data}}});
+          }
+          else
+          {
+            this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva'}}});
+          }
+        }
+        else {
+          this.session.kernel.requestExecute({ code: 'nm_client = 0; _FFBOLABClient = nm[0]' });
+          this.species = "adult";
+          if(thisMsg.data != '')
+          {
+            this.model.value = thisMsg.model as any;
+            this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult', state: thisMsg.data}}});
+          }
+          else
+          {
+            this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult'}}});
+          }
+        }
+        console.log("[MODEL] sent [switched]");
+        this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
+        this.JSONList.set(this.model.names);
         break;
       }
       default: {
@@ -494,15 +541,29 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           };
 
           // TODO Python Safeguard: dup comm
+          // let code = [
+          //   // 'from ipykernel.comm import Comm',
+          //   // '_FFBOLabcomm = Comm(target_name="' + this._commId + '")',
+          //   '_FFBOLabcomm.send(data="FFBOLab comm established")',
+          //   '_FFBOLabcomm.send(data="Generating FFBOLab Client...")',
+          //   // 'import flybrainlab as fbl',
+          //   // '_FFBOLABClient = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
+          //   'nm = []',
+          //   'nm.append(_FFBOLABClient)',
+          // ].join('\n');
           let code = [
             // 'from ipykernel.comm import Comm',
             // '_FFBOLabcomm = Comm(target_name="' + this._commId + '")',
             '_FFBOLabcomm.send(data="FFBOLab comm established")',
             '_FFBOLabcomm.send(data="Generating FFBOLab Client...")',
             // 'import flybrainlab as fbl',
-            // '_FFBOLABClient = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
+            '_FBLAdult = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)',
+            // '_FFBOLABClient = _FBLAdult',
             'nm = []',
-            'nm.append(_FFBOLABClient)',
+            'nm.append(_FBLAdult)',
+            "_FBLLarva = fbl.Client(FFBOLabcomm = _FFBOLabcomm, legacy = True, url = u'wss://neuronlp.fruitflybrain.org:9020/ws')",
+            'nm.append(_FBLLarva)',
+            'nm_client = 0'
           ].join('\n');
           
           // console.log('before requestExecute');
@@ -790,13 +851,34 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           if (this.session.kernel) {
             this.session.kernel.requestExecute({ code: 'nm_client = 1 - nm_client; _FFBOLABClient = nm[nm_client]' });
             if (this.species == "adult") {
+              this.workspaceData.adult.model = JSON.parse(JSON.stringify(this.model.value));
               this.species = "larva";
-              this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva'}}});
+              if(this.workspaceData.larva.data != '')
+              {
+                this.model.value = this.workspaceData.larva.model;
+                this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva', state: this.workspaceData.larva.data}}});
+              }
+              else
+              {
+                this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva'}}});
+              }
             }
             else {
+              this.workspaceData.larva.model = JSON.parse(JSON.stringify(this.model.value));
               this.species = "adult";
-              this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult'}}});
+              if(this.workspaceData.adult.data != '')
+              {
+                this.model.value = this.workspaceData.adult.model;
+                this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult', state: this.workspaceData.adult.data}}});
+              }
+              else
+              {
+                this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult'}}});
+              }
             }
+            console.log("[MODEL] sent [switched]");
+            this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
+            this.JSONList.set(this.model.names);
           }
         }
       )
@@ -886,6 +968,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
 
   readonly model: FFBOLabModel;
   public species: any;
+  private workspaceData: any;
   public session: ClientSession;
   private toolbar: Toolbar<Widget>;
 

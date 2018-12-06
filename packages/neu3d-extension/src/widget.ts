@@ -65,6 +65,9 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
     fullscreenToggle.appendChild(toggleIcon);
     this.node.appendChild(fullscreenToggle);
 
+    // this.n3dlog = {larva: {}, adult: {}};
+    this.n3dlog = [];
+
     // let neu3Ddiv = document.createElement('div');
     // neu3Ddiv.id = NEU3D_ID;
     // neu3Ddiv.style.width = "100%";
@@ -275,6 +278,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
         case "Data": {
           let rawData = msg.data.data
           if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
+            this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
             let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
             this.content = neu3Ddata;
           }
@@ -284,7 +288,18 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
           this.onWorkspaceSwitch(msg.data);
           break;
         }
+        case "statePush": {
+          let tempstate = msg.data;
+          tempstate.json.forEach((element) => {
+            this.n3dlog.push(JSON.parse(JSON.stringify(element)));
+            // console.log(JSON.parse(JSON.stringify(element)));
+            let neu3Ddata = { ffbo_json: JSON.parse(JSON.stringify(element)), type: 'morphology_json' };
+          });
+          break;
+        }
         default: {
+          console.log('[Neu3D RESET]');
+          this.n3dlog = [];
           this._receiveCommand(msg.data);
           break;
         }
@@ -295,9 +310,20 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
   }
 
   onWorkspaceSwitch(msg: any): void {
+    console.log("[Neu3d RESET]");
+    console.log(this.neu3D.export_state());
+    console.log(this.content);
+    if(msg['species'] == 'larva') {
+      this._userAction.emit({ action: 'state', content: { origin: 'NLP', species: 'adult', data: {state: this.neu3D.export_state(), json: this.n3dlog }} });
+    }
+    else {
+      this._userAction.emit({ action: 'state', content: { origin: 'NLP', species: 'larva', data: {state: this.neu3D.export_state(), json: this.n3dlog }} });
+    }
+    this.n3dlog = [];
     this.neu3D.reset(true);
     delete (this.neu3D);
     let neu3Ddiv = this._domCheckAndAdd();
+    let addPromises = [];
     if (msg['species'] == 'larva') {
       this.neu3D = new Neu3D(neu3Ddiv,
         undefined,
@@ -311,11 +337,11 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
       this._setupCallbacks();
       var currentLarvaJSON = JSON.parse(JSON.stringify(neu3DLarvaJSON));
       // add initial mesh, default to adult mesh
-      this.neu3D.addJson({
+      addPromises.push(this.neu3D.addJson({
         // ffbo_json: neu3DAdultJSON,
         ffbo_json: currentLarvaJSON,
         showAfterLoadAll: true
-      });
+      }));
 
     }
     else {
@@ -330,13 +356,35 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
     
       var currentAdultJSON = JSON.parse(JSON.stringify(neu3DAdultJSON));
       // add initial mesh, default to adult mesh
-      this.neu3D.addJson({
+      addPromises.push(this.neu3D.addJson({
         // ffbo_json: neu3DAdultJSON,
         ffbo_json: currentAdultJSON,
         showAfterLoadAll: true
-      });
+      }));
     }
-
+    if(msg['state'] != undefined)
+    {
+      let tempstate = msg['state'];
+      console.log('[Neu3d IMPORT]');
+      console.log('importing data');
+      console.log(tempstate.json);
+      tempstate.json.forEach((element) => {
+        this.n3dlog.push(JSON.parse(JSON.stringify(element)));
+        // console.log(JSON.parse(JSON.stringify(element)));
+        let neu3Ddata = { ffbo_json: JSON.parse(JSON.stringify(element)), type: 'morphology_json' };
+        addPromises.push(this.neu3D.addJson(neu3Ddata));
+      });
+      if (tempstate.state != '')
+      {
+        console.log('importing state');
+        console.log(tempstate.state);
+        // THIS DOESNT WORK YET?
+        Promise.all(addPromises).then(() => {
+          console.log(addPromises);
+          this.neu3D.import_state(tempstate.state);
+        });
+      }
+    }
 
   }
 
@@ -361,7 +409,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
    */
   private _handleParentActions(sender: IFFBOLabWidget, value: JSONObject): void {
     if (value.type == "NLP") {
-      //console.log("{NLP received}");
+      console.log("{NLP received}");
       console.log(value);
       this.onMasterMessage(value.data);
     }
@@ -502,6 +550,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
   private _isConnected = false;
   private _isInitialized = false;
   public neu3D: Neu3D;
+  private n3dlog: any;
   private _userAction = new Signal<this, object>(this);
   private _inSignal: ISignal<IFFBOLabWidget, object>;
 };
