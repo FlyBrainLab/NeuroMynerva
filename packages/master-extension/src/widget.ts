@@ -498,6 +498,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         console.log("[MODEL] sent [switched]");
         this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
         this.JSONList.set(this.model.names);
+        this.workspaceData = {adult: {model: '', data: ''}, larva: {model: '', data: ''}};
         break;
       }
       default: {
