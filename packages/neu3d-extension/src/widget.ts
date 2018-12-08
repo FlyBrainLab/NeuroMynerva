@@ -297,6 +297,10 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
           });
           break;
         }
+        case "save": {
+          this._userAction.emit({ action: 'save', content: { origin: 'NLP', data: {state: this.neu3D.export_state(), json: this.n3dlog }} });
+          break;
+        }
         default: {
           console.log('[Neu3D RESET]');
           this.n3dlog = [];

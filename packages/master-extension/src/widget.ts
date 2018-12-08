@@ -394,6 +394,15 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         }
         break;
       }
+      case 'save':{
+        let savedata = {model: '', species: '', json: ''};
+        savedata.model = JSON.parse(JSON.stringify(this.model.value));
+        savedata.species = this.species;
+        savedata.json = (<any>value.content).data.json;
+        this.session.kernel.requestExecute({code: "import json\nlateststate = json.loads('"+JSON.stringify(savedata)+"')"});
+        console.log(savedata);
+        break;
+      }
       default : {
         console.warn('action [', value.action, '] not recognized' )
         break;
@@ -882,6 +891,13 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
             this.JSONList.set(this.model.names);
           }
         }
+      )
+    );
+
+    toolbar.addItem(
+      'workspace-save',
+      this._createButton('fas fa-save', 'Save Workspace', 'jp-SearchBar-Settings',
+        () => {this._outSignal.emit({type: "NLP", data: {messageType: 'save', data: {}}});}
       )
     );
 
