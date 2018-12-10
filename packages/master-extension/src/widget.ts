@@ -400,6 +400,14 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         savedata.species = this.species;
         savedata.json = (<any>value.content).data.json;
         this.session.kernel.requestExecute({code: "import json\nlateststate = json.loads('"+JSON.stringify(savedata)+"')"});
+        // this.session.kernel.requestExecute({code: "_FFBOLabcomm.send({'data': '<p>"+JSON.stringify(savedata)+"</p>', 'messageType':'HTML', 'widget':'popout', 'width':500})"});
+
+        var outBlob = new Blob([JSON.stringify(savedata)], {type: 'application/json'});
+        var dlLink = document.createElement('a');
+        dlLink.download = this.session.path.split('.')[0] + '.fbl';
+        dlLink.href = window.URL.createObjectURL(outBlob);
+        dlLink.dataset.downloadurl = ['text/plain', dlLink.download, dlLink.href].join(':');
+        dlLink.click();
         console.log(savedata);
         break;
       }
