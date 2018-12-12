@@ -105,6 +105,23 @@ body{
     opacity: 0.8;
 }
 
+.NM-filein {
+    position: absolute;
+    top: 30px;
+    right: 5px;
+    /* width: 100px;
+    height: 100px; */
+    border-radius:5px;
+    background-color:white;
+    border:none;
+    z-index: 9999;
+    opacity: 0.5;    
+}
+
+.NM-filein:hover {
+    opacity: 0.8;
+}
+
 .jp-FFBOLabMaster li a {
     display: block;
     color: black;

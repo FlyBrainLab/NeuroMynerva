@@ -103,6 +103,72 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     this.species = "adult";
     this.workspaceData = {adult: {model: '', data: ''}, larva: {model: '', data: ''}};
     
+    let filefloat = document.createElement('div');
+    let divfloat1 = document.createElement('div');
+    let divfloat2 = document.createElement('div');
+    let filein = document.createElement('input');
+    let fileaccept = document.createElement('button');
+    fileaccept.id = 'fileSubmit';
+    fileaccept.innerText = "Submit";
+    filein.id = 'fileForUpload';
+    filefloat.className = 'NM-filein';
+    filein.type = "file";
+    filein.accept = ".fbl";
+    fileaccept.onclick = (e) => {
+      var file = (<any>document.getElementById("fileForUpload")).files[0];
+      console.log('INFILE: ' + file.name);
+      if (file) {
+          var reader = new FileReader();
+          reader.readAsText(file, "UTF-8");
+          reader.onload = (evt) => {
+              console.log(JSON.parse((<any>evt.target).result));
+              var thisMsg = JSON.parse((<any>evt.target).result);
+              console.log('[IMPORT from file]');
+              console.log(thisMsg);
+              if (thisMsg.species == "larva") {
+                this.session.kernel.requestExecute({ code: 'nm_client = 1; _FFBOLABClient = nm[1]' });
+                this.species = "larva";
+                if(thisMsg.data != '')
+                {
+                  this.model.value = thisMsg.model as any;
+                  this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva', state: {state: '', json: thisMsg.json}}}});
+                }
+                else
+                {
+                  this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'larva'}}});
+                }
+              }
+              else {
+                this.session.kernel.requestExecute({ code: 'nm_client = 0; _FFBOLABClient = nm[0]' });
+                this.species = "adult";
+                if(thisMsg.data != '')
+                {
+                  this.model.value = thisMsg.model as any;
+                  this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult', state: {state: '', json: thisMsg.json}}}});
+                }
+                else
+                {
+                  this._outSignal.emit({type: "NLP", data: {messageType: 'switchWorkspace', data: {species: 'adult'}}});
+                }
+              }
+              console.log("[MODEL] sent [switched]");
+              this._outSignal.emit({type: 'model', data: {sender: this.model, value: this.model.value}});
+              this.JSONList.set(this.model.names);
+              this.workspaceData = {adult: {model: '', data: ''}, larva: {model: '', data: ''}};
+              this.node.removeChild(filefloat);
+          }
+          reader.onerror = function (evt) {
+              console.log("error reading file");
+              return;
+          }
+      }
+    };
+    divfloat1.appendChild(filein);
+    divfloat2.appendChild(fileaccept);
+    filefloat.appendChild(divfloat1);
+    filefloat.appendChild(divfloat2);
+    this.node.appendChild(filefloat);
+
     //model.valueChanged.connect(this.onModelChanged, this);
     this.model = model;
     this._sessionOpts = options;
