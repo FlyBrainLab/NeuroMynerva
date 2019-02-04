@@ -31,6 +31,8 @@ const DEFAULT_SESSION_OPTS ={
   }
 };
 
+var filefloat = document.createElement('div');
+
 
 export
   type IFFBOChildType = "Neu3D" | "GFX";
@@ -85,7 +87,7 @@ export
 
 
 /**
-* An FFBOLab Master Widge
+* An FFBOLab Master Widget
 */
 export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
   
@@ -103,7 +105,6 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     this.species = "adult";
     this.workspaceData = {adult: {model: '', data: ''}, larva: {model: '', data: ''}};
     
-    let filefloat = document.createElement('div');
     let divfloat1 = document.createElement('div');
     let divfloat2 = document.createElement('div');
     let filein = document.createElement('input');
@@ -163,6 +164,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
           }
       }
     };
+    divfloat2.style.cssFloat = 'right';
     divfloat1.appendChild(filein);
     divfloat2.appendChild(fileaccept);
     filefloat.appendChild(divfloat1);
@@ -972,6 +974,13 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
       'workspace-save',
       this._createButton('fas fa-save', 'Save Workspace', 'jp-SearchBar-Settings',
         () => {this._outSignal.emit({type: "NLP", data: {messageType: 'save', data: {}}});}
+      )
+    );
+
+    toolbar.addItem(
+      'workspace-load',
+      this._createButton('fas fa-upload', 'Load Workspace', 'jp-SearchBar-Settings',
+        () => {this.node.appendChild(filefloat);}
       )
     );
 
