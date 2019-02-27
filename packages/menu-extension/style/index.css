@@ -1,0 +1,61 @@
+* {
+    box-sizing: border-box;
+}
+
+h1{
+    text-align: center;
+}
+
+.container {
+    padding: 16px;
+    background-color: white;
+    overflow:auto;
+}
+
+input[type=text], input[type=password], select{
+    width: 100%;
+    padding: 15px;
+    margin: 5px 0 22px 0;
+    display: inline-block;
+    border: none;
+    background: #f1f1f1;
+}
+
+select
+{
+    color: dimgray;
+}
+option
+{
+    color: #000;
+}
+option:first-child
+{
+    color: dimgray;
+}
+
+input[type=text]:focus, input[type=password]:focus, select:focus{
+    outline: none !important;
+    border: 1px solid #FF8C00;
+}
+  
+hr {
+    border: 1px solid #f1f1f1;
+    margin-bottom: 25px;
+}
+
+.savebtn {
+    background-color: #FF8C00;
+    color: white;
+    padding: 16px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    opacity: 0.9;
+    font-family: 'Rajdhani', sans-serif;
+}
+  
+.savebtn:hover {
+    opacity: 1;
+}
