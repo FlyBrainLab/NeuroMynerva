@@ -106,7 +106,7 @@ body{
 }
 
 .NM-filein {
-    position: absolute;
+    /* position: absolute; */
     top: 30px;
     right: 5px;
     /* width: 100px;
@@ -115,7 +115,8 @@ body{
     background-color:white;
     border:none;
     z-index: 9999;
-    opacity: 0.5;    
+    opacity: 0.5;   
+    margin: auto; 
 }
 
 .NM-filein:hover {

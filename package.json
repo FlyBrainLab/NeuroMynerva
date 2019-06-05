@@ -15,6 +15,6 @@
     "packages/*"
   ],
   "dependencies": {
-    "neu3d": "^1.0.8"
+    "neu3d": "^1.0.12"
   }
 }

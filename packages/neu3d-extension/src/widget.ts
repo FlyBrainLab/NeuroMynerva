@@ -282,6 +282,11 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
             let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
             this.content = neu3Ddata;
           }
+          else {
+            this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
+            let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
+            this.content = neu3Ddata;
+          }
           break;
         }
         case "switchWorkspace": {
