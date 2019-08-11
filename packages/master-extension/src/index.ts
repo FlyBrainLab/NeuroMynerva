@@ -1,5 +1,5 @@
 import { JupyterLab, JupyterLabPlugin, ILayoutRestorer } from '@jupyterlab/application';
-import { ICommandPalette, InstanceTracker } from '@jupyterlab/apputils';
+import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
 import { ReadonlyJSONObject, JSONObject, JSONValue } from '@phosphor/coreutils';
 import { Widget, Menu } from '@phosphor/widgets';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -51,7 +51,7 @@ declare global {
 /**
  * Initialization data for FFBOLab Plugin
  */
-const tracker: JupyterLabPlugin<InstanceTracker<FFBOLabWidget>> = {
+const tracker: JupyterLabPlugin<WidgetTracker<FFBOLabWidget>> = {
   activate,
   id: '@jupyterlab/FFBOLab-extension:plugin',
   autoStart: true,
@@ -111,10 +111,10 @@ function activate(app: JupyterLab,
   menu: IMainMenu,
   state: IStateDB,
   launcher: ILauncher
-): InstanceTracker<FFBOLabWidget> {
+): WidgetTracker<FFBOLabWidget> {
   if (VERBOSE) { console.log('[NM Master] NeuroMynerva extension activated!');}
   const namespace = 'NeuroMynerva';
-  let tracker = new InstanceTracker<FFBOLabWidget>({ namespace });
+  let tracker = new WidgetTracker<FFBOLabWidget>({ namespace });
   const services = app.serviceManager;
   let widget: FFBOLabWidget;
 
@@ -190,7 +190,7 @@ function addCommands(
   widget: FFBOLabWidget,
   app: JupyterLab,
   services: ServiceManager,
-  tracker: InstanceTracker<FFBOLabWidget>,
+  tracker: WidgetTracker<FFBOLabWidget>,
   restorer: ILayoutRestorer,
   launcher: ILauncher,
   state: IStateDB,

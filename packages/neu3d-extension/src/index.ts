@@ -1,5 +1,5 @@
 import { JupyterLab, JupyterLabPlugin, ILayoutRestorer } from '@jupyterlab/application';
-import { ICommandPalette, InstanceTracker } from '@jupyterlab/apputils';
+import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
 import { Neu3DWidget } from './widget'
 import { JSONExt } from '@phosphor/coreutils';
 
@@ -7,7 +7,7 @@ const VERBOSE = false;
 /**
  * Initialization data for FFBOLab Plugin
  */
-const tracker: JupyterLabPlugin<InstanceTracker<Neu3DWidget>> = {
+const tracker: JupyterLabPlugin<WidgetTracker<Neu3DWidget>> = {
   activate,
   id: '@jupyterlab-neuro-mynerva/neu3d:plugin',
   autoStart: true,
@@ -31,10 +31,10 @@ function activate(
   app: JupyterLab,
   palette: ICommandPalette,
   restorer: ILayoutRestorer
-): InstanceTracker<Neu3DWidget> {
+): WidgetTracker<Neu3DWidget> {
   if (VERBOSE) {console.log('[NM Neu3d] NeuroMynerva (neu3d) extension activated!');}
   const namespace = 'NeuroMynerva-neu3d';
-  let tracker = new InstanceTracker<Neu3DWidget>({ namespace });
+  let tracker = new WidgetTracker<Neu3DWidget>({ namespace });
   const { commands, shell } = app;
   let widget: Neu3DWidget;
 
@@ -42,14 +42,14 @@ function activate(
   commands.addCommand(CommandIDs.open, {
     label: 'Create Neu3D',
     execute: () => {
-      window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+      window.FFBOLabrestorer.fetch('ffbo:state').then(_fetch => {
         let newFetch = _fetch;
         if(!_fetch)
         {
           newFetch = {};
         }
         newFetch['neu3d'] = true;
-        window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+        window.FFBOLabrestorer.save('ffbo:state', newFetch);
       });
       if (VERBOSE) {console.log('[NM NEU3D] OPEN call');}
       if (!widget || widget.isDisposed) {
@@ -63,7 +63,7 @@ function activate(
       }
       if (!widget.isAttached) {
         // Attach the widget to the main work area if it's not there
-        shell.addToMainArea(widget, { mode: 'split-bottom'});
+        app.shell._addToMainArea(widget, { mode: 'split-bottom' });
       } else {
         // Refresh widget
         widget.update();

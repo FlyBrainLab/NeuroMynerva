@@ -79,7 +79,7 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
     let neu3dwidget = this;
     window.addEventListener('message', function (event) {
       // console.log(event.data);
-      console.log("[NM Neu3D] Input:", event.data.data);
+      console.log("[NM Neu3D] Input:", event.data);
       if (event.data.messageType == 'text') {
         console.log("[NM Neu3D] message:", event.data.data);
       }
@@ -457,10 +457,10 @@ export class Neu3DWidget extends Widget implements IFFBOChildWidget {
     Signal.disconnectAll(this._userAction);
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:neu3d-open');
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-3d');
-    window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+    window.FFBOLabrestorer.fetch('ffbo:state').then(_fetch => {
       let newFetch = _fetch;
       newFetch['neu3d'] = false;
-      window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+      window.FFBOLabrestorer.save('ffbo:state', newFetch);
     });
     if (this._isDisposed) {
       console.log('[FFBOLab Neu3D] disposed');

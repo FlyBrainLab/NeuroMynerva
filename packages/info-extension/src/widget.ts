@@ -121,10 +121,10 @@ export class NeuroInfoWidget extends Widget implements IFFBOChildWidget {
     Signal.disconnectAll(this._userAction);
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:info-open');
     window.JLabApp.commands.notifyCommandChanged('NeuroMynerva:toggle-info');
-    window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+    window.FFBOLabrestorer.fetch('ffbo:state').then(_fetch => {
       let newFetch = _fetch;
       newFetch['info'] = false;
-      window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+      window.FFBOLabrestorer.save('ffbo:state', newFetch);
     });
     if (this._isDisposed) {
       if (VERBOSE) {console.log('[NM Info] disposed');}

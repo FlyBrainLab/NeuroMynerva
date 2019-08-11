@@ -8,8 +8,8 @@
   "author": "Tingkai Liu, Mehmet Kerem Turkcan, Mark Mazel",
   "license": "MIT",
   "devDependencies": {
-    "lerna": "^2.11.0",
-    "typescript": "^3.1.1"
+    "lerna": "^3.16.4",
+    "typescript": "^3.5.3"
   },
   "workspaces": [
     "packages/*"

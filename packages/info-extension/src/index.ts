@@ -1,5 +1,5 @@
 import { JupyterLab, JupyterLabPlugin, ILayoutRestorer } from '@jupyterlab/application';
-import { ICommandPalette, InstanceTracker } from '@jupyterlab/apputils';
+import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
 import { NeuroInfoWidget } from './widget'
 import { JSONExt } from '@phosphor/coreutils';
 
@@ -8,7 +8,7 @@ const VERBOSE = false;
 /**
  * Tracker for restoring layout of NeuroInfoWidget
  */
-const tracker: JupyterLabPlugin<InstanceTracker<NeuroInfoWidget>> = {
+const tracker: JupyterLabPlugin<WidgetTracker<NeuroInfoWidget>> = {
   activate,
   id: '@jupyterlab-neuro-mynerva/info:plugin',
   autoStart: true,
@@ -35,10 +35,10 @@ function activate(
   app: JupyterLab,
   palette: ICommandPalette,
   restorer: ILayoutRestorer
-): InstanceTracker<NeuroInfoWidget> {
+): WidgetTracker<NeuroInfoWidget> {
   if (VERBOSE) {console.log('[NeuroMynerva-Info] NeuroMynerva (info) extension activated!');}
   const namespace = 'NeuroMynerva-info';
-  let tracker = new InstanceTracker<NeuroInfoWidget>({ namespace });
+  let tracker = new WidgetTracker<NeuroInfoWidget>({ namespace });
   const { commands, shell } = app;
   let widget: NeuroInfoWidget;
 
@@ -46,14 +46,14 @@ function activate(
   commands.addCommand(CommandIDs.open, {
     label: 'Create Info',
     execute: () => {
-      window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+      window.FFBOLabrestorer.fetch('ffbo:state').then(_fetch => {
         let newFetch = _fetch;
         if(!_fetch)
         {
           newFetch = {};
         }
         newFetch['info'] = true;
-        window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+        window.FFBOLabrestorer.save('ffbo:state', newFetch);
       });
       if (!widget || widget.isDisposed) {
         // Create a new widget if one does not exist

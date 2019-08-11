@@ -542,7 +542,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
     }
     if(this.session.kernel)
     {
-      return this.session.kernel.requestCommInfo(void 0).then((info) => {
+      return this.session.kernel.requestCommInfo({ target_name: 'test' }).then((info) => {
         let tempComms = info.content.comms;
         let found = '';
         console.log(tempComms);

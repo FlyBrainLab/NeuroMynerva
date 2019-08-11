@@ -1,5 +1,5 @@
 import { JupyterLab, JupyterLabPlugin, ILayoutRestorer } from '@jupyterlab/application';
-import { ICommandPalette, InstanceTracker } from '@jupyterlab/apputils';
+import { ICommandPalette, WidgetTracker } from '@jupyterlab/apputils';
 import { NeuroGFXWidget } from './widget'
 import { JSONExt } from '@phosphor/coreutils';
 
@@ -13,7 +13,7 @@ declare global {
 /**
  * Initialization data for FFBOLab Plugin
  */
-const tracker: JupyterLabPlugin<InstanceTracker<NeuroGFXWidget>> = {
+const tracker: JupyterLabPlugin<WidgetTracker<NeuroGFXWidget>> = {
   activate,
   id: '@jupyterlab-neuro-mynerva/neugfx:plugin',
   autoStart: true,
@@ -37,10 +37,10 @@ function activate(
   app: JupyterLab,
   palette: ICommandPalette,
   restorer: ILayoutRestorer
-): InstanceTracker<NeuroGFXWidget> {
+): WidgetTracker<NeuroGFXWidget> {
   if (VERBOSE) {console.log('[NM Neugfx] NeuroMynerva (neugfx) extension activated!');}
   const namespace = 'NeuroMynerva-gfx';
-  let tracker = new InstanceTracker<NeuroGFXWidget>({ namespace });
+  let tracker = new WidgetTracker<NeuroGFXWidget>({ namespace });
   const { commands, shell } = app;
   let widget: NeuroGFXWidget;
 
@@ -48,14 +48,14 @@ function activate(
   commands.addCommand(CommandIDs.open, {
     label: 'Create NeuroGFX',
     execute: () => {
-      window.FFBOLabrestorer._state.fetch('ffbo:state').then(_fetch => {
+      window.FFBOLabrestorer.fetch('ffbo:state').then(_fetch => {
         let newFetch = _fetch;
         if(!_fetch)
         {
           newFetch = {};
         }
         newFetch['gfx'] = true;
-        window.FFBOLabrestorer._state.save('ffbo:state', newFetch);
+        window.FFBOLabrestorer.save('ffbo:state', newFetch);
       });
       if (VERBOSE) { console.log('NEUGFX OPEN call');}
       if (!widget || widget.isDisposed) {
