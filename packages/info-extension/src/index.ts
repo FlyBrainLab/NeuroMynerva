@@ -66,7 +66,7 @@ function activate(
       }
       if (!widget.isAttached) {
         // Attach the widget to the main work area if it's not there
-        shell.addToRightArea(widget);
+        shell._addToRightArea(widget);
         // shell.addToMainArea(widget);
       } else {
         // Refresh widget

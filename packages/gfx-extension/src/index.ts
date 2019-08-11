@@ -69,7 +69,7 @@ function activate(
       }
       if (!widget.isAttached) {
         // Attach the widget to the main work area if it's not there
-        shell.addToMainArea(widget, { mode: 'split-right'});
+        app.shell._addToMainArea(widget, { mode: 'split-right'});
       } else {
         // Refresh widget
         widget.update();
