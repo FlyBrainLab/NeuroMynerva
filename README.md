@@ -1,34 +1,34 @@
 # Neu3D Widget
 
 ## Build Process
-The Widget needs to be built in the following sequence (particularly with npm install of the neu3d-widget)
 ```bash
-cd /path/to/neu3d-extension
+conda create -n fblv2-test python=3.7 nodejs -y
+conda activate fblv2-test
+npm install -g npm-safe-install
+pip install jupyter jupyterlab>=2.1.2
+git clone git@github.com:TK-21st/FBL-Wrapper.git
+cd FBL-Wrapper
+git checkout neu3d
+cd neu3d-extension
+
 npm install
-jupyter labextension link .
-npm run watch
-
-# in a separate terminal
-# if you want changes to neu3d-extension to propagate. 
-# rebuilding extension won't take long since it's very small and 
-# the watch function has generally been working for me in this case
-jupyter lab --watch 
-
-# in a separate terminal
-cd /path/to/neu3d-widget
+# conda activate fblv2-test # make sure right jupyter is used. I had some issue in my ZSH, could be ZSH specific
+jupyter labextension link . # the jlab build call here can take quite some time 
+# if you want to watch changes to neu3d-extension
+# npm run watch
+# start a new terminal
+# cd /path/to/neu3d-widget
+cd ../neu3d-widget
 mkdir asset
-cd asset
-git clone git@github.com:fruitflybrain/neu3d.git
-cd ../   # go back to neu3d-widget
-npm link ./asset/neu3d # link neu3d for use
-npm install # install requirements for neu3d-widget
-cd asset/neu3d
-npm install
-npm run watch # build and watch neu3d
-
-# in a separate terminal
-cd /path/to/neu3d-widget
+git clone git@github.com:fruitflybrain/neu3d.git asset/neu3d
+nsi asset/neu3d
+npm run install:neu3d
 npm run dev
+# in a new terminal
+conda activate fblv2-test
+jupyter lab
+# if you want to watch changes to neu3d-extension
+# jupyter lab --watch
 ```
 
 **Note**: we are using port 7998 (hardcoded)
