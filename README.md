@@ -15,6 +15,7 @@ Here the design requirement is inspired by the following workflows:
 
 2. Browser Entry Point
     1. Launch Neu3D
+    2. _TODO_
 
 Some additional considerations
 1. There should be a way to interrogate the python kernel to see all the instantiated clients and the connected widgets
@@ -28,12 +29,12 @@ Some additional considerations
 ### FBL-Wrapper Widget
 - [x] Create `sessionContext` and `comm` on instantiation
 - [x] Support ability to open a console to interact with the python kernel that is referenced by the `sessionContext` (right click).
-- Check if a python kernel is FBL compatible from the `Widget`
-- [] Support capability to change kernel to connect to another running kernel
-    - [] If the other kernel is not FBL compatible
-        - [] notify user that code will be injected 
-        - [] inject code to create all necessary python objects only when necessary
-    - [] If the other kernel is FBL compatible
+- [ ] Check if a python kernel is FBL compatible from the `Widget`
+- [ ] Support capability to change kernel to connect to another running kernel
+    - [ ] If the other kernel is not FBL compatible
+        - [ ] notify user that code will be injected 
+        - [ ] inject code to create all necessary python objects only when necessary
+    - [ ] If the other kernel is FBL compatible
 
 ### `FBL Compatible` Python Kernels
 Here we introduce the concept of FBL compatible kernels.
