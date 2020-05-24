@@ -1,25 +1,27 @@
 # FBL Wrapper Widget
-This repository contains wrapper widge which supports both integrated and independent utilities of FBL Widgets.
+This repository contains a wrapper widget which supports both integrated and independent utilities of FBL Widgets.
 
-## Design Requirement
-Here the design requirement is inspired by the following workflows:
+## Design Requirements
+The design requirements are inspired by the following workflows:
 
-1. Pyhton Entry Point
-    1. Spin up a Jupyter `notebook`
-    2. Instantiate FBL python package, create a client (`client-1`)
-    3. Query neurons (e.g. neurons in mb) from python kernel using `client-1`
-    4. Launch Neu3D widget (`neu3d-1`) connected to the `notebook`'s kernel and connected to the `client-1`
-    5. Visualize queried neurons in `neu3d-1`
-    6. Interact with neurons and see results in info-panel
-    7. Repeat step 2-6 with another client `client-2` in the same `notebook`
+1. Python Entry Point:
+    1. Spin up a Jupyter `notebook`.
+    2. Instantiate FBL python package, create a client (`client-1`).
+    3. Launch Neu3D widget (`neu3d-1`) connected to the `notebook`'s kernel and connected to the `client-1`
+    4. Query neurons (e.g. neurons in mb) from python kernel using `client-1`.
+    5. Queried neurons are automatically visualized in `neu3d-1`.
+    6. Interact with neurons and see results in info-panel.
+    7. Repeat step 2-6 with another client `client-2` in the same `notebook`.
 
-2. Browser Entry Point
-    1. Launch Neu3D
-    2. _TODO_
+2. Browser Entry Point:
+    1. Launch Neu3D.
+    2. Clicking on a neuron fires a GetInfo event in Python kernel (executes `nm[i].GetInfo(id)`). TODO: A description of FBLClient-related callbacks.
+    3. Double clicking a neuron (i) pins a neuron in Neu3D, (ii) fires a PinNeuron event in Python kernel (executes `nm[i].PinNeuron(id)`).
+    4. All other functionality in Neu3D is similarly reflected.
 
-Some additional considerations
-1. There should be a way to interrogate the python kernel to see all the instantiated clients and the connected widgets
-2. There should be a way to see all FBL sessions running in the JLab, a widget that returns all kernels running fbl and the clients/widgets within
+Some additional considerations:
+1. There should be a way to interrogate the python kernel to see all the instantiated clients and the connected widgets.
+2. There should be a way to see all FBL sessions running in the JLab, a widget that returns all kernels running fbl and the clients/widgets within.
 
 ### FBL-Wrapper-Extension
 - [x] Extension Added to Launcher with custom logo
