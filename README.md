@@ -55,7 +55,7 @@ nm.append(_FBLLarva)
 nm_client = 0
 ```
 
-The proposed new behavior is as follows:
+The proposed new behavior is as follows: (_TODO_)
 ```python
 import flybrainlab as fbl
 from ipykernel.comm import Comm
@@ -82,5 +82,4 @@ nm.append(_FBLAdult)
 _FBLLarva = fbl.Client(FFBOLabcomm = _FFBOLabcomm, legacy = True, url = u'wss://neuronlp.fruitflybrain.org:9020/ws')
 nm.append(_FBLLarva)
 nm_client = 0
-
 ```
