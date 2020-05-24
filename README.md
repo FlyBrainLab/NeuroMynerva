@@ -61,9 +61,8 @@ import flybrainlab as fbl
 from ipykernel.comm import Comm
 from collections import OrderedDict
 
-
 if not hasattr(fbl, 'session'):
-    fbl.session
+    fbl.session # TODO
 if '${FBL_CLASS_Python}' not in _FBLWidgets:
     _FBLWidgets['${FBL_CLASS_Python}'] = OrderedDict()
 _FBLWidgets['${FBL_CLASS_Python}']['${this.id}'] = {'id': '${this.id}', 'comm':_FFBOLabcomm}
