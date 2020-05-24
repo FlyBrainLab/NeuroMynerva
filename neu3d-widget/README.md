@@ -1,57 +1,6 @@
-# fbl-wrapper
-
-![Github Actions Status](https://github.com/my_name/myextension/workflows/Build/badge.svg)
-
-A JupyterLab Extension Wrapper for FlyBrainLab applications.
-
-
-
-## Requirements
-
-* JupyterLab >= 2.0
-
-## Install
-
-```bash
-jupyter labextension install fbl-wrapper
-```
-
-## Contributing
-
-### Install
-
-The `jlpm` command is JupyterLab's pinned version of
-[yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
-`yarn` or `npm` in lieu of `jlpm` below.
-
-```bash
-# Clone the repo to your local environment
-# Move to fbl-wrapper directory
-
-# Install dependencies
-jlpm
-# Build Typescript source
-jlpm build
-# Link your development version of the extension with JupyterLab
-jupyter labextension link .
-# Rebuild Typescript source after making changes
-jlpm build
-# Rebuild JupyterLab after making any changes
-jupyter lab build
-```
-
-You can watch the source directory and run JupyterLab in watch mode to watch for changes in the extension's source and automatically rebuild the extension and application.
-
-```bash
-# Watch the source directory in another terminal tab
-jlpm watch
-# Run jupyterlab in watch mode in one terminal tab
-jupyter lab --watch
-```
-
-### Uninstall
-
-```bash
-
-jupyter labextension uninstall fbl-wrapper
-```
+# Neu3D Widget
+## Known issues
+- [ ] file upload is done by creating a div with hardcoded class name (from neu3d.js package), this means in multiple instance configuration, all uploaded files will be loaded into the first neu3d instance.
+    - [ ] support file upload feature in each `neu3d-widget` with unique `id`
+    - [ ] destroy added HTML elements when `neu3d-widget` is disposed
+- [ ] the visualization settings for larva and adult are not correct. 
