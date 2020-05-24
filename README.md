@@ -1,5 +1,43 @@
-# FBL Wrapper Widget
-This repository contains wrapper widge which supports both integrated and independent utilities of FBL Widgets.
+# Neu3D Widget
+
+## Build Process
+The Widget needs to be built in the following sequence (particularly with npm install of the neu3d-widget)
+```bash
+cd /path/to/neu3d-extension
+npm install
+jupyter labextension link .
+npm run watch
+
+# in a separate terminal
+# if you want changes to neu3d-extension to propagate. 
+# rebuilding extension won't take long since it's very small and 
+# the watch function has generally been working for me in this case
+jupyter lab --watch 
+
+# in a separate terminal
+cd /path/to/neu3d-widget
+mkdir asset
+cd asset
+git clone git@github.com:fruitflybrain/neu3d.git
+cd ../   # go back to neu3d-widget
+npm link ./asset/neu3d # link neu3d for use
+npm install # install requirements for neu3d-widget
+cd asset/neu3d
+npm install
+npm run watch # build and watch neu3d
+
+# in a separate terminal
+cd /path/to/neu3d-widget
+npm run dev
+```
+
+**Note**: we are using port 7998 (hardcoded)
+
+## Known issues
+- [ ] file upload is done by creating a div with hardcoded class name (from neu3d.js package), this means in multiple instance configuration, all uploaded files will be loaded into the first neu3d instance.
+    - [ ] support file upload feature in each `neu3d-widget` with unique `id`
+    - [ ] destroy added HTML elements when `neu3d-widget` is disposed
+- [ ] the visualization settings for larva and adult are not correct... not sure why 
 
 ## Design Requirement
 Here the design requirement is inspired by the following workflows:
@@ -20,65 +58,3 @@ Here the design requirement is inspired by the following workflows:
 Some additional considerations
 1. There should be a way to interrogate the python kernel to see all the instantiated clients and the connected widgets
 2. There should be a way to see all FBL sessions running in the JLab, a widget that returns all kernels running fbl and the clients/widgets within
-
-### FBL-Wrapper-Extension
-- [x] Extension Added to Launcher with custom logo
-- [ ] Restorer should be able to re-open previously closed widget on window refresh
-    - [ ] need to implement a command to `open` widget with given `path` instead of creating new ones
-
-### FBL-Wrapper Widget
-- [x] Create `sessionContext` and `comm` on instantiation
-- [x] Support ability to open a console to interact with the python kernel that is referenced by the `sessionContext` (right click).
-- [ ] Check if a python kernel is FBL compatible from the `Widget`
-- [ ] Support capability to change kernel to connect to another running kernel
-    - [ ] If the other kernel is not FBL compatible
-        - [ ] notify user that code will be injected 
-        - [ ] inject code to create all necessary python objects only when necessary
-    - [ ] If the other kernel is FBL compatible
-
-### `FBL Compatible` Python Kernels
-Here we introduce the concept of FBL compatible kernels.
-
-The old behavior was as follows:
-```python
-from ipykernel.comm import Comm
-_FFBOLabcomm = Comm(target_name='${this._commId}')
-_FFBOLabcomm.send(data='FFBOLab comm established')
-_FFBOLabcomm.send(data='Generating FFBOLab Client...')
-import flybrainlab as fbl
-_FBLAdult = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)
-_FFBOLABClient = _FBLAdult
-nm = []
-nm.append(_FBLAdult)
-_FBLLarva = fbl.Client(FFBOLabcomm = _FFBOLabcomm, legacy = True, url = u'wss://neuronlp.fruitflybrain.org:9020/ws')
-nm.append(_FBLLarva)
-nm_client = 0
-```
-
-The proposed new behavior is as follows: (_TODO_)
-```python
-import flybrainlab as fbl
-from ipykernel.comm import Comm
-from collections import OrderedDict
-
-if not hasattr(fbl, 'session'):
-    fbl.session # TODO
-if '${FBL_CLASS_Python}' not in _FBLWidgets:
-    _FBLWidgets['${FBL_CLASS_Python}'] = OrderedDict()
-_FBLWidgets['${FBL_CLASS_Python}']['${this.id}'] = {'id': '${this.id}', 'comm':_FFBOLabcomm}
-
-if '_FFBOLabcomm' not in globals():
-    _FFBOLabcomm = Comm(target_name='${this._commTarget}')
-if _FFBOLabcomm.target_name != '${this._commTarget}':
-    _FFBOLabcomm = Comm(target_name='${this._commTarget}')
-_FFBOLabcomm.send(data="FFBOLab comm established")
-_FFBOLabcomm.send(data="Generating FFBOLab Client...")
-if '_FBLAdult' not in globals():
-    _FBLAdult = fbl.ffbolabClient(FFBOLabcomm = _FFBOLabcomm)
-
-nm = []
-nm.append(_FBLAdult)
-_FBLLarva = fbl.Client(FFBOLabcomm = _FFBOLabcomm, legacy = True, url = u'wss://neuronlp.fruitflybrain.org:9020/ws')
-nm.append(_FBLLarva)
-nm_client = 0
-```
