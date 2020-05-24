@@ -21,6 +21,8 @@ import {
 } from './icons';
 import { LabIcon } from '@jupyterlab/ui-components';
 import '../style/index.css';
+import {AdultMesh} from './adult_mesh';
+import {LarvaMesh} from './larva_mesh';
 // import commCodeStr from "./launch_session.py";
 
 const VERBOSE = true;
@@ -83,6 +85,10 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
     }
     this._commTarget = `${TEMPLATE_COMM_TARGET}-${count}`;
 
+    // load in meshes
+    this._adultMesh = AdultMesh;
+    this._larvaMesh = LarvaMesh;
+
     sessionContext = this.sessionContext =
       sessionContext ||
       new SessionContext({
@@ -138,16 +144,14 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
       this.neu3d = new Neu3D(
         this._neu3dContainer, 
         undefined,
-        {  
-          "globalCenter": { 'x': 0, 'y': -250, 'z': 0 }, 
-          "enablePositionReset": true, 
-          "resetPosition": {x: 263.7529882900178, y: -279.09063424477444, z: -3652.912696805477},
-          "upSign": -1.,
+        {
+          "enablePositionReset": true
          },
         {
           stats: true,
           datGUI: {
-            createButtons: false
+            createButtons: false,
+            preset: "Low"
           }
         }
       );
@@ -424,10 +428,59 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
   }
 
   /**
+   * Propagate resize event to neu3d
+   * @param msg 
+   */
+  onResize(msg: any) {
+    super.onResize(msg);
+    this.neu3d.onWindowResize();
+  }
+  /**
   * A promise that resolves when the FBL widget is ready
   */
   get ready(): Promise<void> {
     return this._ready.promise;
+  }
+
+  /**
+   * Set species
+   * @param new_species new species to be added
+   *    - If sepcies is `adult` or `larva`, this will display mesh and change metadata settings
+   */
+  set species(new_species: string) {
+    if (new_species === this._species) {
+      return;
+    }
+    this._species = new_species;
+    
+    switch (this._species.toLowerCase()) {
+      case 'larva':
+        for (let mesh of Object.keys(this.neu3d.meshDict)){
+          if (this.neu3d.meshDict[mesh].background) {
+            this.neu3d.remove(mesh);
+          }
+        }
+        this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
+        this.neu3d._metadata.resetPosition = {x: 263.7529882900178, y: -279.09063424477444, z: -3652.912696805477};
+        this.neu3d._metadata.upSign = -1.;
+        break;
+      case 'adult':
+        for (let mesh of Object.keys(this.neu3d.meshDict)){
+          if (this.neu3d.meshDict[mesh].background) {
+            this.neu3d.remove(mesh);
+          }
+        }
+        this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
+        this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
+        this.neu3d._metadata.upSign = 1.;
+        break;
+      default:
+        break; //no-op
+    }
+  }
+
+  get species(): string {
+    return this._species
   }
 
 
@@ -441,9 +494,11 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
   private toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   private _comm: Kernel.IComm;
-  public species: any;
+  private _species: any;
   //A session context which points to the kernel resource
   neu3d: Neu3D;
+  readonly _adultMesh: Object; // caching for dynamically imported mesh
+  readonly _larvaMesh: Object; // caching for dynamically import mesh
   private _neu3dContainer: HTMLDivElement;
   sessionContext: ISessionContext;
 };
