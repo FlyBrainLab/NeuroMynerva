@@ -33,11 +33,17 @@ npm run dev
 
 **Note**: we are using port 7998 (hardcoded)
 
-## Known issues
-- [ ] file upload is done by creating a div with hardcoded class name (from neu3d.js package), this means in multiple instance configuration, all uploaded files will be loaded into the first neu3d instance.
+## Tasks
+- [ ] (**Known issue**) file upload is done by creating a div with hardcoded class name (from neu3d.js package), this means in multiple instance configuration, all uploaded files will be loaded into the first neu3d instance.
     - [ ] support file upload feature in each `neu3d-widget` with unique `id`
     - [ ] destroy added HTML elements when `neu3d-widget` is disposed
-- [ ] the visualization settings for larva and adult are not correct... not sure why 
+- [ ] (**Known issue**) the visualization settings for larva and adult are not correct... not sure why 
+- [ ] Support mesh loading
+    - [x] expose mesh loading feature (setter for `species` will load the meshes appropriately)
+    - [ ] create UI to reflect species and allow changing of species (maybe a button like the change kernel button).
+- [ ] UX support for telling user that the neuron is outside of the visible field because of coordinate issue. Maybe add a callback to `neu3d.addJson` which checks for if any added neurons are outside of visible field?
+- [x] simplify `dat.GUI` by putting most UIs into the toolbar native to JLab.
+- [x] Default setting to `Low` (mostly turning off FXAA and SSAO) to ensure high framerate.
 
 ## Design Requirement
 Here the design requirement is inspired by the following workflows:
