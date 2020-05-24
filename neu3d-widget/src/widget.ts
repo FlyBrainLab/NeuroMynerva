@@ -15,7 +15,9 @@ import { PromiseDelegate } from '@lumino/coreutils';
 
 import { Toolbar, ToolbarButton } from '@jupyterlab/apputils';
 import {
-  codeIcon
+  uploadIcon, syncIcon, zoomToFitIcon,
+  eyeIcon, eyeSlashIcon, cameraIcon, trashIcon,
+  mapUpinIcon
 } from './icons';
 import { LabIcon } from '@jupyterlab/ui-components';
 import '../style/index.css';
@@ -545,18 +547,38 @@ namespace Private {
     widget: Neu3DWidget,
     toolbar: Toolbar
   ): void {
-    toolbar.insertItem(0,
-      'compile',
-      createButton(codeIcon, 'Compile Circuit', 'jp-SearchBar-Compile',
-        () => {
-          if (VERBOSE) { console.log('[NM Master] compiling') }
-          if (widget.sessionContext.session) {
-            widget.sessionContext.session.kernel.requestExecute({ code: '_FFBOLABClient.prepareCircuit()' });
-          }
-        }
-      )
-    );
-
+    toolbar.addItem(
+      'upload', 
+      createButton(uploadIcon, "Upload SWC File", 'jp-Neu3D-Btn jp-SearBar-upload', 
+        () => { document.getElementById('neu3d-file-upload').click(); }));
+    toolbar.addItem(
+      'reset', 
+      createButton(syncIcon, "Reset View", 'jp-Neu3D-Btn jp-SearBar-reset', 
+      () => { widget.neu3d.resetView() }));
+    toolbar.addItem(
+      'zoomToFit', 
+      createButton(zoomToFitIcon, "Center and zoom into visible Neurons/Synapses", 'jp-Neu3D-Btn jp-SearBar-zoomToFit', 
+      () => { widget.neu3d.resetVisibleView() }));
+    toolbar.addItem(
+      'hideAll', 
+      createButton(eyeSlashIcon, "Hide All", 'jp-Neu3D-Btn jp-SearBar-hideAll', 
+      () => { widget.neu3d.hideAll() }));
+    toolbar.addItem(
+      'showAll', 
+      createButton(eyeIcon, "Show All", 'jp-Neu3D-Btn jp-SearBar-showAll', 
+      () => { widget.neu3d.showAll() }));
+    toolbar.addItem(
+      'screenshot', 
+      createButton(cameraIcon,"Download Screenshot", 'jp-Neu3D-Btn jp-SearBar-camera', 
+      () => { widget.neu3d._take_screenshot = true;}));
+    toolbar.addItem(
+      'unpinAll', 
+      createButton(mapUpinIcon, "Unpin All", 'jp-Neu3D-Btn jp-SearBar-unpin', 
+      () => { widget.neu3d.unpinAll(); }));
+    toolbar.addItem(
+      'removeUnpinned', 
+      createButton(trashIcon, "Remove Unpinned Neurons", 'jp-Neu3D-Btn jp-SearBar-remove-unpinned', 
+      ()=> {widget.neu3d.removeUnpinned();}));
     toolbar.addItem('spacer', Toolbar.createSpacerItem());
     toolbar.addItem('restart', Toolbar.createRestartButton(widget.sessionContext));
     toolbar.addItem('kernelName', Toolbar.createKernelNameItem(widget.sessionContext));
