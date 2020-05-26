@@ -5,7 +5,7 @@ import { IDisposable } from '@lumino/disposable';
 import { PathExt, Time } from '@jupyterlab/coreutils';
 import { 
   Widget, 
-  PanelLayout 
+  // PanelLayout 
 } from '@lumino/widgets';
 import {
   ISessionContext, SessionContext, 
@@ -62,7 +62,6 @@ export
   // * Connection to another widget through signal
   // */
   // connect(signal: ISignal<IFBLWidget, object>): void;
-
 
   /**
    * The sessionContext keeps track of the current running session
@@ -142,9 +141,9 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
       });
 
     this.addClass(Neu3D_CLASS_JLab);
-    const layout = (this.layout = new PanelLayout());
+    // const layout = (this.layout = new PanelLayout());
     this.toolbar = Private.createToolbar(this);
-    layout.addWidget(this.toolbar);
+    // layout.addWidget(this.toolbar);
     Private.populateToolBar(this, this.toolbar);
     this._neu3dContainer = document.createElement('div')
     this._neu3dContainer.style.height = '100%';
@@ -250,6 +249,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
         this.sessionContext.dispose();
       })
     }
+    this.model.dispose();
     super.dispose();
     this._isDisposed = true;
     Signal.disconnectAll(this._outSignal);
