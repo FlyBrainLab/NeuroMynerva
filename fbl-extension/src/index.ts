@@ -16,7 +16,8 @@ import {
   ICommandPalette, 
   MainAreaWidget, 
   WidgetTracker, 
-  ISessionContext
+  ISessionContext,
+  Toolbar
 } from '@jupyterlab/apputils';
 
 import { ISignal } from '@lumino/signaling';
@@ -44,10 +45,7 @@ declare global {
 // NOTE: this is taken exactly from the WidgetModule class
 // it is put here so we have something to reference in the widget tracker
 interface IFBLWidget extends Widget {
-  // /**
-  // * Connection to another widget through signal
-  // */
-  // connect(signal: ISignal<IFBLWidget, object>): void;
+  toolbar?: Toolbar<Widget>;
 
   modelChanged: ISignal<this, object>;
 
@@ -174,6 +172,21 @@ async function activateFBL(
     when: app.serviceManager.ready
   });
 
+  restorer.restore(neuAnyTracker, {
+    command: CommandIDs.NeuAnyOpen,
+    args: widget => {
+      const { path, name } = widget.content.sessionContext;
+      return {
+        model: widget.content.model,
+        species: widget.content.species,
+        path: path,
+        name: name
+      };
+    },
+    name: widget => widget.content.sessionContext.name,
+    when: app.serviceManager.ready
+  });
+
   window.app = app;
   window.neu3dTracker = neu3DTracker;
 
@@ -215,7 +228,7 @@ async function activateFBL(
       }
       // Create a new widget if one does not exist
       let widget: IFBLWidget = new (Neu3DWidgetModule as any)({app: app});
-      let panel = new MainAreaWidget({content: widget});
+      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       // Attach the widget to the main work area if it's not there
       if (!neu3DTracker.has(panel)){
         await neu3DTracker.add(panel);
@@ -248,7 +261,7 @@ async function activateFBL(
         app: app, 
         ...args
       });
-      let panel = new MainAreaWidget({content: widget});
+      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       if (!neu3DTracker.has(panel)){
         await neu3DTracker.add(panel);
       }
@@ -277,7 +290,7 @@ async function activateFBL(
       }
       // Create a new widget if one does not exist
       let widget: IFBLWidget = new (NeuGFXWidgetModule as any)({app: app});
-      let panel = new MainAreaWidget({content: widget});
+      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       if (!neuGFXtracker.has(panel)){
         neuGFXtracker.add(panel);
       }
@@ -302,7 +315,7 @@ async function activateFBL(
       }
       // Create a new widget if one does not exist
       let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({app: app});
-      let panel = new MainAreaWidget({content: widget});
+      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       if (!neuAnyTracker.has(panel)){
         neuAnyTracker.add(panel);
       }
@@ -317,6 +330,38 @@ async function activateFBL(
       app.shell.activateById(panel.id);
     }
   });
+  // TODO: Open Existing according to path.
+  app.commands.addCommand(CommandIDs.NeuAnyOpen, {
+    label: 'Open NeuAny Instance',
+    icon: fblIcon,
+    execute: async (args) => {
+      if (!NeuAnyWidgetModule){
+        let plugin = await loadModule(NEUANY_MODULE_URL);
+        NeuAnyWidgetModule = plugin.NeuAnyWidget;  
+      }
+      // Create a new widget if one does not exist
+      let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({
+        app: app, 
+        ...args
+      });
+      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
+      if (!neuAnyTracker.has(panel)){
+        await neuAnyTracker.add(panel);
+      }
+      widget.sessionContext.propertyChanged.connect(()=>{
+        void neuAnyTracker.save(panel);
+      });
+      widget.modelChanged.connect(()=>{
+        void neuAnyTracker.save(panel);
+      });
+      // Attach the widget to the main work area if it's not there
+      app.shell.add(panel, 'main');
+      widget.update();
+      panel.update()
+      // Activate the widget
+      app.shell.activateById(panel.id);
+    }
+  });  
 
   app.commands.addCommand(CommandIDs.Neu3DCreateConsole, {
     label: 'Create Console for Neu3D Widget',
