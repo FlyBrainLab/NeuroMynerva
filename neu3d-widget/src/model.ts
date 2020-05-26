@@ -26,7 +26,7 @@ interface IMeshDictItem {
 * currently rendered neuron information
 */
 export interface INeu3DModel extends IDisposable {
-  readonly meshDict: IMeshDict;
+  meshDict: IMeshDict;
   // readonly ModelChanged: ISignal<Neu3DModel, IMeshDict>;
 }
 
@@ -37,55 +37,51 @@ export class Neu3DModel implements INeu3DModel {
   constructor(model?: INeu3DModel){
     if (model){
       if (model.meshDict) {
-        this._meshDict = model.meshDict;
+        this.meshDict = model.meshDict;
       }else{
-        this._meshDict = {};
+        this.meshDict = {};
       }
     } else {
-      this._meshDict = {};
+      this.meshDict = {};
     }
-  }
-  
-  get meshDict(): IMeshDict {
-    return this._meshDict;
   }
   
   /**
    * Synchronize with real meshDict from the Neu3D instance
    */
   syncWithWidget(meshDict: any){
-    this._meshDict = Private.loadNeu3DMeshDict(meshDict);
+    this.meshDict = Private.loadNeu3DMeshDict(meshDict);
   }
 
   addMesh(rid:string, value:IMeshDictItem){
-    this._meshDict[rid] = Private.convertRawMesh(value);
+    this.meshDict[rid] = Private.convertRawMesh(value);
   }
 
   removeMesh(rid:string){
-    delete this._meshDict[rid];
+    delete this.meshDict[rid];
   }
 
   pinMeshes(rids:Array<string>){
     for (let rid of rids){
-      this._meshDict[rid]['pinned'] = true;
+      this.meshDict[rid]['pinned'] = true;
     }
   }
 
   unpinMeshes(rids:Array<string>){
     for (let rid of rids){
-      this._meshDict[rid]['pinned'] = false;
+      this.meshDict[rid]['pinned'] = false;
     }
   }
 
   hideMeshes(rids:Array<string>){
     for (let rid of rids){
-      this._meshDict[rid]['visibility'] = false;
+      this.meshDict[rid]['visibility'] = false;
     }
   }
 
   showMeshes(rids:Array<string>){
     for (let rid of rids){
-      this._meshDict[rid]['visibility'] = true;
+      this.meshDict[rid]['visibility'] = true;
     }
   }
 
@@ -112,12 +108,12 @@ export class Neu3DModel implements INeu3DModel {
     }
     this._isDisposed = true;
     // Signal.clearData(this);
-    delete this._meshDict;
+    delete this.meshDict;
   }
   
   // private _modelChanged = new Signal<this, IMeshDict>(this);
   private _isDisposed = false;
-  private _meshDict: IMeshDict;
+  meshDict: IMeshDict;
 }
 
 

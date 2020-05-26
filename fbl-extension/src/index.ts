@@ -48,6 +48,9 @@ interface IFBLWidget extends Widget {
   // * Connection to another widget through signal
   // */
   // connect(signal: ISignal<IFBLWidget, object>): void;
+
+  modelChanged: ISignal<this, object>;
+
   sessionContext: ISessionContext;
 
   species: string;
@@ -220,6 +223,9 @@ async function activateFBL(
       widget.sessionContext.propertyChanged.connect(()=>{
         void neu3DTracker.save(panel);
       })
+      widget.modelChanged.connect(()=>{
+        void neu3DTracker.save(panel);
+      })
 
       app.shell.add(panel, 'main');
       widget.update()
@@ -248,7 +254,10 @@ async function activateFBL(
       }
       widget.sessionContext.propertyChanged.connect(()=>{
         void neu3DTracker.save(panel);
-      })
+      });
+      widget.modelChanged.connect(()=>{
+        void neu3DTracker.save(panel);
+      });
       // Attach the widget to the main work area if it's not there
       app.shell.add(panel, 'main');
       widget.update();

@@ -192,9 +192,11 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
 
     this.neu3d.meshDict.on('add', (e:INeu3DMessage) => {
       this.model.addMesh(e.prop, e.value);
+      this._modelChanged.emit(e);
     });
     this.neu3d.meshDict.on('remove', (e:INeu3DMessage) => {
       this.model.removeMesh(e.prop)
+      this._modelChanged.emit(e);
     });
     this.neu3d.meshDict.on('change', 
     (e:INeu3DMessage) =>{
@@ -208,6 +210,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
         default:
           break;
       }
+      this._modelChanged.emit(e);
     },
     'pinned');
     this.neu3d.meshDict.on('change', 
@@ -222,6 +225,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
         default:
           break;
       }
+      this._modelChanged.emit(e);
     },
     'visibility');
     this.neu3d.onWindowResize()
@@ -376,8 +380,8 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
   // }
 
 
-  get modelChanged(): ISignal<Neu3DWidget, void> {
-    return this.modelChanged;
+  get modelChanged(): ISignal<this, object> {
+    return this._modelChanged;
   }
 
   /**
@@ -552,6 +556,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
   private _connected: Date;
   private _isDisposed = false;
   private _outSignal = new Signal<this, object>(this);
+  private _modelChanged = new Signal<this, object>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   private _comm: Kernel.IComm;
