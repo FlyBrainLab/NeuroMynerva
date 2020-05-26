@@ -73,15 +73,15 @@ interface IFBLWidget extends Widget {
  * The command IDs used by the console plugin.
  */
 namespace CommandIDs {
-  export const Neu3DCreate = 'fbl:neu3d:create';
-  export const Neu3DOpen = 'fbl:neu3d:open';
-  export const Neu3DCreateConsole = 'fbl:neu3d:create-console';
-  export const NeuGFXCreate = 'fbl:neugfx:create';
-  export const NeuGFXOpen = 'fbl:neugfx:open';
-  export const NeuGFXCreateConsole = 'fbl:neugfx:create-console';
-  export const NeuAnyCreate = 'fbl:neuany:create';
-  export const NeuAnyOpen = 'fbl:neuany:open';
-  export const NeuAnyCreateConsole = 'fbl:neuany:create-console';
+  export const Neu3DCreate = 'fbl-neu3d:create';
+  export const Neu3DOpen = 'fbl-neu3d:open';
+  export const Neu3DCreateConsole = 'fbl-neu3d:create-console';
+  export const NeuGFXCreate = 'fbl-neugfx:create';
+  export const NeuGFXOpen = 'fbl-neugfx:open';
+  export const NeuGFXCreateConsole = 'fbl-neugfx:create-console';
+  export const NeuAnyCreate = 'fbl-neuany:create';
+  export const NeuAnyOpen = 'fbl-neuany:open';
+  export const NeuAnyCreateConsole = 'fbl-neuany:create-console';
 }
 
 /**
@@ -117,16 +117,9 @@ async function loadModule(url: String): Promise<any> {
  */
 const injectRequired = new Promise<any>((resolve, reject)=>{
   (function(d) {
-    // the sanity check below should not be necessary since we are passing
-    // hasRequire explicitly in, a state that is kept track of by the application
-    // but put here just in case
-    let scripts = d.getElementsByTagName('head')[0].children;
-    for (let s of scripts){
-      if ((<any>s).src){
-        if ((<any>s).src.includes("require.js")){
-            return;
-        }
-    }}
+    if (window.hasOwnProperty('require') && (typeof((window as any).require) === 'function')) {
+          return;
+    }
     const script = d.createElement('script');
     script.type = 'text/javascript';
     script.async = true;
