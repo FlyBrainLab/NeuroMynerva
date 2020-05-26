@@ -3,16 +3,18 @@ import { ServiceManager, Kernel, Session } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { PathExt, Time } from '@jupyterlab/coreutils';
-import { Widget, PanelLayout } from '@lumino/widgets';
+import { 
+  Widget, 
+  PanelLayout 
+} from '@lumino/widgets';
 import {
-  ISessionContext, SessionContext, sessionContextDialogs, showDialog, Dialog
+  ISessionContext, SessionContext, 
+  sessionContextDialogs, showDialog, Dialog,
 } from '@jupyterlab/apputils';
 
 import Neu3D from 'neu3d';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Message } from '@lumino/messaging';
-import { PromiseDelegate } from '@lumino/coreutils';
-
 import { Toolbar, ToolbarButton } from '@jupyterlab/apputils';
 import {
   uploadIcon, syncIcon, zoomToFitIcon,
@@ -21,6 +23,7 @@ import {
 } from './icons';
 import { LabIcon } from '@jupyterlab/ui-components';
 import '../style/index.css';
+import { INeu3DModel, Neu3DModel } from './model';
 import {AdultMesh} from './adult_mesh';
 import {LarvaMesh} from './larva_mesh';
 // import commCodeStr from "./launch_session.py";
@@ -38,19 +41,45 @@ declare global {
   }
 }
 
+
+/**
+ * Data sent from neu3d's `on` callbacks
+ * Only covers `add, remove, pinned, visibility` events
+ */
+interface INeu3DMessage {
+  event: string;
+  prop: string;
+  value: boolean | any;
+  old_value?: boolean | any;
+  path?: Array<string> | any;
+  obj?: any;
+}
+
+
 export
   interface IFBLWidget {
   // /**
   // * Connection to another widget through signal
   // */
   // connect(signal: ISignal<IFBLWidget, object>): void;
+
+
+  /**
+   * The sessionContext keeps track of the current running session
+   * associated with the widget.
+   */
   sessionContext: ISessionContext;
 
-  species: string;
   /**
-  * Output signal of child widget (used for connection to master)
-  */
-  outSignal: ISignal<this, object>;
+   * A string indicating whether it's adult or larva.
+   * Has special setter that the neu3d visualization setting and rendered meshes
+   */
+  species: string;
+
+  // /** 
+  // * Output signal of child widget (used for connection to master)
+  // */
+  // outSignal: ISignal<this, object>;
 
   /**
    * Dispose current widget
@@ -58,9 +87,9 @@ export
   dispose(): void;
 
   /**
-   * 
+   * All neurons current rendered in the workspace. 
    */
-  model?: any;
+  model: INeu3DModel;
 }
 
 /**
@@ -68,15 +97,22 @@ export
 */
 export class Neu3DWidget extends Widget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions) {
-    super();
+    super({});
+    // expose widget to window
+    window.widget = this;
     console.log('Instantiating Neu3D Widget');
     let {
       path,
       basePath,
       name,
       app,
-      sessionContext
+      sessionContext,
+      model,
+      species,
     } = options;
+
+    // create model
+    this.model = new Neu3DModel(model);
     let manager: ServiceManager = app.serviceManager;
     const count = Private.count++;
     this.id = `Neu3D-${count}-${UUID.uuid4()}`;
@@ -109,6 +145,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
     const layout = (this.layout = new PanelLayout());
     this.toolbar = Private.createToolbar(this);
     layout.addWidget(this.toolbar);
+    Private.populateToolBar(this, this.toolbar);
     this._neu3dContainer = document.createElement('div')
     this._neu3dContainer.style.height = '100%';
     this._neu3dContainer.style.width = '100%';
@@ -117,6 +154,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
     // create session and `initialize`
     sessionContext.initialize().then(async value => {
       // Setup Main Panel
+      
       if (value) {
         await sessionContextDialogs.selectKernel(sessionContext);
       }
@@ -128,14 +166,9 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
       sessionContext.kernelChanged.connect(this._onKernelChanged, this);
       sessionContext.propertyChanged.connect(this._onPathChanged, this);
 
-      if (this.neu3d){
-        this.neu3d.onWindowResize()
-      }
-      this._ready.resolve(void 0);
+      if (this.neu3d){ this.neu3d.onWindowResize(); }
+      this.species = species; // set species after neu3d is available
     });
-
-    // expose widget to window
-    window.widget = this;
   }
 
   onAfterShow(msg: Message){
@@ -156,6 +189,41 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
         }
       );
     }
+
+    this.neu3d.meshDict.on('add', (e:INeu3DMessage) => {
+      this.model.addMesh(e.prop, e.value);
+    });
+    this.neu3d.meshDict.on('remove', (e:INeu3DMessage) => {
+      this.model.removeMesh(e.prop)
+    });
+    this.neu3d.meshDict.on('change', 
+    (e:INeu3DMessage) =>{
+      switch (e.value) {
+        case true:
+          this.model.pinMeshes(e.path);
+          break;
+        case false:
+          this.model.unpinMeshes(e.path);
+          break;
+        default:
+          break;
+      }
+    },
+    'pinned');
+    this.neu3d.meshDict.on('change', 
+    (e:INeu3DMessage) =>{
+      switch (e.value) {
+        case true:
+          this.model.showMeshes(e.path);
+          break;
+        case false:
+          this.model.hideMeshes(e.path);
+          break;
+        default:
+          break;
+      }
+    },
+    'visibility');
     this.neu3d.onWindowResize()
   }
 
@@ -173,11 +241,11 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
     delete this.neu3d;
     this._outSignal.emit({ type: "Dispose" });
     // Dispose Session 
-    // if(!this.sessionContext.isDisposed) { 
-    //   this.sessionContext.shutdown().then(() => {
-    //     this.sessionContext.dispose();
-    //   })
-    // }
+    if(!this.sessionContext.isDisposed) { 
+      this.sessionContext.shutdown().then(() => {
+        this.sessionContext.dispose();
+      })
+    }
     super.dispose();
     this._isDisposed = true;
     Signal.disconnectAll(this._outSignal);
@@ -435,13 +503,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
     super.onResize(msg);
     this.neu3d.onWindowResize();
   }
-  /**
-  * A promise that resolves when the FBL widget is ready
-  */
-  get ready(): Promise<void> {
-    return this._ready.promise;
-  }
-
+  
   /**
    * Set species
    * @param new_species new species to be added
@@ -488,10 +550,9 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
   * The Elements associated with the widget.
   */
   private _connected: Date;
-  private _ready = new PromiseDelegate<void>();
   private _isDisposed = false;
   private _outSignal = new Signal<this, object>(this);
-  private toolbar: Toolbar<Widget>;
+  toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   private _comm: Kernel.IComm;
   private _species: any;
@@ -501,21 +562,27 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
   readonly _larvaMesh: Object; // caching for dynamically import mesh
   private _neu3dContainer: HTMLDivElement;
   sessionContext: ISessionContext;
+  model: Neu3DModel;
 };
 
 
 /**
- * A namespace for ConsolePanel statics.
+ * A namespace for FBL Widget statics.
  */
 export namespace FBLWidget {
   /**
-   * The initialization options for a console panel.
+   * The initialization options for a FBL Widget
    */
   export interface IOptions {
     /**
      * The service manager used by the panel.
      */
     app: JupyterFrontEnd;
+
+    /**
+     * Species
+     */
+    species?: string;
 
     /**
      * The path of an existing widget.
@@ -537,10 +604,17 @@ export namespace FBLWidget {
      */
     sessionContext?: ISessionContext;
 
+
     /**
-     * A function to call when the kernel is busy.
+     * Function to call when setting busy
      */
     setBusy?: () => IDisposable;
+
+
+    /**
+     * Existing model to be loaded into widget
+     */
+    model?: INeu3DModel;
   }
 }
 
@@ -598,7 +672,7 @@ namespace Private {
     return btn;
   }
 
-  function populateToolBar(
+  export function populateToolBar(
     widget: Neu3DWidget,
     toolbar: Toolbar
   ): void {
