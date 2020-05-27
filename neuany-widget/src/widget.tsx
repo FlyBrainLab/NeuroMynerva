@@ -1,32 +1,22 @@
+import * as React from 'react';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { ServiceManager, Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { PathExt, Time } from '@jupyterlab/coreutils';
-
-import { 
-  Widget, 
-  // PanelLayout 
-} from '@lumino/widgets';
+import { Widget } from '@lumino/widgets';
 import {
   ISessionContext, SessionContext, 
   sessionContextDialogs, showDialog, Dialog,
   UseSignal, ReactWidget
 } from '@jupyterlab/apputils';
-
 import { Signal, ISignal } from '@lumino/signaling';
 import { Message } from '@lumino/messaging';
 import { Toolbar, ToolbarButton, ToolbarButtonComponent } from '@jupyterlab/apputils';
-import {
-  uploadIcon, 
-  // syncIcon, zoomToFitIcon,
-  // eyeIcon, eyeSlashIcon, cameraIcon, trashIcon,
-  // mapUpinIcon
-} from './icons';
+import { uploadIcon, fblIcon } from './icons';
 import { LabIcon } from '@jupyterlab/ui-components';
 import '../style/index.css';
 import { INeuAnyModel, NeuAnyModel } from './model';
-import * as React from 'react';
 
 const VERBOSE = true;
 const NEUANY_CLASS_JLab = "jp-NeuAny";
@@ -76,9 +66,7 @@ export
 */
 export class NeuAnyWidget extends Widget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions) {
-    super({});
-    // expose widget to window
-    window.widget = this;
+    super();
     let {
       path,
       basePath,
@@ -132,6 +120,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
         },
         setBusy: options.setBusy
       });
+
     _startup_log += `
     <br>[Startup] Output SessionContext with options. <br>
     &nbsp;&nbsp;&nbsp;&nbsp; |-- path: ${sessionContext.path} <br>
@@ -160,6 +149,9 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
       if (value) {
         await sessionContextDialogs.selectKernel(sessionContext);
       }
+      // Force it to handle comms
+      sessionContext.session.kernel.handleComms = true;
+      Private.logToWidget(this, '[Startup - callback] Forcing kernel to handleComm');
       this._connected = new Date();  
       await this._registerComm();
       Private.logToWidget(this, '[Startup - callback] Comm Registered');
@@ -204,12 +196,6 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
       return;
     }
 
-    // Dispose Session 
-    if(!this.sessionContext.isDisposed) { 
-      this.sessionContext.shutdown().then(() => {
-        this.sessionContext.dispose();
-      })
-    }
     super.dispose();
     this.model.dispose();
     this._isDisposed = true;
@@ -231,7 +217,8 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
     // interrogate kernel as Kernel class
     let msg = await kernel.requestCommInfo({});
     if (!kernel.handleComms){ 
-      return Promise.resolve(null);
+      // force kernel to handleComms
+      kernel.handleComms = true;
     }
     if (msg.content && msg.content?.status == 'ok') {
       for (let c of Object.values(msg.content.comms)) {
@@ -375,7 +362,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
     await this.sessionContext.ready;
     let kernel = this.sessionContext.session.kernel;
     Private.logToWidget(this, `[Comm Event] Registering Comm with target: ${this._commTarget}`);
-    if (kernel) {
+    if (kernel?.handleComms) {
       // safeguard to ensure if this comm already exists
       if (!kernel.hasComm(this._commTarget)) {
         kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
@@ -401,11 +388,13 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
       from collections import OrderedDict
       if 'comms' not in globals():
         comms = OrderedDict()
+      if '${this.id}' not in comms:
         comm = Comm(target_name="${this._commTarget}")
         comms['${this.id}'] = comm
       if not any([comm.target_name != "${this._commTarget}" for widget_id, comm in comms.items()]):
         comm = Comm(target_name="${this._commTarget}")
         comms['${this.id}'] = comm
+
       comms['${this.id}'].send(data="comm sent message")
       # comm.close(data="closing comm")
       `;
@@ -587,21 +576,20 @@ namespace Private {
     const sessionContext = widget.sessionContext.session;
     if (sessionContext) {
       let caption =
-        `Name: ${sessionContext.name}\n` +
+        `Session Name: ${sessionContext.name}\n` +
         `Directory: ${PathExt.dirname(sessionContext.path)}\n` +
         `Kernel: ${widget.sessionContext.kernelDisplayName}\n` +
         `Comm: ${widget._commTarget})`;
       if (connected) {
         caption += `\nConnected: ${Time.format(connected.toISOString())}`;
       }
-      // if (executed) {
-      //   caption += `\nLast Execution: ${Time.format(executed.toISOString())}`;
-      // }
-      widget.title.label = sessionContext.name;
+      widget.title.label = `${widget.name}::${sessionContext.name}`;
+      widget.title.icon = fblIcon;
       widget.title.caption = caption;
     } else {
-      widget.title.label = 'FBL';
-      widget.title.caption = '';
+      widget.title.label = widget.name;
+      widget.title.icon = fblIcon;
+      widget.title.caption = `No Kernel`;
     }
   }
 
