@@ -37,6 +37,7 @@ const NEUANY_CLASS_NAME = '.jp-NeuAny';
 declare global {
   interface Window {
     neu3dTracker: any;
+    neuAnyTracker: any;
     app: any;
   }
 }
@@ -182,6 +183,7 @@ async function activateFBL(
 
   window.app = app;
   window.neu3dTracker = neu3DTracker;
+  window.neuAnyTracker = neuAnyTracker;
 
   let Neu3DWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   let NeuGFXWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
@@ -214,13 +216,13 @@ async function activateFBL(
   app.commands.addCommand(CommandIDs.Neu3DCreate, {
     label: 'Create Neu3D Instance',
     icon: neu3DIcon,
-    execute: async () => {
+    execute: async (args) => {
       if (!Neu3DWidgetModule){
         let plugin = await loadModule(NEU3D_MODULE_URL);
         Neu3DWidgetModule = plugin.Neu3DWidget;  
       }
       // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (Neu3DWidgetModule as any)({app: app});
+      let widget: IFBLWidget = new (Neu3DWidgetModule as any)({app: app, ...args});
       let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       // Attach the widget to the main work area if it's not there
       if (!neu3DTracker.has(panel)){
@@ -276,13 +278,13 @@ async function activateFBL(
   app.commands.addCommand(CommandIDs.NeuGFXCreate, {
     label: 'Create NeuGFX Instance',
     icon: neuGFXIcon,
-    execute: async () => {
+    execute: async (args) => {
       if (!NeuGFXWidgetModule){
         let plugin = await loadModule(NEUGFX_MODULE_URL);
         NeuGFXWidgetModule = plugin.NeuGFXWidget;
       }
       // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (NeuGFXWidgetModule as any)({app: app});
+      let widget: IFBLWidget = new (NeuGFXWidgetModule as any)({app: app, ...args});
       let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       if (!neuGFXtracker.has(panel)){
         neuGFXtracker.add(panel);
@@ -301,13 +303,13 @@ async function activateFBL(
   app.commands.addCommand(CommandIDs.NeuAnyCreate, {
     label: 'Create NeuAny Instance (Placeholder)',
     icon: fblIcon,
-    execute: async () => {
+    execute: async (args) => {
       if (!NeuAnyWidgetModule){
         let plugin = await loadModule(NEUANY_MODULE_URL);
         NeuAnyWidgetModule = plugin.NeuAnyWidget;
       }
       // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({app: app});
+      let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({app: app, ...args});
       let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       if (!neuAnyTracker.has(panel)){
         neuAnyTracker.add(panel);
@@ -333,10 +335,7 @@ async function activateFBL(
         NeuAnyWidgetModule = plugin.NeuAnyWidget;  
       }
       // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({
-        app: app, 
-        ...args
-      });
+      let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({app: app, ...args});
       let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
       if (!neuAnyTracker.has(panel)){
         await neuAnyTracker.add(panel);

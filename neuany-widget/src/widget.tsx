@@ -1,8 +1,9 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
-import { ServiceManager, Kernel, Session } from '@jupyterlab/services';
+import { ServiceManager, Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { PathExt, Time } from '@jupyterlab/coreutils';
+
 import { 
   Widget, 
   // PanelLayout 
@@ -78,7 +79,6 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
     super({});
     // expose widget to window
     window.widget = this;
-    console.log('Instantiating NeuAny Widget');
     let {
       path,
       basePath,
@@ -110,6 +110,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
     if (!path) {
       path = `${basePath || ''}/${this.id}`;
     }
+    this.name = name || `NeuAny ${count}`;
     this._commTarget = `${TEMPLATE_COMM_TARGET}-${count}`;
     _startup_log += `
     <br>[Startup] Creating SessionContext with options. <br>
@@ -122,7 +123,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
         sessionManager: manager.sessions,
         specsManager: manager.kernelspecs,
         path,
-        name: name || `NeuAny ${count}`,
+        name: this.name,
         type: 'FBL',
         kernelPreference: {
           shouldStart: true,
@@ -213,46 +214,52 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
     this.model.dispose();
     this._isDisposed = true;
     Signal.disconnectAll(this._modelChanged);
-    if (this._isDisposed) {
-      if (VERBOSE) { console.log('[NM] NeuAny Widget Disposed'); }
-    } 
   }
 
   /**
    * Check if Kernel is FBL compatible
-   * 1. Checks if contains Comm matches the comms target id
+   * 1. Check if kernel handles comm
+   * 2. Checks if contains Comm matches the comms target template
+   * 3. Return the first Comm targetName if found
    */
-  isFBLKernel(kernel: Kernel.IKernelConnection): string | null {
+  async isFBLKernel(kernel: Kernel.IKernelConnection): Promise<string|null> | null {
     Private.logToWidget(this, 
       `[FBL Event] isFBLKernel Called <br>
       &nbsp;&nbsp;&nbsp;&nbsp |-- kernel name: ${kernel?.model.name} <br>
       &nbsp;&nbsp;&nbsp;&nbsp |-- kernel id: ${kernel?.model.id} `);
     let targetCandidates = new Array<any>();
     // interrogate kernel as Kernel class
-    for (let c of (kernel as any)._comms.values()) {
-      if (c.isDisposed) {
-        continue
-      }
-      if (c._target.includes(TEMPLATE_COMM_TARGET)) {
-        targetCandidates.push(c._target);
-      };
+    let msg = await kernel.requestCommInfo({});
+    if (!kernel.handleComms){ 
+      return Promise.resolve(null);
     }
-
+    if (msg.content && msg.content?.status == 'ok') {
+      for (let c of Object.values(msg.content.comms)) {
+        if (c.target_name.includes(TEMPLATE_COMM_TARGET)) {
+          targetCandidates.push(c.target_name);
+        };
+      }
+    } else{
+      return Promise.resolve(null);
+    }
+    
     if (targetCandidates.length == 0) {
       Private.logToWidget(this, 
-        `[FBL Event] isFBLKernel Comm Target not found`)
-      return null;
+        `[FBL Event] isFBLKernel Comm Target not found`);
+      return Promise.resolve(null);
     }
 
     // take only unique target values
     targetCandidates = [...new Set(targetCandidates)];
     if (targetCandidates.length > 1){
-      console.warn(`[NM] Multiple FBL Comms found in Kernel ${kernel}, using the first one!
-                    found ${targetCandidates.length}: ${targetCandidates}`);
+      Private.logToWidget(this,
+        `[NM] Multiple FBL Comms found in Kernel ${kernel}, using the first one!
+         found ${targetCandidates.length}: ${targetCandidates}`
+         );
     }
     Private.logToWidget(this, 
       `[FBL Event] isFBLKernel Comm Target found: ${targetCandidates.toString()}`);
-    return targetCandidates[0];
+    return Promise.resolve(targetCandidates[0]);
   }
 
   /**
@@ -270,21 +277,20 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
       &nbsp;&nbsp;&nbsp;&nbsp |-- old id: ${oldKernel?.model.id} <br>
       &nbsp;&nbsp;&nbsp;&nbsp |-- new name: ${newKernel?.model.name} <br>
       &nbsp;&nbsp;&nbsp;&nbsp |-- new id: ${newKernel?.model.id}`);
-
-    if (newKernel === null || newKernel.isDisposed){
+    
+    if (!newKernel || newKernel?.isDisposed){
       return;
     }
 
     let newCommTarget: string = null;
     let oldCommTarget: string = null;
-    if (VERBOSE) { console.log('[NM] kernel changed', context, oldKernel, newKernel); }
 
     // check if FBL Comm exists in the new kernel
     if (newKernel && !newKernel.isDisposed){
-      newCommTarget = this.isFBLKernel(newKernel);
+      newCommTarget = await this.isFBLKernel(newKernel);
     }
-    if (oldKernel && !newKernel.isDisposed){
-      oldCommTarget = this.isFBLKernel(oldKernel);
+    if (oldKernel && !oldKernel.isDisposed){
+      oldCommTarget = await this.isFBLKernel(oldKernel);
     }
 
     let dialogButtons = [Dialog.okButton()];
@@ -296,7 +302,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
                 We will need to inject some code into the new kernel to create Comm target ${this._commTarget}`;
       if (oldKernel !== null) { // if switching over from another kernel
         if (oldCommTarget && (!oldKernel.isDisposed)) { // if the 
-          msg += `Fortunately, the old Kernel ${oldKernel.name} has the right Comm. <br>
+          msg += `Fortunately, the old Kernel ${oldKernel.name} has the right Comm ${oldCommTarget}.<br>
                 You can opt to stay in the older kernel if you want`;
           dialogButtons.push(
             Dialog.cancelButton({
@@ -304,8 +310,8 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
             })
           )
         }
-        // We inform the user that code will need to be injected into the 
-        // new kernel to make it FBL compatible. 
+        // We inform the user that code will need to be injected 
+        // into the new kernel to make it FBL compatible. 
         // If the old kernel is still running as has the appropriate comm,
         // we allow the user to revert the kernel change. 
         // Else we force the user to accept the code injection.
@@ -317,7 +323,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
           if (result.button.accept){
             this._registerComm();
             this._onPathChanged();
-          } 
+          }
         });
       }
     }
@@ -333,7 +339,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
     if (status === "restarting") {
       this.sessionContext.ready.then(() => {
         this._registerComm();
-      })
+      });
     }
   }
 
@@ -342,8 +348,6 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
   */
   private _onPathChanged(msg?: any): void {
     Private.logToWidget(this, `[Session Event] Path Changed. ${msg}`);
-    console.log('[NM] Path Changed', msg);
-    if (VERBOSE) { console.log(this.sessionContext.kernelDisplayName); }
     if (this.sessionContext.session) {
       Private.updateTitle(this, this._connected);
     }
@@ -357,8 +361,11 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
     return this._speciesChanged;
   }
 
-  private commMessageHandler(msg: any) {
-    console.log('[' + msg.content.comm_id + '] ', msg.content.data);
+  private commMessageHandler(msg: KernelMessage.ICommMsgMsg) {
+    Private.logToWidget(this,
+      `[Comm Message] Comm_id: ${msg.content.comm_id} <br>
+      &nbsp;&nbsp;&nbsp;&nbsp |-- message: ${msg.content.data.toString()}
+      `);
   }
 
   /**
@@ -377,14 +384,13 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
           if (commMsg.content.target_name !== this._commTarget) {
             return;
           }
-          comm.onMsg = (msg) => {
+          comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
             Private.logToWidget(this, `[Comm Event] Comm message received, target: ${this._commTarget}`);
             Private.logToWidget(this, `&nbsp;&nbsp;&nbsp;&nbsp |-- Message received: ${msg.content.data}`);
             this.commMessageHandler(msg);
           };
-          comm.onClose = (msg) => {
+          comm.onClose = (msg: KernelMessage.ICommCloseMsg) => {
             Private.logToWidget(this, `[Comm Event] Comm closed, target: ${this._commTarget}`);
-            if (VERBOSE) { console.log('[NM] Comm Closed,', this._commTarget, msg.content.data); }
           };
         });
       }
@@ -392,11 +398,15 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
       // TODO Python Safeguard: dup comm
       let code = `
       from ipykernel.comm import Comm
-      if 'comm' not in globals():
+      from collections import OrderedDict
+      if 'comms' not in globals():
+        comms = OrderedDict()
         comm = Comm(target_name="${this._commTarget}")
-      if comm.target_name != "${this._commTarget}":
+        comms['${this.id}'] = comm
+      if not any([comm.target_name != "${this._commTarget}" for widget_id, comm in comms.items()]):
         comm = Comm(target_name="${this._commTarget}")
-      comm.send(data="comm sent message")
+        comms['${this.id}'] = comm
+      comms['${this.id}'].send(data="comm sent message")
       # comm.close(data="closing comm")
       `;
 
@@ -429,11 +439,21 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
 
       kernel.requestExecute({ code: code }).done.then((reply) => {
         if (reply && reply.content.status === "error"){
+          const traceback = ANSI.stripReplyError(reply.content.traceback);
+          const body = (
+            <div>
+              {traceback && (
+                <details className="jp-mod-wide">
+                  <pre>{traceback}</pre>
+                </details>
+              )}
+            </div>
+          );
           showDialog({
             title: `Comm Registration Failed (${this._commTarget})`,
-            body: reply.content.traceback.join('')
+            body: body
           }).then(()=>{
-            return Promise.reject('Execution Failed');
+            return Promise.resolve('Execution Failed');
           })
         } else if (reply && reply.content.status === 'ok'){
           return Promise.resolve(void 0);
@@ -483,6 +503,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
   private _speciesChanged = new Signal<this, string>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
+  readonly name: string;
   // private _comm: Kernel.IComm;
   private _species: any;
   readonly _adultMesh: Object; // caching for dynamically imported mesh
@@ -636,6 +657,7 @@ namespace Private {
     msg: string
   ): void {
     widget.innerContainer.innerHTML += `<br>${msg}`;
+    if (VERBOSE) { console.log(msg); }
   }
 
   /**
@@ -721,5 +743,12 @@ namespace Private {
     );
     el.addClass('jp-FBL-species');
     return el;
+  }
+}
+
+namespace ANSI {
+  export function stripReplyError(msg:Array<string>): string {
+    let characters = /\[-|\[[0-1];[0-9]+m|\[[0]m/g;
+    return msg.join('\n').replace(characters, "");
   }
 }
