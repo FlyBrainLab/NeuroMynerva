@@ -19,7 +19,7 @@ import '../style/index.css';
 import { INeuAnyModel, NeuAnyModel } from './model';
 
 const VERBOSE = true;
-const NEUANY_CLASS_JLab = "jp-NeuAny";
+const NEUANY_CLASS_JLab = "jp-FBL-NeuAny";
 const TOOLBAR_SPECIES_CLASS = "jp-NeuAny-Species";
 // This class is used for keeping track of FBL
 // widgets that are associated with a given client session
@@ -76,6 +76,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
       model,
       species,
     } = options;
+
     let _startup_log = `
     [Startup] Instantiating with options<br>
     &nbsp;&nbsp;&nbsp;&nbsp; |-- path: ${path} <br>
@@ -112,7 +113,7 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
         specsManager: manager.kernelspecs,
         path,
         name: this.name,
-        type: 'FBL',
+        type: 'console',
         kernelPreference: {
           shouldStart: true,
           canStart: true,
@@ -495,8 +496,6 @@ export class NeuAnyWidget extends Widget implements IFBLWidget {
   readonly name: string;
   // private _comm: Kernel.IComm;
   private _species: any;
-  readonly _adultMesh: Object; // caching for dynamically imported mesh
-  readonly _larvaMesh: Object; // caching for dynamically import mesh
   innerContainer: HTMLDivElement;
   sessionContext: ISessionContext;
   model: NeuAnyModel;
