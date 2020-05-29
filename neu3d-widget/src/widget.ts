@@ -29,7 +29,7 @@ import {LarvaMesh} from './larva_mesh';
 // import commCodeStr from "./launch_session.py";
 
 const VERBOSE = true;
-const Neu3D_CLASS_JLab = "jp-Neu3D";
+const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
 // This class is used for keeping track of FBL
 // widgets that are associated with a given client session
 // const Neu3D_CLASS_Python = "Neu3D";
@@ -131,7 +131,7 @@ export class Neu3DWidget extends Widget implements IFBLWidget {
         specsManager: manager.kernelspecs,
         path,
         name: name || `Neu3D ${count}`,
-        type: 'FBL',
+        type: 'console',
         kernelPreference: {
           shouldStart: true,
           canStart: true,
