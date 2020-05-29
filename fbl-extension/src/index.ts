@@ -17,9 +17,16 @@ import {
   MainAreaWidget, 
   WidgetTracker, 
   ISessionContext,
-  Toolbar
+  Toolbar,
 } from '@jupyterlab/apputils';
 
+import{
+  Kernel
+} from '@jupyterlab/services';
+
+import {
+  LabIcon
+} from '@jupyterlab/ui-components'
 import { ISignal } from '@lumino/signaling';
 import { 
   Widget
@@ -27,17 +34,23 @@ import {
 
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
 
+const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
 const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
 const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
 const NEUANY_MODULE_URL = "http://localhost:7999/build/bundle.js"; //placeholder
-const NEU3D_CLASS_NAME = '.jp-Neu3D';
-const NEUGFX_CLASS_NAME = '.jp-NeuGFX';
-const NEUANY_CLASS_NAME = '.jp-NeuAny';
+// const MASTER_CLASS_NAME = '.jp-FBL-Master';
+const NEU3D_CLASS_NAME = '.jp-FBL-Neu3D';
+const NEUGFX_CLASS_NAME = '.jp-FBL-NeuGFX';
+const NEUANY_CLASS_NAME = '.jp-FBL-NeuAny';
+const NEU3DICON = neu3DIcon;
+const NEUGFXICON = neuGFXIcon;
+const NEUANYICON = fblIcon;
 
 declare global {
   interface Window {
     neu3dTracker: any;
     neuAnyTracker: any;
+    master: any;
     app: any;
   }
 }
@@ -45,18 +58,19 @@ declare global {
 
 // NOTE: this is taken exactly from the WidgetModule class
 // it is put here so we have something to reference in the widget tracker
-interface IFBLWidget extends Widget {
-  toolbar?: Toolbar<Widget>;
-
-  modelChanged: ISignal<this, object>;
-
+export
+  interface IFBLWidget extends Widget{
+  /**
+   * The sessionContext keeps track of the current running session
+   * associated with the widget.
+   */
   sessionContext: ISessionContext;
 
-  species: string;
-   /**
-   * Output signal of child widget (used for connection to master)
+  /**
+   * A string indicating whether it's adult or larva.
+   * Has special setter that the neu3d visualization setting and rendered meshes
    */
-  outSignal: ISignal<this, object>;
+  species: string;
 
   /**
    * Dispose current widget
@@ -64,9 +78,15 @@ interface IFBLWidget extends Widget {
   dispose(): void;
 
   /**
-   * 
+   * All neurons current rendered in the workspace. 
    */
-  model?: any;  
+  model: any;
+
+
+  speciesChanged: ISignal<IFBLWidget, string>;
+  modelChanged: ISignal<IFBLWidget, object>;
+  icon?: LabIcon
+  toolbar?: Toolbar<Widget>
 }
 
 
@@ -102,7 +122,7 @@ const extension: JupyterFrontEndPlugin<void> = {
  *  will need to resolve to specific module like `plugin.Neu3DWidget` after return
  */
 async function loadModule(url: String): Promise<any> {
-  await injectRequired;
+  await injectRequired();
   return new Promise<any>((resolve, reject)=>{
     (<any>window).require([url], (plugin: any)=>{
       console.log(`Loaded plugin from ${url} with RequireJS`, plugin);
@@ -116,19 +136,21 @@ async function loadModule(url: String): Promise<any> {
  * @param hasRequire indicate if require has been loaded by this extension already
  * @return a promise that resolves to true after requireJS is loaded
  */
-const injectRequired = new Promise<any>((resolve, reject)=>{
-  (function(d) {
-    if (window.hasOwnProperty('require') && (typeof((window as any).require) === 'function')) {
-          return;
-    }
-    const script = d.createElement('script');
-    script.type = 'text/javascript';
-    script.async = true;
-    script.src = 'https://requirejs.org/docs/release/2.3.6/comments/require.js';
-    d.getElementsByTagName('head')[0].appendChild(script);
-  }(window.document));
-  resolve(void 0);
-});
+function injectRequired(): Promise<any> {
+  return new Promise<any>((resolve, reject)=>{
+    (function(w) {
+      if (w.hasOwnProperty('require') && (typeof((w as any).require) === 'function')) {
+        resolve(void 0);
+      }
+      const script = w.document.createElement('script');
+      script.type = 'text/javascript';
+      script.async = true;
+      script.src = 'https://requirejs.org/docs/release/2.3.6/comments/require.js';
+      w.document.getElementsByTagName('head')[0].appendChild(script);
+    }(window));
+    setTimeout(() => resolve(void 0), 500);
+  });
+}
 
 
 /**
@@ -147,9 +169,9 @@ async function activateFBL(
 ) {
   console.log("FBL Extension Activated");
   const neu3DTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'});
-  const neuGFXtracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'});
+  const neuGFXTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'});
   const neuAnyTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neuany'});
-
+  
   // Handle state restoration.
   restorer.restore(neu3DTracker, {
     command: CommandIDs.Neu3DOpen,
@@ -188,6 +210,27 @@ async function activateFBL(
   let Neu3DWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   let NeuGFXWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   let NeuAnyWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
+  
+  await injectRequired();
+  let plugin = await loadModule(MASTER_MODULE_URL);
+  const MasterWidgetModule = plugin.MasterWidget;
+  const masterWidget = new MasterWidgetModule({
+    "Neu3D": neu3DTracker,
+    "NeuAny": neuAnyTracker,
+    "NeuGFX": neuGFXTracker,
+  })
+  masterWidget.id = 'jp-FBL-Master';
+  masterWidget.title.caption = 'FBL Widgets and Running Sessions';
+  masterWidget.title.icon = fblIcon;
+  masterWidget.title.iconClass = 'jp-SideBar-tabIcon';
+
+
+  window.master = masterWidget;
+  // add to last
+  if (restorer) {
+    restorer.add(masterWidget, 'FBL-Master');
+  }
+  app.shell.add(masterWidget, 'left', {rank: Infinity});
 
   // Get the current widget and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyPartialJSONObject): MainAreaWidget<IFBLWidget> | null {
@@ -197,7 +240,7 @@ async function activateFBL(
         widget = neu3DTracker.currentWidget;
         break;
       case 'neugfx':
-        widget = neuGFXtracker.currentWidget;
+        widget = neuGFXTracker.currentWidget;
         break;
       case 'neuany':
         widget = neuAnyTracker.currentWidget;
@@ -215,213 +258,132 @@ async function activateFBL(
 
   app.commands.addCommand(CommandIDs.Neu3DCreate, {
     label: 'Create Neu3D Instance',
-    icon: neu3DIcon,
+    icon: NEU3DICON,
     execute: async (args) => {
       if (!Neu3DWidgetModule){
         let plugin = await loadModule(NEU3D_MODULE_URL);
         Neu3DWidgetModule = plugin.Neu3DWidget;  
       }
-      // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (Neu3DWidgetModule as any)({app: app, ...args});
-      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
-      // Attach the widget to the main work area if it's not there
-      if (!neu3DTracker.has(panel)){
-        await neu3DTracker.add(panel);
-      }
-      widget.sessionContext.propertyChanged.connect(()=>{
-        void neu3DTracker.save(panel);
-      })
-      widget.modelChanged.connect(()=>{
-        void neu3DTracker.save(panel);
-      })
-
-      app.shell.add(panel, 'main');
-      widget.update()
-      panel.update()
-      // Activate the widget
-      app.shell.activateById(panel.id);
+      await FBL.createFBLWidget(
+        app,
+        <any>Neu3DWidgetModule,
+        NEU3DICON,
+        args,
+        neu3DTracker
+      );
     }
-  });  
-  // TODO: Open Existing according to path.
+  });
   app.commands.addCommand(CommandIDs.Neu3DOpen, {
     label: 'Open Neu3D Instance',
-    icon: neu3DIcon,
+    icon: NEU3DICON,
     execute: async (args) => {
       if (!Neu3DWidgetModule){
         let plugin = await loadModule(NEU3D_MODULE_URL);
         Neu3DWidgetModule = plugin.Neu3DWidget;  
       }
-      // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (Neu3DWidgetModule as any)({
-        app: app, 
-        ...args
-      });
-      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
-      if (!neu3DTracker.has(panel)){
-        await neu3DTracker.add(panel);
-      }
-      widget.sessionContext.propertyChanged.connect(()=>{
-        void neu3DTracker.save(panel);
-      });
-      widget.modelChanged.connect(()=>{
-        void neu3DTracker.save(panel);
-      });
-      // Attach the widget to the main work area if it's not there
-      app.shell.add(panel, 'main');
-      widget.update();
-      panel.update()
-      // Activate the widget
-      app.shell.activateById(panel.id);
+      await FBL.createFBLWidget(
+        app,
+        <any>Neu3DWidgetModule,
+        NEU3DICON,
+        args,
+        neu3DTracker
+      );
     }
   });  
 
   app.commands.addCommand(CommandIDs.NeuGFXCreate, {
     label: 'Create NeuGFX Instance',
-    icon: neuGFXIcon,
+    icon: NEUGFXICON,
     execute: async (args) => {
       if (!NeuGFXWidgetModule){
         let plugin = await loadModule(NEUGFX_MODULE_URL);
         NeuGFXWidgetModule = plugin.NeuGFXWidget;
       }
-      // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (NeuGFXWidgetModule as any)({app: app, ...args});
-      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
-      if (!neuGFXtracker.has(panel)){
-        neuGFXtracker.add(panel);
-      }
-      widget.sessionContext.propertyChanged.connect(()=>{
-        void neuGFXtracker.save(panel);
-      })
-      // Attach the widget to the main work area if it's not there
-      app.shell.add(panel, 'main');
-      widget.update();
-      panel.update();
-      // Activate the widget
-      app.shell.activateById(panel.id);
+      await FBL.createFBLWidget(
+        app,
+        <any>NeuGFXWidgetModule,
+        NEUGFXICON,
+        args,
+        neuGFXTracker
+      );
     }
   });
   app.commands.addCommand(CommandIDs.NeuAnyCreate, {
     label: 'Create NeuAny Instance (Placeholder)',
-    icon: fblIcon,
+    icon: NEUANYICON,
     execute: async (args) => {
       if (!NeuAnyWidgetModule){
         let plugin = await loadModule(NEUANY_MODULE_URL);
         NeuAnyWidgetModule = plugin.NeuAnyWidget;
       }
-      // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({app: app, ...args});
-      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
-      if (!neuAnyTracker.has(panel)){
-        neuAnyTracker.add(panel);
-      }
-      widget.sessionContext.propertyChanged.connect(()=>{
-        void neuAnyTracker.save(panel);
-      })
-      // Attach the widget to the main work area if it's not there
-      app.shell.add(panel, 'main');
-      widget.update();
-      panel.update();
-      // Activate the widget
-      app.shell.activateById(panel.id);
+      await FBL.createFBLWidget(
+        app,
+        <any>NeuAnyWidgetModule,
+        NEUANYICON,
+        args,
+        neuAnyTracker
+      );
     }
   });
   // TODO: Open Existing according to path.
   app.commands.addCommand(CommandIDs.NeuAnyOpen, {
     label: 'Open NeuAny Instance',
-    icon: fblIcon,
+    icon: NEUANYICON,
     execute: async (args) => {
       if (!NeuAnyWidgetModule){
         let plugin = await loadModule(NEUANY_MODULE_URL);
         NeuAnyWidgetModule = plugin.NeuAnyWidget;  
       }
-      // Create a new widget if one does not exist
-      let widget: IFBLWidget = new (NeuAnyWidgetModule as any)({app: app, ...args});
-      let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
-      if (!neuAnyTracker.has(panel)){
-        await neuAnyTracker.add(panel);
-      }
-      widget.sessionContext.propertyChanged.connect(()=>{
-        void neuAnyTracker.save(panel);
-      });
-      widget.modelChanged.connect(()=>{
-        void neuAnyTracker.save(panel);
-      });
-      // Attach the widget to the main work area if it's not there
-      app.shell.add(panel, 'main');
-      widget.update();
-      panel.update()
-      // Activate the widget
-      app.shell.activateById(panel.id);
+      await FBL.createFBLWidget(
+        app,
+        <any>NeuAnyWidgetModule,
+        NEUANYICON,
+        args,
+        neuAnyTracker
+      );
     }
   });  
 
   app.commands.addCommand(CommandIDs.Neu3DCreateConsole, {
     label: 'Create Console for Neu3D Widget',
-    icon: neu3DIcon,
+    icon: NEU3DICON,
     execute: args => {
       const current = getCurrent({ ...args, widget:'neu3d', activate:false});
-      if (!current) {
-        return;
-      }
-      app.commands.execute(
-        'console:create', 
-        {
-          path: current.content.sessionContext.path,
-          ref: current.id,
-          insertMode: 'split-right',
-          activate: args['activate'] as boolean
-        });
+      if (!current) { return; }
+      FBL.createConsole(app, current, args);
     },
     isEnabled: ()=>{
       const current = getCurrent({widget:'neu3d', activate: false});
-      return Private.hasRunningSession(current);
+      return FBL.hasRunningSession(current);
     }
   });
 
 
   app.commands.addCommand(CommandIDs.NeuGFXCreateConsole, {
     label: 'Create Console for NeuGFX Widget',
-    icon: neuGFXIcon,
+    icon: NEUGFXICON,
     execute: args => {
       const current = getCurrent({ ...args, widget:'neugfx', activate:false});
-      if (!current) {
-        return;
-      }
-      app.commands.execute(
-        'console:create', 
-        {
-          path: current.content.sessionContext.path,
-          ref: current.id,
-          insertMode: 'split-right',
-          activate: args['activate'] as boolean
-        });
+      if (!current) { return; }
+      FBL.createConsole(app, current, args);
     },
     isEnabled: ()=>{
       const current = getCurrent({widget:'neu3d', activate: false});
-      return Private.hasRunningSession(current);
+      return FBL.hasRunningSession(current);
     }
   });
 
   app.commands.addCommand(CommandIDs.NeuAnyCreateConsole, {
     label: 'Create Console for NeuAny Widget (Place holder)',
-    icon: fblIcon,
+    icon: NEUANYICON,
     execute: args => {
       const current = getCurrent({ ...args, widget:'neuany', activate:false});
-      if (!current) {
-        return;
-      }
-      app.commands.execute(
-        'console:create', 
-        {
-          path: current.content.sessionContext.path,
-          ref: current.id,
-          insertMode: 'split-right',
-          activate: args['activate'] as boolean
-        });
+      if (!current) { return; }
+      FBL.createConsole(app, current, args);
     },
     isEnabled: ()=>{
       const current = getCurrent({widget:'neuany', activate: false});
-      return Private.hasRunningSession(current);
+      return FBL.hasRunningSession(current);
     }
   });
 
@@ -468,24 +430,17 @@ async function activateFBL(
   // Add the command to the palette.
   [
     CommandIDs.Neu3DCreate,
-    CommandIDs.Neu3DOpen,
     CommandIDs.Neu3DCreateConsole,
     CommandIDs.NeuGFXCreate,
-    CommandIDs.NeuGFXOpen,
     CommandIDs.NeuGFXCreateConsole,
     CommandIDs.NeuAnyCreate,
-    CommandIDs.NeuAnyOpen,
     CommandIDs.NeuAnyCreateConsole,
   ].forEach(command=>{
     palette.addItem({command, category: 'Fly Brain Lab' });
   })
 }
 
-
-/**
- * Bunch of State-less Utility Functions
- */
-namespace Private {
+namespace FBL {
   /**
    * Check if a given widget has a running session
    * @param args 
@@ -504,6 +459,82 @@ namespace Private {
       return false;
     }
   }
-}
+  /**
+   * Check if Kernel is FBL compatible
+   * 1. Check if kernel handles comm
+   * 2. Checks if contains Comm matches the comms target template
+   * 3. Return the first Comm targetName if found
+   * @param kernel - kernel to be changed
+   */
+  export async function isFBLKernel(kernel: Kernel.IKernelConnection): Promise<string|null> {
+    let targetCandidates = new Array<any>();
+    // interrogate kernel as Kernel class
+    let msg = await kernel.requestCommInfo({});
+    if (!kernel.handleComms){ 
+      // force kernel to handleComms
+      kernel.handleComms = true;
+    }
+    if (msg.content && msg.content?.status == 'ok') {
+      for (let c of Object.values(msg.content.comms)) {
+        if (c.target_name.includes('FBL')) {
+          targetCandidates.push(c.target_name);
+        };
+      }
+    } else{
+      return Promise.resolve(null);
+    }
+    
+    if (targetCandidates.length == 0) {
+      return Promise.resolve(null);
+    }
 
+    // take only unique target values
+    targetCandidates = [...new Set(targetCandidates)];
+    return Promise.resolve(targetCandidates[0]);
+  }
+
+  export async function createFBLWidget(
+    app: JupyterFrontEnd, 
+    Module: any,
+    icon: LabIcon,
+    moduleArgs: any, 
+    tracker: WidgetTracker<MainAreaWidget<IFBLWidget>>
+  ) {
+    let widget: IFBLWidget = new Module({
+      app: app, 
+      icon: icon,
+      ...moduleArgs,
+    });
+    let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
+    if (!tracker.has(panel)){
+      await tracker.add(panel);
+    }
+    widget.sessionContext.propertyChanged.connect(()=>{
+      void tracker.save(panel);
+    });
+    widget.modelChanged.connect(()=>{
+      void tracker.save(panel);
+    });
+    // Attach the widget to the main work area if it's not there
+    app.shell.add(panel, 'main');
+    widget.update();
+    panel.update()
+    // Activate the widget
+    app.shell.activateById(panel.id);
+  }
+
+  export function createConsole(
+    app:JupyterFrontEnd,
+    panel:MainAreaWidget<IFBLWidget>,
+  args: any) {
+    app.commands.execute(
+      'console:create', 
+      {
+        path: panel.content.sessionContext.path,
+        ref: panel.id,
+        insertMode: args['insertMode'] ?? 'split-right',
+        activate: args['activate'] as boolean
+      });
+  }
+}
 export default extension;
