@@ -26,6 +26,7 @@
     "dev": "concurrently \"http-server -p 7999\" \"npm:watch\""
   },
   "dependencies": {
+    "@flybrainlab/fbl-extension": "file:../fbl-extension",
     "@jupyterlab/application": "^2.0.0"
   },
   "devDependencies": {

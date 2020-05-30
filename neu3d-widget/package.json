@@ -22,19 +22,20 @@
   },
   "scripts": {
     "build": "tsc && webpack",
-    "build:neu3d": "cd asset/neu3d && npm run build",
-    "install:neu3d": "cd asset/neu3d && npm install",
-    "watch:neu3d": "cd asset/neu3d && npm run watch",
+    "build:neu3d": "cd ../neu3d && npm run build",
+    "install:neu3d": "cd ../neu3d && npm install",
+    "watch:neu3d": "cd ../neu3d && npm run watch",
     "clean": "rimraf lib tsconfig.tsbuildinfo",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
     "prepare": "jlpm run clean && jlpm run build",
-    "watch": "nodemon -e ts,js --watch src --watch asset/neu3d/lib --exec \"npm run build\"",
+    "watch": "nodemon -e ts,js --watch src --watch ../neu3d/lib --exec \"npm run build\"",
     "dev": "concurrently \"http-server -p 7998\" \"npm:watch\" \"npm:watch:neu3d\""
   },
   "dependencies": {
+    "@flybrainlab/fbl-template": "file:../fbl-template-widget",
     "@jupyterlab/application": "^2.0.0",
-    "neu3d": "file:asset/neu3d"
+    "neu3d": "file:../neu3d"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.25.0",
