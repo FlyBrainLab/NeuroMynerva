@@ -32,6 +32,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions) {
     super({
       name:options.name || `Neu3D-${Private.count++}`, 
+      icon: Icons.neu3DIcon,
       ...options});
 
     // load in meshes
