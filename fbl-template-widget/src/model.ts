@@ -1,13 +1,12 @@
 import { IDisposable } from '@lumino/disposable';
-import { IObservableJSON, ObservableJSON } from '@jupyterlab/observables';
+// import { IObservableJSON } from '@jupyterlab/observables';
+import { Signal, ISignal } from '@lumino/signaling';
 
-/**
-* currently rendered neuron information
-*/
+
 export interface IFBLWidgetModel extends IDisposable {
-  data: IObservableJSON | {};
-  metadata: IObservableJSON | {};
-  states: IObservableJSON | {};
+  data: object | any;
+  metadata: object | any;
+  states: object | any ;
 }
 
 /**
@@ -15,54 +14,9 @@ export interface IFBLWidgetModel extends IDisposable {
 */
 export class FBLWidgetModel implements IFBLWidgetModel {
   constructor(options?: Partial<IFBLWidgetModel>){
-    this.data = new ObservableJSON({values: options?.data ?? {}});
-    this.metadata = new ObservableJSON({values: options?.metadata ?? {}});
-    this.states = new ObservableJSON({values: options?.states ?? {}});
-    this.data.changed.connect(this.onDataChanged, this);
-    this.metadata.changed.connect(this.onMetadataChanged, this);
-    this.states.changed.connect(this.onStatesChanged, this);
-  }
-
-  /**
-   * Handle data Change within the model.
-   * To be overload by child class
-   * @param sender 
-   * @param args 
-   */
-  private onDataChanged(
-    sender: IObservableJSON, 
-    args: IObservableJSON.IChangedArgs
-  ): void {
-    // no-op
-    return;
-  }
-
-  /**
-   * Handle States Change within the model.
-   * To be overload by child class
-   * @param sender 
-   * @param args 
-   */
-  private onMetadataChanged(
-    sender: IObservableJSON, 
-    args: IObservableJSON.IChangedArgs
-  ): void {
-    // no-op
-    return;
-  }
-
-  /**
-   * Handle States Change within the model.
-   * To be overload by child class
-   * @param sender 
-   * @param args 
-   */
-  private onStatesChanged(
-    sender: IObservableJSON, 
-    args: IObservableJSON.IChangedArgs
-  ): void {
-    // no-op
-    return;
+    this.data = options?.data ?? {};
+    this.metadata = options?.metadata ?? {};
+    this.states = options?.states ?? {};
   }
 
   /**
@@ -81,16 +35,44 @@ export class FBLWidgetModel implements IFBLWidgetModel {
     }
 
     // TODO: Actually may not want to dispose these if shared with IPyFBL
-    this.data.dispose();
-    this.metadata.dispose();
-    this.states.dispose();
+    delete this.data;
+    delete this.metadata;
+    delete this.states;
+    Signal.disconnectAll(this._dataChanged);
+    Signal.disconnectAll(this._metadataChanged);
+    Signal.disconnectAll(this._statesChanged);
     this._isDisposed = true;
   }
+
+  get dataChanged(): ISignal<this, FBLWidgetModel.IChangeArgs | any> {
+    return this._dataChanged;
+  }
+
+  get metadataChanged():ISignal<this, any>{
+    return this._metadataChanged;
+  }
   
+  get statesChanged(): ISignal<this, any>{
+    return this._statesChanged;
+  }
 
   
-  private _isDisposed = false;
-  readonly data: IObservableJSON; // can only set/get/keys/values but not directly modified
-  readonly metadata: IObservableJSON; // can only set/get/keys/values but not directly modified
-  readonly states: IObservableJSON; // can only set/get/keys/values but not directly modified
+  protected _isDisposed = false;
+  _dataChanged = new Signal<this, FBLWidgetModel.IChangeArgs | any>(this);
+  _metadataChanged = new Signal<this, FBLWidgetModel.IChangeArgs | any>(this);
+  _statesChanged = new Signal<this, FBLWidgetModel.IChangeArgs | any>(this);
+  data: object | any;
+  metadata: object | any;
+  states: object | any;
+}
+
+export namespace FBLWidgetModel {
+  export interface IChangeArgs {
+    type: 'data' | 'metadata' | 'states' | string;
+    event: 'change' | 'add' | 'remove' | string;
+    source: object | any; // the object that changed
+    key?: string | any; // source[key] should give a way to access the data that's been changed
+    oldValue: object | any;
+    newValue: object | any; 
+  }
 }

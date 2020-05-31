@@ -48,7 +48,6 @@ export interface IFBLWidget extends Widget {
 }
 
 
-const TEMPLATE_WIDGET_CLASS = 'jp-FBL-Template';
 const TOOLBAR_SPECIES_CLASS = 'jp-FBL-Species';
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
 
@@ -68,21 +67,16 @@ export class FBLWidget extends Widget implements IFBLWidget {
       icon
     } = options;
 
-    this.addClass(TEMPLATE_WIDGET_CLASS);
     // keep track of number of instances
     const count = Private.count++;
 
     // specify name and id
-    this.name = name || `NeuAny-${count}`;
+    this.name = name || `Template-${count}`;
     this.id = `${this.name}-${UUID.uuid4()}`;
     const path = options.path ?? `${basePath || ''}/${this.id}`;
     this.icon = icon ?? fblIcon;
 
-    // create model
-    this.model = new FBLWidgetModel(model);
-    this.model.data.changed.connect(this.onDataChanged, this);
-    this.model.metadata.changed.connect(this.onMetadataChanged, this);
-    this.model.states.changed.connect(this.onStatesChanged, this);
+    this.initModel(model);
 
     // specify comm target (unique to this widget)
     this._commTarget = `${TEMPLATE_COMM_TARGET}:${this.id}`;
@@ -127,7 +121,17 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
       // set species after session is avaible, in case the setter needs the session
       this.species = species ?? 'No Species';
+      Private.updateTitle(this, this._connected);
     });
+    Private.updateTitle(this, this._connected);
+  }
+
+  initModel(model: Partial<IFBLWidgetModel>){
+    // create model
+    this.model = new FBLWidgetModel(model);
+    this.model.dataChanged.connect(this.onDataChanged, this);
+    this.model.metadataChanged.connect(this.onMetadataChanged, this);
+    this.model.statesChanged.connect(this.onStatesChanged, this);
   }
 
   /**
@@ -135,7 +139,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overload by children
    * @param msg 
    */
-  private onCommMsg(msg: KernelMessage.ICommMsgMsg) {
+  onCommMsg(msg: KernelMessage.ICommMsgMsg) {
     // no-op
     return;
   }
@@ -145,7 +149,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overload by children
    * @param msg 
    */
-  private onCommClose(msg: KernelMessage.ICommCloseMsg) {
+  onCommClose(msg: KernelMessage.ICommCloseMsg) {
     // no-op
     return;
   }
@@ -155,7 +159,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overloaded by child
    * @param args 
    */
-  private onDataChanged(args: any){
+  onDataChanged(args: any){
     // no-op
     // overload by child
     return;
@@ -166,7 +170,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overloaded by child
    * @param args 
    */
-  private onMetadataChanged(args: any){
+  onMetadataChanged(args: any){
     // no-op
     return;
   }
@@ -176,7 +180,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overloaded by child
    * @param args 
    */
-  private onStatesChanged(args: any){
+  onStatesChanged(args: any){
     // no-op
     return 
   }
@@ -202,7 +206,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
   * A method that handles changing sessionContext
   */
- private async onKernelChanged(
+ async onKernelChanged(
     context: ISessionContext,
     args: Session.ISessionConnection.IKernelChangedArgs
   ) {
@@ -222,7 +226,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * @param sess 
    * @param status 
    */
-  private onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) {
+  onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) {
     if (status === 'restarting') {
       this.sessionContext.ready.then(() => {
         this.initFBLClient();
@@ -233,7 +237,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
   * A method that handles changing session Context
   */
-  private onPathChanged(msg?: any): void {
+  onPathChanged(msg?: any): void {
     if (this.sessionContext.session) {
       Private.updateTitle(this, this._connected);
     }
@@ -253,11 +257,26 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return this._speciesChanged;
   }
 
+  initFBLCode(): string {
+    return `
+    from ipykernel.comm import Comm
+    from collections import OrderedDict
+    if 'comms' not in globals():
+      comms = OrderedDict()
+    if '${this.id}' not in comms:
+      comm = Comm(target_name="${this._commTarget}")
+      comms['${this.id}'] = comm
+    if not any([comm.target_name != "${this._commTarget}" for widget_id, comm in comms.items()]):
+      comm = Comm(target_name="${this._commTarget}")
+      comms['${this.id}'] = comm
+    comms['${this.id}'].send(data="comm sent message")
+    `;
+  }
 
   /**
   * Initialize FBLClient on associated kernel
   */
-  private async initFBLClient(): Promise<void> {
+  async initFBLClient(): Promise<void> {
     if (!this.sessionContext.session?.kernel){
       return Promise.resolve(void 0); // no kernel
     }
@@ -282,7 +301,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
         });
       }
 
-      const code = this.initFBLCode;
+      const code = this.initFBLCode();
 
       kernel.requestExecute({ code: code }).done.then((reply) => {
         if (reply && reply.content.status === 'error'){
@@ -318,7 +337,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * Populate content of toolbar. Can be overloaded by child.
    * @param toolbar 
    */
-  private populateToolBar(): void {
+  populateToolBar(): void {
     this.toolbar.addItem('Species Changer', Private.createSpeciesButton(this));
     this.toolbar.addItem('spacer', Toolbar.createSpacerItem());
     this.toolbar.addItem('restart', Toolbar.createRestartButton(this.sessionContext));
@@ -337,7 +356,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
     this._speciesChanged.emit(newSpecies);
     this._species = newSpecies;
-
   }
 
   /** 
@@ -351,32 +369,18 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
   * The Elements associated with the widget.
   */
-  private _connected: Date;
-  private _isDisposed = false;
-  private _modelChanged = new Signal<this, object>(this);
-  private _speciesChanged = new Signal<this, string>(this);
+  protected _connected: Date;
+  protected _isDisposed = false;
+  protected _modelChanged = new Signal<this, object>(this);
+  protected _speciesChanged = new Signal<this, string>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   readonly name: string;
-  // private _comm: Kernel.IComm;
-  private _species: any;
+  protected _species: any;
   innerContainer: HTMLDivElement;
   sessionContext: ISessionContext;
   model: FBLWidgetModel;
   icon: LabIcon;
-  readonly initFBLCode = `
-    from ipykernel.comm import Comm
-    from collections import OrderedDict
-    if 'comms' not in globals():
-      comms = OrderedDict()
-    if '${this.id}' not in comms:
-      comm = Comm(target_name="${this._commTarget}")
-      comms['${this.id}'] = comm
-    if not any([comm.target_name != "${this._commTarget}" for widget_id, comm in comms.items()]):
-      comm = Comm(target_name="${this._commTarget}")
-      comms['${this.id}'] = comm
-    comms['${this.id}'].send(data="comm sent message")
-    `;
 };
 
 
