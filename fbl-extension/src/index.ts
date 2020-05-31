@@ -9,13 +9,15 @@ import {
 } from '@jupyterlab/launcher';
 
 import {
-  ReadonlyPartialJSONObject
+  ReadonlyPartialJSONObject,
+  Token
 } from '@lumino/coreutils';
 
 import {
   ICommandPalette, 
   MainAreaWidget, 
   WidgetTracker, 
+  IWidgetTracker,
   ISessionContext,
   Toolbar,
 } from '@jupyterlab/apputils';
@@ -56,10 +58,9 @@ declare global {
 }
 
 
-// NOTE: this is taken exactly from the WidgetModule class
-// it is put here so we have something to reference in the widget tracker
-export
-  interface IFBLWidget extends Widget{
+// NOTE: this interface should be used by all widgets using npm install/import
+// for now it needs to be copy-pasted around
+export interface IFBLWidget extends Widget{
   /**
    * The sessionContext keeps track of the current running session
    * associated with the widget.
@@ -105,13 +106,28 @@ namespace CommandIDs {
   export const NeuAnyCreateConsole = 'fbl-neuany:create-console';
 }
 
+
+interface IFBLWidgetTrackers {
+  [widget:string]: IWidgetTracker<MainAreaWidget<IFBLWidget>>
+}
+/* tslint:disable */
+/**
+ * The FBL Widget Tracker Token
+ */
+export const IFBLWidgetTrackers = new Token<IFBLWidgetTrackers>(
+  '@flybrainlab/fbl-extension:IFBLWidgetTrackers'
+);
+
+/* tslint:enable */
+
 /**
  * Initialization data for the neu3d-extension extension.
  */
-const extension: JupyterFrontEndPlugin<void> = {
+const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
   id: 'fbl-extension',
   autoStart: true,
   requires: [ICommandPalette, ILauncher, ILayoutRestorer],
+  provides: IFBLWidgetTrackers,
   activate: activateFBL
 };
 
@@ -152,7 +168,6 @@ function injectRequired(): Promise<any> {
   });
 }
 
-
 /**
  * Activate the FBL widget extension.
  * The extension is automatically loaded, which injects RequireJS into browser if it's not there already
@@ -166,7 +181,7 @@ async function activateFBL(
   palette: ICommandPalette,
   launcher: ILauncher,
   restorer: ILayoutRestorer
-) {
+): Promise<IFBLWidgetTrackers> {
   console.log("FBL Extension Activated");
   const neu3DTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'});
   const neuGFXTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'});
@@ -178,7 +193,11 @@ async function activateFBL(
     args: widget => {
       const { path, name } = widget.content.sessionContext;
       return {
-        model: widget.content.model,
+        model: {
+          data: widget.content.model?.data,
+          metadata: widget.content.model?.metadata,
+          states: widget.content.model?.states
+        },
         species: widget.content.species,
         path: path,
         name: name
@@ -193,7 +212,11 @@ async function activateFBL(
     args: widget => {
       const { path, name } = widget.content.sessionContext;
       return {
-        model: widget.content.model,
+        model: {
+          data: widget.content.model?.data,
+          metadata: widget.content.model?.metadata,
+          states: widget.content.model?.states
+        },
         species: widget.content.species,
         path: path,
         name: name
@@ -218,7 +241,7 @@ async function activateFBL(
     "Neu3D": neu3DTracker,
     "NeuAny": neuAnyTracker,
     "NeuGFX": neuGFXTracker,
-  })
+  });
   masterWidget.id = 'jp-FBL-Master';
   masterWidget.title.caption = 'FBL Widgets and Running Sessions';
   masterWidget.title.icon = fblIcon;
@@ -438,9 +461,15 @@ async function activateFBL(
   ].forEach(command=>{
     palette.addItem({command, category: 'Fly Brain Lab' });
   })
+
+  return Promise.resolve({
+    'Neu3D': neu3DTracker,
+    'NeuGFX': neuGFXTracker,
+    'NeuAny': neuAnyTracker,
+  })
 }
 
-namespace FBL {
+export namespace FBL {
   /**
    * Check if a given widget has a running session
    * @param args 
@@ -536,5 +565,8 @@ namespace FBL {
         activate: args['activate'] as boolean
       });
   }
+
+  export const testAttr: string = 'test';
 }
+
 export default extension;
