@@ -21,7 +21,7 @@ declare global {
 }
 
 const VERBOSE = true;
-const NEUANY_CLASS_JLab = "jp-FBL-Neu3D";
+const NEUANY_CLASS_JLab = "jp-FBL-NeuAny";
 
 /**
 * An Neu3D Widget
