@@ -12,7 +12,7 @@ import {
   Dialog, showDialog
  } from'@jupyterlab/apputils';
 import { 
-  Session, SessionManager
+  Session
 } from '@jupyterlab/services';
 import { Widget } from '@lumino/widgets';
 
@@ -21,9 +21,10 @@ import{
 } from '@lumino/signaling';
 
 import { 
-  LabIcon, closeIcon, fileIcon 
+  LabIcon, closeIcon//, fileIcon 
 } from '@jupyterlab/ui-components';
 import '../style/index.css';
+import { fblIcon } from './icons';
 
 const MASTER_CLASS_JLab = "jp-FBL-Master";
 // const TOOLBAR_SPECIES_CLASS = "jp-Master-Species";
@@ -183,8 +184,8 @@ class FBLWidgetTrackers {
 export class MasterWidget extends ReactWidget {
   constructor(
     trackers: {[name:string]: FBLTracker},
-    manager: SessionManager
   ) {
+    console.log('Master Widget Created');
     super();
     this.fbltrackers = new FBLWidgetTrackers(trackers);
     this.addClass(MASTER_CLASS_JLab);
@@ -294,11 +295,11 @@ namespace FBLWidgetReact {
   function Item(props: { panel: FBLPanel }) {
     const {panel} = props;
     const widget = panel.content;
-    let icon: LabIcon = fileIcon;
+    let icon: LabIcon = fblIcon;
     
-    if (widget.icon?.react){
-      icon = widget.icon;
-    }
+    // if (widget.icon?.react){
+    //   icon = widget.icon;
+    // }
 
     return (
       <li className={ITEM_CLASS}>
