@@ -159,7 +159,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overloaded by child
    * @param args 
    */
-  onDataChanged(args: any){
+  onDataChanged(sender: IFBLWidgetModel, args: any){
     // no-op
     // overload by child
     return;
@@ -170,7 +170,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overloaded by child
    * @param args 
    */
-  onMetadataChanged(args: any){
+  onMetadataChanged(sender: IFBLWidgetModel, args: any){
     // no-op
     return;
   }
@@ -180,7 +180,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overloaded by child
    * @param args 
    */
-  onStatesChanged(args: any){
+  onStatesChanged(sender: IFBLWidgetModel, args: any){
     // no-op
     return 
   }

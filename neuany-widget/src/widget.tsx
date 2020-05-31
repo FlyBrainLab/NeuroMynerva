@@ -55,12 +55,12 @@ export class NeuAnyWidget extends FBLWidget implements IFBLWidget {
     btnContainer.appendChild(changeDataBtn);
     let changeMetaDataBtn = document.createElement('button');
     changeMetaDataBtn.innerText = 'Change MetaData';
-    changeDataBtn.onclick = () =>{
+    changeMetaDataBtn.onclick = () =>{
       this.model.testChangeMetaData();
     }
     btnContainer.appendChild(changeMetaDataBtn);
     let changeStatesBtn = document.createElement('button');
-    changeDataBtn.onclick = () =>{
+    changeStatesBtn.onclick = () =>{
       this.model.testChangeStates();
     }
     changeStatesBtn.innerText = 'Change State';
@@ -68,19 +68,19 @@ export class NeuAnyWidget extends FBLWidget implements IFBLWidget {
     this.node.appendChild(btnContainer);
 
     this.dataContainer = document.createElement('div');
-    this.dataContainer.style.height = '30%';
+    this.dataContainer.style.height = '15%';
     this.dataContainer.style.width = '100%';
     this.dataContainer.style.overflow = 'scroll';
     this.node.appendChild(this.dataContainer);
     // create container shows model information
     this.statesContainer = document.createElement('div');
-    this.statesContainer.style.height = '30%';
+    this.statesContainer.style.height = '15%';
     this.statesContainer.style.width = '100%';
     this.statesContainer.style.overflow = 'scroll';
     this.node.appendChild(this.statesContainer);
     // create container shows model information
     this.metadataContainer = document.createElement('div');
-    this.metadataContainer.style.height = '30%';
+    this.metadataContainer.style.height = '15%';
     this.metadataContainer.style.width = '100%';
     this.metadataContainer.style.overflow = 'scroll';
     this.node.appendChild(this.metadataContainer);
@@ -97,35 +97,38 @@ export class NeuAnyWidget extends FBLWidget implements IFBLWidget {
   initModel(model: Partial<INeuAnyModel>){
     // create model
     this.model = new NeuAnyModel(model);
-    // this.model.dataChanged.connect(this.onDataChanged, this);
-    // this.model.metadataChanged.connect(this.onMetadataChanged, this);
-    // this.model.statesChanged.connect(this.onStatesChanged, this);
+    this.model.dataChanged.connect(this.onDataChanged, this);
+    this.model.metadataChanged.connect(this.onMetadataChanged, this);
+    this.model.statesChanged.connect(this.onStatesChanged, this);
   }
 
   renderModel(change?: any){
     this.msgContainer.innerHTML = this.model.msg;
-    this.dataContainer.innerHTML = this.model.data;
-    this.statesContainer.innerHTML = this.model.states;
-    this.metadataContainer.innerHTML = this.model.metadata;
+    this.dataContainer.innerHTML = JSON.stringify(this.model.data);
+    this.statesContainer.innerHTML = JSON.stringify(this.model.states);
+    this.metadataContainer.innerHTML = JSON.stringify(this.model.metadata);
     
     if (change){
       switch (change.type) {
         case 'data':
-          this.dataContainer.innerHTML += `<br>
+          this.dataContainer.innerHTML += `
+          <br>----------------------------------------------------<br>
             Changed: Event: Type ${change.type}, Key ${change.key},<br>
             OldValue: ${change.oldValue}<br>
             NewValue: ${change.newValue}
           `
           break;
         case 'metadata':
-          this.metadataContainer.innerHTML += `<br>
+          this.metadataContainer.innerHTML += `
+          <br>----------------------------------------------------<br>
             Changed: Event: Type ${change.type}, Key ${change.key},<br>
             OldValue: ${change.oldValue}<br>
             NewValue: ${change.newValue}
           `
           break;
         case 'states':
-          this.statesContainer.innerHTML += `<br>
+          this.statesContainer.innerHTML += `
+          <br>----------------------------------------------------<br>
             Changed: Event: Type ${change.type}, Key ${change.key},<br>
             OldValue: ${change.oldValue}<br>
             NewValue: ${change.newValue}
@@ -140,19 +143,19 @@ export class NeuAnyWidget extends FBLWidget implements IFBLWidget {
     }
   }
 
-  onDataChanged(args: any){
+  onDataChanged(sender: INeuAnyModel, args: any){
     Private.logToWidget(this, `Data Changed, ${args}`);
     this.renderModel(args);
     this._modelChanged.emit({msg: 'data changed'});
   }
 
-  onMetadataChanged(args: any){
+  onMetadataChanged(sender: INeuAnyModel, args: any){
     Private.logToWidget(this, `Metadata Changed, ${args}`);
     this.renderModel(args);
     this._modelChanged.emit({msg: 'metadata changed'});
   }
 
-  onStatesChanged(args: any){
+  onStatesChanged(sender: INeuAnyModel, args: any){
     Private.logToWidget(this, `States Changed, ${args}`);
     this.renderModel(args);
     this._modelChanged.emit({msg: 'states changed'});

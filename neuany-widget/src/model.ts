@@ -24,13 +24,13 @@ export class NeuAnyModel extends FBLWidgetModel implements INeuAnyModel {
   }
 
   testChangeData() {
-    let key = 'test_key';
-    let newValue = 'test_val';
+    let key = 'data:test_key';
+    let newValue = `data:test_val ${UUID.uuid4()}`;
     let oldValue = this.data[key];
     this.data[key] = newValue;
     let msg : FBLWidgetModel.IChangeArgs = {
-      type: 'data:data',
-      event: `data:change ${UUID.uuid4}`,
+      type: 'data',
+      event: `change`,
       source: this.data,
       key: key,
       oldValue: oldValue,
@@ -41,52 +41,35 @@ export class NeuAnyModel extends FBLWidgetModel implements INeuAnyModel {
 
   testChangeMetaData() {
     let key = 'metadata:test_key';
-    let newValue = `metadata:test_val ${UUID.uuid4}`;
-    let oldValue = this.data[key];
-    this.data[key] = newValue;
+    let newValue = `metadata:test_val ${UUID.uuid4()}`;
+    let oldValue = this.metadata[key];
+    this.metadata[key] = newValue;
     let msg : FBLWidgetModel.IChangeArgs = {
-      type: 'data',
+      type: 'metadata',
       event: 'change',
-      source: this.data,
+      source: this.metadata,
       key: key,
       oldValue: oldValue,
       newValue: newValue
     }
-    this._dataChanged.emit(msg);
+    this._metadataChanged.emit(msg);
   }
 
   testChangeStates() {
     let key = 'state:test_key';
-    let newValue = `state:test_val ${UUID.uuid4}`;
-    let oldValue = this.data[key];
-    this.data[key] = newValue;
+    let newValue = `state:test_val ${UUID.uuid4()}`;
+    let oldValue = this.states[key];
+    this.states[key] = newValue;
     let msg : FBLWidgetModel.IChangeArgs = {
       type: 'states',
       event: 'change',
-      source: this.data,
+      source: this.states,
       key: key,
       oldValue: oldValue,
       newValue: newValue
     }
-    this._dataChanged.emit(msg);
+    this._statesChanged.emit(msg);
   }
-  // get dataChanged(): ISignal<this, any> {
-  //   return this._dataChanged;
-  // }
 
-  // get metadataChanged():ISignal<this, any>{
-  //   return this._metadataChanged;
-  // }
-  
-  // get statesChanged(): ISignal<this, any>{
-  //   return this._statesChanged;
-  // }
-
-  // _dataChanged = new Signal<this, any>(this);
-  // _metadataChanged = new Signal<this, any>(this);
-  // _statesChanged = new Signal<this, any>(this);
-  // data: object | any;
-  // metadata:  object | any;
-  // states: object | any;
   msg: string;
 }
