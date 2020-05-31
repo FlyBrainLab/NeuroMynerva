@@ -126,6 +126,21 @@ export class FBLWidget extends Widget implements IFBLWidget {
     Private.updateTitle(this, this._connected);
   }
 
+  /**
+   * Should handle render logic of model
+   * @param change - changes to a model for incremental rendering
+   */
+  renderModel(change?: any) {
+    // to be implemented by child widgets
+    return
+  }
+
+
+  /**
+   * Initialize model. Overload this method with child's own model class.
+   * It is called in the constructor of the widget
+   * @param model partial information of the model data
+   */
   initModel(model: Partial<IFBLWidgetModel>){
     // create model
     this.model = new FBLWidgetModel(model);

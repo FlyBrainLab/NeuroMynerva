@@ -50,9 +50,7 @@ const NEUANYICON = fblIcon;
 
 declare global {
   interface Window {
-    neu3dTracker: any;
-    neuAnyTracker: any;
-    master: any;
+    fbltrackers: any;
     app: any;
   }
 }
@@ -107,7 +105,7 @@ namespace CommandIDs {
 }
 
 
-interface IFBLWidgetTrackers {
+export interface IFBLWidgetTrackers {
   [widget:string]: IWidgetTracker<MainAreaWidget<IFBLWidget>>
 }
 /* tslint:disable */
@@ -140,10 +138,14 @@ const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
 async function loadModule(url: String): Promise<any> {
   await injectRequired();
   return new Promise<any>((resolve, reject)=>{
-    (<any>window).require([url], (plugin: any)=>{
-      console.log(`Loaded plugin from ${url} with RequireJS`, plugin);
-      resolve(plugin);
-    });
+    (<any>window).require([url], 
+      (plugin: any)=>{
+        console.log(`Loaded plugin from ${url} with RequireJS`, plugin);
+        resolve(plugin);
+      }, (error: any) => {
+        reject(error);
+      }
+    );
   });
 }
 
@@ -227,33 +229,36 @@ async function activateFBL(
   });
 
   window.app = app;
-  window.neu3dTracker = neu3DTracker;
-  window.neuAnyTracker = neuAnyTracker;
+  window.fbltrackers = {
+    'Neu3D': neu3DTracker,
+    'NeuGFX': neuGFXTracker,
+    'NeuAny': neuAnyTracker,
+  }
 
   let Neu3DWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   let NeuGFXWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   let NeuAnyWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   
   await injectRequired();
-  let plugin = await loadModule(MASTER_MODULE_URL);
-  const MasterWidgetModule = plugin.MasterWidget;
-  const masterWidget = new MasterWidgetModule({
-    "Neu3D": neu3DTracker,
-    "NeuAny": neuAnyTracker,
-    "NeuGFX": neuGFXTracker,
+  await loadModule(MASTER_MODULE_URL).then((plugin)=>{
+    const MasterWidgetModule = plugin.MasterWidget;
+    const masterWidget = new MasterWidgetModule({
+      "Neu3D": neu3DTracker,
+      "NeuAny": neuAnyTracker,
+      "NeuGFX": neuGFXTracker,
+    });
+    masterWidget.id = 'jp-FBL-Master';
+    masterWidget.title.caption = 'FBL Widgets and Running Sessions';
+    masterWidget.title.icon = fblIcon;
+    masterWidget.title.iconClass = 'jp-SideBar-tabIcon';
+    // add to last
+    if (restorer) {
+      restorer.add(masterWidget, 'FBL-Master');
+    }
+    app.shell.add(masterWidget, 'left', {rank: Infinity});
+  }).catch(error=>{
+    console.log('Master Widget Loading Failed, skipping injection', error);
   });
-  masterWidget.id = 'jp-FBL-Master';
-  masterWidget.title.caption = 'FBL Widgets and Running Sessions';
-  masterWidget.title.icon = fblIcon;
-  masterWidget.title.iconClass = 'jp-SideBar-tabIcon';
-
-
-  window.master = masterWidget;
-  // add to last
-  if (restorer) {
-    restorer.add(masterWidget, 'FBL-Master');
-  }
-  app.shell.add(masterWidget, 'left', {rank: Infinity});
 
   // Get the current widget and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyPartialJSONObject): MainAreaWidget<IFBLWidget> | null {
