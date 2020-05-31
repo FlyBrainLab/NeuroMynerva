@@ -283,54 +283,53 @@ export class FBLWidget extends Widget implements IFBLWidget {
     await this.sessionContext.ready;
     const kernel = this.sessionContext.session.kernel;
 
-    // register comm if kernel handles comm
-    // this should be forced by the code already but just checking to prevent error
-    if (kernel?.handleComms) {
-      // safeguard to ensure if this comm already exists
-      if (!kernel.hasComm(this._commTarget)) {
-        kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
-          if (commMsg.content.target_name !== this._commTarget) {
-            return;
-          }
-          comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
-            this.onCommMsg(msg);
-          };
-          comm.onClose = (msg: KernelMessage.ICommCloseMsg) => {
-            this.onCommClose(msg);
-          };
-        });
-      }
-
-      const code = this.initFBLCode();
-
-      kernel.requestExecute({ code: code }).done.then((reply) => {
-        if (reply && reply.content.status === 'error'){
-          const traceback = ANSI.stripReplyError(reply.content.traceback);
-          const body = (
-            <div>
-              {traceback && (
-                <details className="jp-mod-wide">
-                  <pre>{traceback}</pre>
-                </details>
-              )}
-            </div>
-          );
-          showDialog({
-            title: `FBLClient Initialization Registration Failed (${this._commTarget})`,
-            body: body
-          }).then(()=>{
-            return Promise.resolve('Execution Failed');
-          })
-        } else if (reply && reply.content.status === 'ok'){
-          return Promise.resolve(void 0);
-        }
-        return Promise.reject(`Reply Message not understood ${reply}`);
-      }, (failure) => {
-        return Promise.reject(failure);
-      });
-    } else {
-      return Promise.reject(`Kernel does not handle Comm. ${kernel}`);
+    // Force Comm handling
+    if (!kernel.handleComms){
+      kernel.handleComms = true;
     }
+
+    // safeguard to ensure if this comm already exists
+    if (!kernel.hasComm(this._commTarget)) {
+      kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
+        if (commMsg.content.target_name !== this._commTarget) {
+          return;
+        }
+        comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
+          this.onCommMsg(msg);
+        };
+        comm.onClose = (msg: KernelMessage.ICommCloseMsg) => {
+          this.onCommClose(msg);
+        };
+      });
+    }
+
+    const code = this.initFBLCode();
+
+    kernel.requestExecute({ code: code }).done.then((reply) => {
+      if (reply && reply.content.status === 'error'){
+        const traceback = ANSI.stripReplyError(reply.content.traceback);
+        const body = (
+          <div>
+            {traceback && (
+              <details className="jp-mod-wide">
+                <pre>{traceback}</pre>
+              </details>
+            )}
+          </div>
+        );
+        showDialog({
+          title: `FBLClient Initialization Registration Failed (${this._commTarget})`,
+          body: body
+        }).then(()=>{
+          return Promise.resolve('Execution Failed');
+        })
+      } else if (reply && reply.content.status === 'ok'){
+        return Promise.resolve(void 0);
+      }
+      return Promise.reject(`Reply Message not understood ${reply}`);
+    }, (failure) => {
+      return Promise.reject(failure);
+    });
   }
 
   /**
