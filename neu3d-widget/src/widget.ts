@@ -220,7 +220,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
  * A namespace for private data.
  */
 namespace Private {
-  export let count = 0;
+  export let count = 1;
 
   export function createButton(
     icon: LabIcon.IMaybeResolvable,
