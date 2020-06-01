@@ -419,17 +419,17 @@ async function activateFBL(
   if (launcher){
     launcher.add({
       command: CommandIDs.Neu3DCreate,
-      category: 'Fly Brain Lab',
+      category: 'FlyBrainLab',
       rank: 0
     });
     launcher.add({
       command: CommandIDs.NeuGFXCreate,
-      category: 'Fly Brain Lab',
+      category: 'FlyBrainLab',
       rank: 0
     });
     launcher.add({
       command: CommandIDs.NeuAnyCreate,
-      category: 'Fly Brain Lab',
+      category: 'FlyBrainLab',
       rank: 0
     });
   }
@@ -464,7 +464,7 @@ async function activateFBL(
     CommandIDs.NeuAnyCreate,
     CommandIDs.NeuAnyCreateConsole,
   ].forEach(command=>{
-    palette.addItem({command, category: 'Fly Brain Lab' });
+    palette.addItem({command, category: 'FlyBrainLab' });
   })
 
   return Promise.resolve({
