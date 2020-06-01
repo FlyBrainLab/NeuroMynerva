@@ -60,8 +60,33 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.model.statesChanged.connect(this.onStatesChanged, this);
   }
 
+  renderModel(change?: any): void {
+    if (change) {
+      // TODO: Handle incremental rendering for model change
+      // currently re-rendering the whole scene regardless
+      this.neu3d.reset(true);
+      this.neu3d.addJson({ ffbo_json: this.model.data });
+    } else {
+      // complete reset
+      this.neu3d.reset(true);
+      this.neu3d.addJson({ ffbo_json: this.model.data });
+    }
+  }
+
+  onDataChanged(change: any) {
+    this.renderModel(change);
+  }
+
+  onStatesChanged(change: any) {
+    this.renderModel(change);
+  }
+
+  onMetadataChanged(change: any) {
+    this.renderModel(change);
+  }
+  
+
   onAfterShow(msg: Message){
-    super.onAfterShow(msg);
     if (!this.neu3d){
       this.neu3d = new Neu3D(
         this._neu3dContainer, 
@@ -117,7 +142,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this._modelChanged.emit(e);
     },
     'visibility');
-    this.neu3d.onWindowResize()
+    this.neu3d.onWindowResize();
+    this.renderModel();
+    super.onAfterShow(msg);
   }
 
   /**
