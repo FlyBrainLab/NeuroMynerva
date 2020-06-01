@@ -12,7 +12,10 @@ interface IMeshDictItem {
   visibility?: Boolean,
   background?: Boolean
   color?: {r: Number, g:Number, b:Number},
-  pinned?: boolean 
+  pinned?: boolean,
+  filename?: string,  // specified if downloaded mesh
+  filetype?: 'swc' | string,  // 'swc'
+  dataStr?: string // datastring of swcs
 }
 
 /**
@@ -58,13 +61,16 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
 
   removeMesh(rid:string){
     let oldValue = this.data[rid];
-    this._dataChanged.emit({
-      event: 'remove',
-      source: this.data,
-      key: rid,
-      oldValue: oldValue,
-      newValue: undefined
-    });
+    if (oldValue) { // check if mesh exists
+      delete this.data[rid];
+      this._dataChanged.emit({
+        event: 'remove',
+        source: this.data,
+        key: rid,
+        oldValue: oldValue,
+        newValue: undefined
+      });
+    }
   }
 
   pinMeshes(rids:Array<string>){
@@ -174,14 +180,33 @@ namespace Private {
    * Convert Raw Neu3D Mesh to `IMeshDict`
    */
   export function convertRawMesh(mesh: any): IMeshDictItem {
-    return {
-      label: mesh['label'],
-      highlight: mesh['highlight'],
-      opacity: mesh['opacity'],
-      visibility: mesh['visibility'],
-      background: mesh['background'],
-      color: mesh['color'],
-      pinned: mesh['pinned'],
+    if (mesh.filename){
+      return {
+        label: mesh['label'],
+        highlight: mesh['highlight'],
+        opacity: mesh['opacity'],
+        visibility: mesh['visibility'],
+        background: mesh['background'],
+        color: mesh['color'],
+        pinned: mesh['pinned'],
+        filetype: mesh['filetype'],
+        filename: mesh['filename']
+      }
+    } else if (mesh.dataStr){
+      return {
+        label: mesh['label'],
+        highlight: mesh['highlight'],
+        opacity: mesh['opacity'],
+        visibility: mesh['visibility'],
+        background: mesh['background'],
+        color: mesh['color'],
+        pinned: mesh['pinned'],
+        filetype: mesh['filetype'],
+        dataStr: mesh['dataStr']
+      }
+    } else {
+      return {}; // neither mesh nor swc
     }
+    
   }
 }

@@ -5,6 +5,7 @@ import { UUID } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { PathExt, Time } from '@jupyterlab/coreutils';
 import { Widget } from '@lumino/widgets';
+import { Message } from '@lumino/messaging';
 import {
   ISessionContext, SessionContext, 
   sessionContextDialogs, showDialog, Dialog,
@@ -123,16 +124,25 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.species = species ?? 'No Species';
       Private.updateTitle(this, this._connected);
     });
+
     Private.updateTitle(this, this._connected);
   }
 
+  /**
+   * After 
+   * @param msg 
+   */
+  onAfterShow(msg: Message): void {
+    super.onAfterShow(msg);
+    this.renderModel();
+  }
   /**
    * Should handle render logic of model
    * @param change - changes to a model for incremental rendering
    */
   renderModel(change?: any) {
     // to be implemented by child widgets
-    return
+    return;
   }
 
 
