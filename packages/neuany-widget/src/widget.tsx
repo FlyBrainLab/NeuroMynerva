@@ -1,7 +1,5 @@
-import { IFBLWidget, FBLWidget } from '@flybrainlab/fbl-template';
+import { IFBLWidget, FBLWidget, Icons } from '@flybrainlab/fbl-template-widget';
 import { Message } from '@lumino/messaging';
-
-import { Icons } from '@flybrainlab/fbl-template';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { PathExt, Time } from '@jupyterlab/coreutils';

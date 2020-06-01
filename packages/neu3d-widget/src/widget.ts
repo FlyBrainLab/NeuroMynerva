@@ -1,8 +1,8 @@
-import { IFBLWidget, FBLWidget } from '@flybrainlab/fbl-template';
+import { IFBLWidget, FBLWidget } from '@flybrainlab/fbl-template-widget';
 import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { ToolbarButton } from '@jupyterlab/apputils';
-import { Icons } from '@flybrainlab/fbl-template';
+import { Icons } from '@flybrainlab/fbl-template-widget';
 import { LabIcon } from '@jupyterlab/ui-components';
 import '../style/index.css';
 import { Neu3DModel, INeu3DModel } from './model';

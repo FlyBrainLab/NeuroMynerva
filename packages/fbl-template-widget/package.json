@@ -1,7 +1,7 @@
 {
-  "name": "@flybrainlab/neu3d",
+  "name": "@flybrainlab/fbl-template-widget",
   "version": "0.1.0",
-  "description": "Neu3D Widget",
+  "description": "Template Widget for FlyBrainLab",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -16,26 +16,17 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "style": "style/index.css",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/my_name/myextension.git"
-  },
   "scripts": {
     "build": "tsc && webpack",
-    "build:neu3d": "cd ../neu3d && npm run build",
-    "install:neu3d": "cd ../neu3d && npm install",
-    "watch:neu3d": "cd ../neu3d && npm run watch",
     "clean": "rimraf lib tsconfig.tsbuildinfo",
+    "clean:node_modules": "rimraf node_modules lib tsconfig.tsbuildinfo",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
-    "prepare": "jlpm run clean && jlpm run build",
-    "watch": "nodemon -e ts,js --watch src --watch ../neu3d/lib --exec \"npm run build\"",
-    "dev": "concurrently \"http-server -p 7998\" \"npm:watch\" \"npm:watch:neu3d\""
+    "watch": "nodemon -e ts,js,tsx --watch src --exec \"npm run build\"",
+    "dev": "nodemon -e ts,js,tsx --watch src --exec \"npm run build\""
   },
   "dependencies": {
-    "@flybrainlab/fbl-template": "file:../fbl-template-widget",
-    "@jupyterlab/application": "^2.0.0",
-    "neu3d": "file:../neu3d"
+    "@jupyterlab/application": "^2.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.25.0",
@@ -49,7 +40,7 @@
     "nodemon": "^2.0.4",
     "prettier": "1.16.4",
     "raw-loader": "^4.0.1",
-    "rimraf": "^2.6.1",
+    "rimraf": "^3.0.2",
     "style-loader": "^1.2.1",
     "svg-url-loader": "^5.0.0",
     "typescript": "~3.7.0"

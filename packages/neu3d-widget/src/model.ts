@@ -1,4 +1,4 @@
-import { FBLWidgetModel, IFBLWidgetModel } from '@flybrainlab/fbl-template';
+import { FBLWidgetModel, IFBLWidgetModel } from '@flybrainlab/fbl-template-widget';
 import { ISignal, Signal } from '@lumino/signaling';
 
 /**
