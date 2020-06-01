@@ -37,8 +37,8 @@ import {
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
 
 const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
-const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
 const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
+const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
 const NEUANY_MODULE_URL = "http://localhost:7999/build/bundle.js"; //placeholder
 // const MASTER_CLASS_NAME = '.jp-FBL-Master';
 const NEU3D_CLASS_NAME = '.jp-FBL-Neu3D';
