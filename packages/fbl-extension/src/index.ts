@@ -485,7 +485,9 @@ export namespace FBL {
     }
     try{
       if (widget.content.sessionContext.isReady){
-        return true;
+        if (widget.content.sessionContext.session) { // check if has kenrel
+          return true;
+        }
       }
       return false;
     } catch (error) {

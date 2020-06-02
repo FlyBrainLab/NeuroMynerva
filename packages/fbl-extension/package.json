@@ -22,7 +22,8 @@
     "clean:node_modules": "rimraf node_modules lib tsconfig.tsbuildinfo",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "dev": "tsc -w"
   },
   "dependencies": {
     "@jupyterlab/application": "^2.0.0",
