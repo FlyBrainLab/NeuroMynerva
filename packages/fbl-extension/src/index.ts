@@ -200,6 +200,7 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
+        id: widget.content.id,
         species: widget.content.species,
         path: path,
         name: name
@@ -219,6 +220,7 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
+        id: widget.content.id,
         species: widget.content.species,
         path: path,
         name: name

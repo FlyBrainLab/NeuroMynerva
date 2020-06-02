@@ -65,15 +65,30 @@ export class FBLWidget extends Widget implements IFBLWidget {
       model,
       species,
       sessionContext,
-      icon
+      icon,
     } = options;
 
     // keep track of number of instances
     const count = Private.count++;
 
-    // specify name and id
+    // specify name
     this.name = name || `Template-${count}`;
-    this.id = `${this.name}-${UUID.uuid4()}`;
+
+    // specify id
+    let id  = options.id ?? `${this.name}-${UUID.uuid4()}`;
+    // make sure there is no conflic with existing widgets
+    let _widgets_iter = app.shell.widgets('main').iter();
+    let _w = _widgets_iter.next();
+    while (_w){
+      if ((_w.id === id) || ((_w as any).content?.id === id)) {
+        id = `${this.name}-${UUID.uuid4()}`;
+        break;
+      }
+      _w = _widgets_iter.next();
+    }
+    this.id = id;
+
+    // specify path
     const path = options.path ?? `${basePath || ''}/${this.id}`;
     this.icon = icon ?? fblIcon;
 
@@ -233,11 +248,17 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (this._isDisposed === true) {
       return;
     }
-
-    super.dispose();
-    this.model.dispose();
-    this._isDisposed = true;
+    this.sessionContext.session.kernel.requestExecute({
+      code: `
+      _comm = testComms.comms[${this.id}]
+      testComms.widgets[_comm.comm_id]['disposed'] = True
+      `
+    });
+    this.comm?.close();
+    this.model?.dispose();
     Signal.disconnectAll(this._modelChanged);
+    super.dispose();
+    this._isDisposed = true;
   }
 
   /**
@@ -306,35 +327,56 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return `
     from ipykernel.comm import Comm
     from collections import OrderedDict
-    class MyTestClass(object):
-        def __init__(self):
-            self.comms = OrderedDict()
-            self.widgets = OrderedDict()
-            self.msg_data = OrderedDict()
+    import dataclasses
+    if 'Widget' not in globals():
+        @dataclasses.dataclass
+        class Widget:
+            widget_type: str # neu3d, neugfx, etc.
+            comm: Comm
+            widget_id: str
+            model: 'typing.Any'
+            msg_data: 'typing.Any'
+            isDisposed: bool = False
     
-        def add_comm(self, widget_id, target_name):
-            comm = Comm(target_name=target_name)
-            self.comms[widget_id] = comm
-            self.widgets[comm.comm_id] = widget_id
-            self.msg_data[widget_id] = None
+    if 'WidgetManager' not in globals():
+        class WidgetManager(object):
+            def __init__(self):
+                self._comms = OrderedDict()
+                self.widgets = OrderedDict()
+        
+            def add_comm(self, widget_id, widget_type, comm_target):
+                comm = Comm(target_name=comm_target)
+                self._comms[widget_id] = comm
+                self.widgets[widget_id] = Widget(
+                    widget_type=widget_type,
+                    widget_id=widget_id,
+                    model=None,
+                    comm=comm,
+                    isDisposed=False,
+                    msg_data=None
+                )
+        
+                @comm.on_msg
+                def handle_msg(msg):
+                    comm_id = msg['content']['comm_id']
+                    data = msg['content']['data']
+                    nonlocal self
+                    widget_id = [w_id for w_id,w in self.widgets.items() if w.comm.comm_id==comm_id]
+                    if len(widget_id) != 1: # should be unique
+                        return
+                    self.widgets[widget_id].msg_data = data
+                    if data == 'dispose':
+                        self.widgets[widget_id].isDisposed = True
+        
+            def send_data(self, widget_id, data):
+                self.widgets[widget_id].comm.send(data)
     
-            @comm.on_msg
-            def handle_msg(msg):
-                comm_id = msg['content']['comm_id']
-                data = msg['content']['data']
-                nonlocal self
-                widget_id = self.widgets[comm_id]
-                self.msg_data[widget_id] = data
-          
-        def send_data(self, widget_id, data):
-            self.comms[widget_id].send(data)
+    if 'fbl_widget_manager' not in globals():
+        fbl_widget_manager = WidgetManager()
     
-    if 'testComms' not in globals():
-        testComms = MyTestClass()
-
-    if '${this.id}' not in testComms.widgets:
-        testComms.add_comm('${this.id}', '${this._commTarget}')
-    testComms.send_data('${this.id}', 'comm sent message')
+    if '${this.id}' not in fbl_widget_manager.widgets:
+        fbl_widget_manager.add_comm('${this.id}', '${this.constructor.name}', '${this._commTarget}')
+    fbl_widget_manager.send_data('${this.id}', 'comm sent message')
     `;
   }
 
@@ -504,6 +546,11 @@ export namespace FBLWidget {
      * Icon associated with this widget, default to fblIcon
      */
     icon?: LabIcon;
+
+    /**
+     * Optionally Specify Widget Id 
+     */
+    id?: string
   }
 
 }
