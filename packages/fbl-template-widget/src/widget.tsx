@@ -2,10 +2,10 @@ import * as React from 'react';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
-import { IDisposable } from '@lumino/disposable';
+import { IDisposable } from '@lumino/disposable'
+import { Message } from '@lumino/messaging';
 import { PathExt, Time } from '@jupyterlab/coreutils';
 import { Widget } from '@lumino/widgets';
-import { Message } from '@lumino/messaging';
 import {
   ISessionContext, SessionContext, 
   sessionContextDialogs, showDialog, Dialog,
@@ -77,6 +77,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     const path = options.path ?? `${basePath || ''}/${this.id}`;
     this.icon = icon ?? fblIcon;
 
+    // initialize model
     this.initModel(model);
 
     // specify comm target (unique to this widget)
@@ -145,6 +146,17 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return;
   }
 
+  /**
+   * Send model to the front-end
+   * @param change 
+   */
+  sendModel(change?: Partial<IFBLWidgetModel>) {
+    this.comm.send({
+      data: change?.data ?? this.model.data,
+      metadata: change?.metadata ?? this.model.metadata,
+      states: change?.states ?? this.model.states,
+    })
+  }
 
   /**
    * Initialize model. Overload this method with child's own model class.
@@ -243,6 +255,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
       await this.sessionContext.ready;
       this.initFBLClient();
       this.onPathChanged();
+
+      this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
+      this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
+      this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
     }
   }
 
@@ -255,6 +271,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (status === 'restarting') {
       this.sessionContext.ready.then(() => {
         this.initFBLClient();
+        // re-register callbacks
+        this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
+        this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
+        this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
       });
     }
   }
@@ -286,15 +306,35 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return `
     from ipykernel.comm import Comm
     from collections import OrderedDict
-    if 'comms' not in globals():
-      comms = OrderedDict()
-    if '${this.id}' not in comms:
-      comm = Comm(target_name="${this._commTarget}")
-      comms['${this.id}'] = comm
-    if not any([comm.target_name != "${this._commTarget}" for widget_id, comm in comms.items()]):
-      comm = Comm(target_name="${this._commTarget}")
-      comms['${this.id}'] = comm
-    comms['${this.id}'].send(data="comm sent message")
+    class MyTestClass(object):
+        def __init__(self):
+            self.comms = OrderedDict()
+            self.widgets = OrderedDict()
+            self.msg_data = OrderedDict()
+    
+        def add_comm(self, widget_id, target_name):
+            comm = Comm(target_name=target_name)
+            self.comms[widget_id] = comm
+            self.widgets[comm.comm_id] = widget_id
+            self.msg_data[widget_id] = None
+    
+            @comm.on_msg
+            def handle_msg(msg):
+                comm_id = msg['content']['comm_id']
+                data = msg['content']['data']
+                nonlocal self
+                widget_id = self.widgets[comm_id]
+                self.msg_data[widget_id] = data
+          
+        def send_data(self, widget_id, data):
+            self.comms[widget_id].send(data)
+    
+    if 'testComms' not in globals():
+        testComms = MyTestClass()
+
+    if '${this.id}' not in testComms.widgets:
+        testComms.add_comm('${this.id}', '${this._commTarget}')
+    testComms.send_data('${this.id}', 'comm sent message')
     `;
   }
 
@@ -319,6 +359,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
         if (commMsg.content.target_name !== this._commTarget) {
           return;
         }
+        this.comm = comm;
         comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
           this.onCommMsg(msg);
         };
@@ -399,6 +440,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   protected _speciesChanged = new Signal<this, string>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
+  protected comm: Kernel.IComm; // the actual comm object
   readonly name: string;
   protected _species: any;
   innerContainer: HTMLDivElement;

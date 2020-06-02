@@ -24,6 +24,12 @@ interface INeu3DMessage {
   obj?: any;
 }
 
+declare global {
+  interface Window {
+    neu3d_widget: any;
+  }
+}
+
 
 /**
 * An Neu3D Widget
@@ -45,7 +51,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this._neu3dContainer.style.height = '100%';
     this._neu3dContainer.style.width = '100%';
     this.node.appendChild(this._neu3dContainer);
-
+    window.neu3d_widget = this;
   }
 
   initFBLCode(): string {
@@ -64,11 +70,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     if (change) {
       // TODO: Handle incremental rendering for model change
       // currently re-rendering the whole scene regardless
-      this.neu3d.reset(true);
       this.neu3d.addJson({ ffbo_json: this.model.data });
     } else {
       // complete reset
-      this.neu3d.reset(true);
       this.neu3d.addJson({ ffbo_json: this.model.data });
     }
   }

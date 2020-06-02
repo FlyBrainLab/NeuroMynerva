@@ -30,7 +30,7 @@ export class NeuAnyWidget extends FBLWidget implements IFBLWidget {
       name: `NeuAny-${Private.count++}`, 
       icon: Icons.fblIcon,
       ...options});
-    window.widget = this
+    window.widget = this;
     this.addClass(NEUANY_CLASS_JLab);
  
     // create container that could hold custom JS 
@@ -256,6 +256,7 @@ export class NeuAnyWidget extends FBLWidget implements IFBLWidget {
   protected _speciesChanged = new Signal<this, string>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
+  comm: Kernel.IComm;
   readonly name: string;
   // private _comm: Kernel.IComm;
   protected _species: any;
