@@ -41,10 +41,32 @@ export interface IFBLWidget extends Widget {
    */
   model: any;
 
+  /**
+   * Name of Widget
+   */
+  name: string
 
+  /**
+   * Signal that emits new species name when changed
+   */
   speciesChanged: ISignal<IFBLWidget, string>;
+
+  /**
+   * Signal that emits model change
+   */
   modelChanged: ISignal<IFBLWidget, object>;
+
+  /**
+   * Icon associated with the widget
+   */
   icon?: LabIcon;
+
+  /**
+   * Toolbar to be added to the MainAreaWidget
+   * 
+   * TODO: This is currently defined here due to an issue with using 
+   *   MainAreaWidget class directly
+   */
   toolbar?: Toolbar<Widget>;
 }
 

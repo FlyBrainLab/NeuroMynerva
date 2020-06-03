@@ -1,30 +1,18 @@
 // FBL Master Widget Class
 import * as React from 'react';
-
+import { Icons, IFBLWidget } from '@flybrainlab/fbl-template-widget';
+import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '@flybrainlab/fbl-extension';
 import { 
   ReactWidget, 
-  IWidgetTracker,
-  ISessionContext,
-  MainAreaWidget,
-  Toolbar,
   ToolbarButtonComponent,
   UseSignal,
   Dialog, showDialog
  } from'@jupyterlab/apputils';
-import { 
-  Session
-} from '@jupyterlab/services';
-import { Widget } from '@lumino/widgets';
-
-import{
-  ISignal
-} from '@lumino/signaling';
 
 import { 
   LabIcon, closeIcon//, fileIcon 
 } from '@jupyterlab/ui-components';
 import '../style/index.css';
-import { fblIcon } from './icons';
 
 const MASTER_CLASS_JLab = 'jp-FBL-Master';
 // const TOOLBAR_SPECIES_CLASS = "jp-Master-Species";
@@ -76,118 +64,16 @@ const DISPOSE_BUTTON_CLASS = 'jp-FBL-Master-itemDispose';
 
 
 
-// NOTE: this is taken exactly from the WidgetModule class
-// it is put here so we have something to reference in the widget tracker
-interface IFBLWidget extends Widget {
-  toolbar?: Toolbar<Widget>;
-
-  modelChanged: ISignal<this, object>;
-
-  sessionContext: ISessionContext;
-
-  species: string;
-   /**
-   * Output signal of child widget (used for connection to master)
-   */
-  outSignal: ISignal<this, object>;
-
-  /**
-   * Dispose current widget
-   */
-  dispose(): void;
-
-  /**
-   * 
-   */
-  model?: any;  
-
-  icon?: LabIcon;
-  
-  name: string;
-}
-
-type FBLPanel = MainAreaWidget<IFBLWidget>;
-type FBLTracker = IWidgetTracker<FBLPanel>;
-
-/**
- * Class for maintaining a list of FBLWidgetTrackers
- */
-class FBLWidgetTrackers {
-  constructor(trackers?: {[name: string]: FBLTracker}){
-    if (trackers){
-      this._trackers = trackers;
-    }else{
-      this._trackers = {};
-    }
-  }
-  /**
-   * Add a fbl widget tracker
-   * @param tracker
-   */
-  add(name: string, tracker: FBLTracker): void {
-    if (!(name in this._trackers)){
-      this._trackers[name] = tracker;
-    }
-  }
-
-  get trackers(): {[name: string]: FBLTracker} {
-    return this._trackers;
-  }
-
-  /** 
-   * Return alternate view of the trackers, keyed by session
-   */
-  get sessionsDict(): {[sessionPath: string]: FBLPanel[] } {
-    let sessionsDict: {[sessionPath: string]: FBLPanel[] } = {};
-    for (const t of Object.values(this.trackers)){
-      t.forEach((panel)=>{
-        const widget = panel.content;
-        if (widget.sessionContext?.session){
-          if (!widget.sessionContext.isDisposed){
-            if (!(widget.sessionContext.session.path in sessionsDict)) {
-              sessionsDict[widget.sessionContext.session.path] = new Array<FBLPanel>();
-            }
-            sessionsDict[widget.sessionContext.session.path].push(panel);
-          }
-        }
-      });
-    }
-    return sessionsDict;
-  }
-
-  /** 
-   * Return a array of unique sessions
-   */
-  get sessions(): Session.ISessionConnection[] {
-    const sessions: Session.ISessionConnection[] = [];
-    for (const t of Object.values(this.trackers)){
-      t.forEach((panel)=>{
-        const widget = panel.content;
-        if (widget.sessionContext?.session){
-          if (!widget.sessionContext.isDisposed){
-            sessions.push(widget.sessionContext.session);
-          }
-        }
-      })
-    }
-    return Array.from(new Set(sessions));
-  }
-
-  // disallow modification to these trackers, 
-  // they are meant to be book-keeping only
-  protected _trackers: {[name: string]: FBLTracker};
-}
-
 /**
 * An FBL Master Widget
 */
 export class MasterWidget extends ReactWidget {
   constructor(
-    trackers: {[name: string]: FBLTracker},
+    fbltrackers: IFBLWidgetTrackers
   ) {
     console.log('Master Widget Created');
     super();
-    this.fbltrackers = new FBLWidgetTrackers(trackers);
+    this.fbltrackers = fbltrackers;
     this.addClass(MASTER_CLASS_JLab);
     this.render();
   }
@@ -295,7 +181,7 @@ namespace FBLWidgetReact {
   function Item(props: { panel: FBLPanel }) {
     const {panel} = props;
     const widget = panel.content;
-    const icon: LabIcon = fblIcon;
+    const icon: LabIcon = Icons.fblIcon;
     
     // if (widget.icon?.react){
     //   icon = widget.icon;
@@ -325,7 +211,7 @@ namespace FBLWidgetReact {
 
   function ShutdownButton(props: {widget: IFBLWidget}){
     const { widget } = props;
-    const body = <p>This kernel is could be used by other widgets at the moment.</p>;
+    const body = <p>This kernel could be used by other widgets at the moment.</p>;
     function onShutdown() {
       void showDialog({
         title: 'Shut Down Kernel?',

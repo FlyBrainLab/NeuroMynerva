@@ -23,7 +23,8 @@ import {
 } from '@jupyterlab/apputils';
 
 import{
-  Kernel
+  Kernel,
+  Session
 } from '@jupyterlab/services';
 
 import {
@@ -56,9 +57,90 @@ declare global {
   }
 }
 
+export type FBLPanel = MainAreaWidget<IFBLWidget>;
+export type FBLTracker = IWidgetTracker<FBLPanel>;
+
+export interface IFBLWidgetTrackers {
+  add(name: string, tracker: FBLTracker): void;
+  trackers:  {[name: string]: FBLTracker};
+  sessionsDict: {[sessionPath: string]: FBLPanel[] };
+  sessions: Session.ISessionConnection[];
+}
+
+/* tslint:disable */
+/**
+ * The FBL Widget Tracker Token
+ */
+export const IFBLWidgetTrackers = new Token<IFBLWidgetTrackers>(
+  '@flybrainlab/fbl-extension:IFBLWidgetTrackers'
+);
+/* tslint:enable */
+
+/**
+ * Class for maintaining a list of FBLWidgetTrackers
+ */
+export class FBLWidgetTrackers implements IFBLWidgetTrackers {
+  constructor(trackers?: {[name: string]: FBLTracker}){
+    if (trackers){
+      this.trackers = trackers;
+    }else{
+      this.trackers = {};
+    }
+  }
+  /**
+   * Add a fbl widget tracker
+   * @param tracker
+   */
+  add(name: string, tracker: FBLTracker): void {
+    if (!(name in this.trackers)){
+      this.trackers[name] = tracker;
+    }
+  }
+
+  /** 
+   * Return alternate view of the trackers, keyed by session
+   */
+  get sessionsDict(): {[sessionPath: string]: FBLPanel[] } {
+    let sessionsDict: {[sessionPath: string]: FBLPanel[] } = {};
+    for (const t of Object.values(this.trackers)){
+      t.forEach((panel)=>{
+        const widget = panel.content;
+        if (widget.sessionContext?.session){
+          if (!widget.sessionContext.isDisposed){
+            if (!(widget.sessionContext.session.path in sessionsDict)) {
+              sessionsDict[widget.sessionContext.session.path] = new Array<FBLPanel>();
+            }
+            sessionsDict[widget.sessionContext.session.path].push(panel);
+          }
+        }
+      });
+    }
+    return sessionsDict;
+  }
+
+  /** 
+   * Return a array of unique sessions
+   */
+  get sessions(): Session.ISessionConnection[] {
+    const sessions: Session.ISessionConnection[] = [];
+    for (const t of Object.values(this.trackers)){
+      t.forEach((panel)=>{
+        const widget = panel.content;
+        if (widget.sessionContext?.session){
+          if (!widget.sessionContext.isDisposed){
+            sessions.push(widget.sessionContext.session);
+          }
+        }
+      })
+    }
+    return Array.from(new Set(sessions));
+  }
+
+  trackers: {[name: string]: FBLTracker};
+}
 
 // NOTE: this interface should be used by all widgets using npm install/import
-// for now it needs to be copy-pasted around
+// for now it needs to be copy-pasted around (taken from fbl-template-widget)
 export interface IFBLWidget extends Widget{
   /**
    * The sessionContext keeps track of the current running session
@@ -85,8 +167,9 @@ export interface IFBLWidget extends Widget{
 
   speciesChanged: ISignal<IFBLWidget, string>;
   modelChanged: ISignal<IFBLWidget, object>;
-  icon?: LabIcon
-  toolbar?: Toolbar<Widget>
+  icon?: LabIcon;
+  toolbar?: Toolbar<Widget>;
+  name: string;
 }
 
 
@@ -106,18 +189,7 @@ namespace CommandIDs {
 }
 
 
-export interface IFBLWidgetTrackers {
-  [widget:string]: IWidgetTracker<MainAreaWidget<IFBLWidget>>
-}
-/* tslint:disable */
-/**
- * The FBL Widget Tracker Token
- */
-export const IFBLWidgetTrackers = new Token<IFBLWidgetTrackers>(
-  '@flybrainlab/fbl-extension:IFBLWidgetTrackers'
-);
 
-/* tslint:enable */
 
 /**
  * Initialization data for the neu3d-extension extension.
@@ -471,11 +543,13 @@ async function activateFBL(
     palette.addItem({command, category: 'FlyBrainLab' });
   })
 
-  return Promise.resolve({
-    'Neu3D': neu3DTracker,
-    'NeuGFX': neuGFXTracker,
-    'NeuAny': neuAnyTracker,
-  })
+  return Promise.resolve(
+    new FBLWidgetTrackers({
+      "Neu3D": neu3DTracker,
+      "NeuGFX": neuGFXTracker,
+      "NeuAny": neuAnyTracker,
+    })
+  );
 }
 
 export namespace FBL {
