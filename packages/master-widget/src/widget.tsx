@@ -26,7 +26,7 @@ import {
 import '../style/index.css';
 import { fblIcon } from './icons';
 
-const MASTER_CLASS_JLab = "jp-FBL-Master";
+const MASTER_CLASS_JLab = 'jp-FBL-Master';
 // const TOOLBAR_SPECIES_CLASS = "jp-Master-Species";
 
 /**
@@ -113,7 +113,7 @@ type FBLTracker = IWidgetTracker<FBLPanel>;
  * Class for maintaining a list of FBLWidgetTrackers
  */
 class FBLWidgetTrackers {
-  constructor(trackers?: {[name:string]: FBLTracker}){
+  constructor(trackers?: {[name: string]: FBLTracker}){
     if (trackers){
       this._trackers = trackers;
     }else{
@@ -124,45 +124,45 @@ class FBLWidgetTrackers {
    * Add a fbl widget tracker
    * @param tracker
    */
-  add(name:string, tracker: FBLTracker): void {
+  add(name: string, tracker: FBLTracker): void {
     if (!(name in this._trackers)){
       this._trackers[name] = tracker;
     }
   }
 
-  get trackers(): {[name:string]: FBLTracker} {
+  get trackers(): {[name: string]: FBLTracker} {
     return this._trackers;
   }
 
   /** 
    * Return alternate view of the trackers, keyed by session
    */
-  get sessions_dict(): {[session_path: string]: FBLPanel[] } {
-    let sessions_dict: {[session_path: string]: FBLPanel[] } = {};
-    for (let t of Object.values(this.trackers)){
+  get sessionsDict(): {[sessionPath: string]: FBLPanel[] } {
+    let sessionsDict: {[sessionPath: string]: FBLPanel[] } = {};
+    for (const t of Object.values(this.trackers)){
       t.forEach((panel)=>{
-        let widget = panel.content;
+        const widget = panel.content;
         if (widget.sessionContext?.session){
           if (!widget.sessionContext.isDisposed){
-            if (!(widget.sessionContext.session.path in sessions_dict)) {
-              sessions_dict[widget.sessionContext.session.path] = new Array<FBLPanel>();
+            if (!(widget.sessionContext.session.path in sessionsDict)) {
+              sessionsDict[widget.sessionContext.session.path] = new Array<FBLPanel>();
             }
-            sessions_dict[widget.sessionContext.session.path].push(panel);
+            sessionsDict[widget.sessionContext.session.path].push(panel);
           }
         }
-      })
+      });
     }
-    return sessions_dict;
+    return sessionsDict;
   }
 
   /** 
    * Return a array of unique sessions
    */
   get sessions(): Session.ISessionConnection[] {
-    let sessions: Session.ISessionConnection[] = [];
-    for (let t of Object.values(this.trackers)){
+    const sessions: Session.ISessionConnection[] = [];
+    for (const t of Object.values(this.trackers)){
       t.forEach((panel)=>{
-        let widget = panel.content;
+        const widget = panel.content;
         if (widget.sessionContext?.session){
           if (!widget.sessionContext.isDisposed){
             sessions.push(widget.sessionContext.session);
@@ -175,7 +175,7 @@ class FBLWidgetTrackers {
 
   // disallow modification to these trackers, 
   // they are meant to be book-keeping only
-  protected _trackers: {[name:string]: FBLTracker};
+  protected _trackers: {[name: string]: FBLTracker};
 }
 
 /**
@@ -183,7 +183,7 @@ class FBLWidgetTrackers {
 */
 export class MasterWidget extends ReactWidget {
   constructor(
-    trackers: {[name:string]: FBLTracker},
+    trackers: {[name: string]: FBLTracker},
   ) {
     console.log('Master Widget Created');
     super();
@@ -210,7 +210,7 @@ export class MasterWidget extends ReactWidget {
  */
 namespace FBLWidgetReact {
   export function FBLWidgetTrackersComponent(props: {
-    fbltrackers: FBLWidgetTrackers
+    fbltrackers: FBLWidgetTrackers;
   }) {
     const trackers_arr = Object.values(props.fbltrackers.trackers);
     const trackers_names = Object.keys(props.fbltrackers.trackers);
@@ -229,7 +229,7 @@ namespace FBLWidgetReact {
    *
    * It is specialized for each based on its props.
    */
-  export function Section(props: {name:string, tracker:FBLTracker}) {
+  export function Section(props: {name: string; tracker: FBLTracker}) {
     function onClose() {
       void showDialog({
         title: `Close All ${props.name}?`,
@@ -275,7 +275,7 @@ namespace FBLWidgetReact {
   }
   
   function ListView(props: { tracker: FBLTracker }) {
-    let panel_arr: Array<FBLPanel> = [];
+    const panel_arr: Array<FBLPanel> = [];
     props.tracker.forEach((panel) => {
       panel_arr.push(panel);
     });
@@ -295,7 +295,7 @@ namespace FBLWidgetReact {
   function Item(props: { panel: FBLPanel }) {
     const {panel} = props;
     const widget = panel.content;
-    let icon: LabIcon = fblIcon;
+    const icon: LabIcon = fblIcon;
     
     // if (widget.icon?.react){
     //   icon = widget.icon;
@@ -325,10 +325,10 @@ namespace FBLWidgetReact {
 
   function ShutdownButton(props: {widget: IFBLWidget}){
     const { widget } = props;
-    let body = <p>This kernel is could be used by other widgets at the moment.</p>;
+    const body = <p>This kernel is could be used by other widgets at the moment.</p>;
     function onShutdown() {
       void showDialog({
-        title: `Shut Down Kernel?`,
+        title: 'Shut Down Kernel?',
         body: body,
         buttons: [
           Dialog.cancelButton(),
