@@ -52,6 +52,7 @@ declare global {
   interface Window {
     fbltrackers: any;
     app: any;
+    master: any;
   }
 }
 
@@ -258,6 +259,7 @@ async function activateFBL(
       restorer.add(masterWidget, 'FBL-Master');
     }
     app.shell.add(masterWidget, 'left', {rank: Infinity});
+    window.master = masterWidget;
   }).catch(error=>{
     console.log('Master Widget Loading Failed, skipping injection', error);
   });

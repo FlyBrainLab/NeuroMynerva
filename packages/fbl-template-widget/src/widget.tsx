@@ -248,12 +248,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (this._isDisposed === true) {
       return;
     }
-    try{
-      this.comm?.close();
-    } catch{
-      // no-op
-      // likely already closed 
-    }
+    this.comm?.dispose();
     this.model?.dispose();
     Signal.disconnectAll(this._modelChanged);
     super.dispose();
@@ -268,7 +263,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
     args: Session.ISessionConnection.IKernelChangedArgs
   ) {
     const newKernel: Kernel.IKernelConnection | null = args.newValue;
-    if (!newKernel || newKernel?.isDisposed){
+    if (newKernel === null){
+      this.comm?.dispose();
       return;
     }
     if (this.sessionContext.session) {

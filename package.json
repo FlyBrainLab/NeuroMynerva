@@ -4,6 +4,7 @@
     "scripts": {
       "build": "lerna run build",
       "watch": "lerna run --parallel watch",
+      "eslint": "lerna run --parallel eslint",
       "dev": "lerna run --parallel dev",
       "clean": "lerna run --parallel clean",
       "clean:node_modules": "lerna run --parallel clean:node_modules && rimraf node_modules",
