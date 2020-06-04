@@ -8,6 +8,7 @@ import '../style/index.css';
 import { Neu3DModel, INeu3DModel } from './model';
 import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
+import { HemibrainMesh } from './hemibrain_mesh';
 
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
 
@@ -45,6 +46,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     // load in meshes
     this._adultMesh = AdultMesh;
     this._larvaMesh = LarvaMesh;
+    this._hemibrainMesh = HemibrainMesh;
 
     this.addClass(Neu3D_CLASS_JLab);
     
@@ -247,6 +249,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   neu3d: Neu3D;
   readonly _adultMesh: Object; // caching for dynamically imported mesh
   readonly _larvaMesh: Object; // caching for dynamically import mesh
+  readonly _hemibrainMesh: Object; // caching for dynamically import mesh
   private _neu3dContainer: HTMLDivElement;
   model: Neu3DModel;
 };
