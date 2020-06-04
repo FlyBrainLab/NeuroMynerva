@@ -8,12 +8,21 @@
 - NeuAny-Widget: 7999
 
 ```bash
-conda create -n fblv2-test python=3.7 nodejs -y
+conda create -n fblv2-test python=3.7 nodejs scipy pandas cookiecutter git yarn -c conda-forge -y
 conda activate fblv2-test
-git clone --branch lerna git@github.com:TK-21st/FBL-Wrapper.git
+git clone --branch v2 https://github.com/TK-21st/FBL-Wrapper.git
 git clone git@github.com:fruitflybrain/neu3d.git packages/neu3d
 pip install jupyter jupyterlab>=2.1.2
-cd FBL-Wrapper
+pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx jupyter
+# If on Windows, execute the following:
+pip install pypiwin32
+git clone https://github.com/FlyBrainLab/Neuroballad.git
+git clone https://github.com/FlyBrainLab/FBLClient.git
+cd ./Neuroballad
+python setup.py develop
+cd ../FBLClient
+python setup.py develop
+cd ../FBL-Wrapper
 jlpm
 jlpm run link
 jlpm run build
