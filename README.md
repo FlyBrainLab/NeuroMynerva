@@ -1,7 +1,8 @@
 # FlyBrainLab Extension
 
 ## Build Process
-**Note**: we are using ports to serve JS resources
+**Note**: we are using multiple ports to serve JS resources, each port for a specific widget. The ports are:
+- Info-Widget: 7995
 - Master-Widget: 7996
 - NeuGFX-Widget: 7997
 - Neu3D-Widget: 7998
