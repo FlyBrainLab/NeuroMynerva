@@ -182,8 +182,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             this.neu3d.remove(mesh);
           }
         }
-        this.neu3d._metadata.resetPosition = {x: 21.737078192786882, y: -444.58087487132843, z: 57.45183401555908};
-        this.neu3d._metadata.upSign = -1.;
+        this.neu3d._metadata.resetPosition = {x: 32.727408729704834, y: -436.2980011559806, z: -36.71433643232834};
+        this.neu3d._metadata.upVector = {x: 0.09683632485855452, y: 0.9768955647317704, z: 0.19051976746566937};
+        this.neu3d._metadata.cameraTarget = {x: 44.591928805676524, y: -21.014991704094935, z: 49.28748557815412};
         this.neu3d.updateControls();
         this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
@@ -196,7 +197,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           }
         }
         this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
-        this.neu3d._metadata.upSign = 1.;
+        this.neu3d._metadata.upVector = {x: 0., y: 1., z: 0.};
         this.neu3d.updateControls();
         this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
@@ -209,7 +210,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           }
         }
         this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
-        this.neu3d._metadata.upSign = 1.;
+        this.neu3d._metadata.upVector = {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184};
+        this.neu3d._metadata.cameraTarget = {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273};
         this.neu3d.updateControls();
         this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
