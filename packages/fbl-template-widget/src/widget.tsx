@@ -575,7 +575,7 @@ namespace Private {
       body.appendChild(text);
 
       const selector = document.createElement('select');
-      for (const species of ['adult', 'larva']){
+      for (const species of ['adult Drosophila melanogaster (FlyCircuit)', 'adult Drosophila melanogaster (Hemibrain)', 'larval Drosophila melanogaster']){
         const option = document.createElement('option');
         option.text = species;
         option.value = species;

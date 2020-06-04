@@ -26,7 +26,8 @@ interface INeu3DMessage {
 
 declare global {
   interface Window {
-    neu3d_widget: any;
+    neu3d_widget: any; // Latest created neu3d widget
+    active_neu3d_widget: any; // Latest actively accessed neu3d widget
   }
 }
 
@@ -172,28 +173,32 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this._species = newSpecies;
     this._speciesChanged.emit(newSpecies);
     
-    switch (this._species.toLowerCase()) {
-      case 'larva':
+    switch (this._species) {
+      case 'larval Drosophila melanogaster':
         for (let mesh of Object.keys(this.neu3d.meshDict)){
           if (this.neu3d.meshDict[mesh].background) {
             this.neu3d.remove(mesh);
           }
         }
-        this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
-        this.neu3d._metadata.resetPosition = {
-          x: 263.7529882900178, y: -279.09063424477444, z: -3652.912696805477
-        };
+        this.neu3d._metadata.resetPosition = {x: 21.737078192786882, y: -444.58087487132843, z: 57.45183401555908};
         this.neu3d._metadata.upSign = -1.;
+        this.neu3d.updateControls();
+        this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
+        window.active_neu3d_widget = this;
+        this.neu3d.resetView();
         break;
-      case 'adult':
+      case 'adult Drosophila melanogaster (FlyCircuit)':
         for (let mesh of Object.keys(this.neu3d.meshDict)){
           if (this.neu3d.meshDict[mesh].background) {
             this.neu3d.remove(mesh);
           }
         }
-        this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
         this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
         this.neu3d._metadata.upSign = 1.;
+        this.neu3d.updateControls();
+        this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
+        window.active_neu3d_widget = this;
+        this.neu3d.resetView();
         break;
       default:
         break; //no-op
