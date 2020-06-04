@@ -202,6 +202,19 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         window.active_neu3d_widget = this;
         this.neu3d.resetView();
         break;
+      case 'adult Drosophila melanogaster (Hemibrain)':
+        for (let mesh of Object.keys(this.neu3d.meshDict)){
+          if (this.neu3d.meshDict[mesh].background) {
+            this.neu3d.remove(mesh);
+          }
+        }
+        this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
+        this.neu3d._metadata.upSign = 1.;
+        this.neu3d.updateControls();
+        this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
+        window.active_neu3d_widget = this;
+        this.neu3d.resetView();
+        break;
       default:
         break; //no-op
     }
