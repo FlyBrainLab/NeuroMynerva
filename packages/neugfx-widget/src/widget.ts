@@ -11,8 +11,11 @@ const NeuGFX_CLASS_JLab = "jp-FBL-NeuGFX";
 declare global {
   interface Window {
     neurogfxWidget: any;
+    jq: any;
   }
 }
+
+
 
 
 /**
@@ -41,9 +44,10 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     this._blocker.className = "jp-FFBOLabBlock";
     this.node.appendChild(this._blocker);
     $(".jp-FFBOLabBlock").hide();
-    window.onmousedown = function(){$(".jp-FFBOLabBlock").show();};
-    window.onmouseup = function(){$(".jp-FFBOLabBlock").hide();};
     window.neurogfxWidget = this._neugfxContainer;
+    window.addEventListener("mousedown", function(){$(".jp-FFBOLabBlock").show(); });
+    window.addEventListener("mouseup", function(){$(".jp-FFBOLabBlock").hide(); });
+    Event.prototype.stopPropagation = function(){  };
   }
 
   onCommMsg(msg: any) {
