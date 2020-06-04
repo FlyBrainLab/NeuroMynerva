@@ -36,12 +36,15 @@ import {
  } from '@lumino/widgets';
 
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
+import { listingsInfoIcon } from '@jupyterlab/ui-components'
 
+const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
 const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
 const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
 const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
 const NEUANY_MODULE_URL = "http://localhost:7999/build/bundle.js"; //placeholder
 // const MASTER_CLASS_NAME = '.jp-FBL-Master';
+// const INFO_CLASS_NAME = '.jp-FBL-Info';
 const NEU3D_CLASS_NAME = '.jp-FBL-Neu3D';
 const NEUGFX_CLASS_NAME = '.jp-FBL-NeuGFX';
 const NEUANY_CLASS_NAME = '.jp-FBL-NeuAny';
@@ -54,6 +57,7 @@ declare global {
     fbltrackers: any;
     app: any;
     master: any;
+    info: any;
   }
 }
 
@@ -239,7 +243,7 @@ function injectRequired(): Promise<any> {
       script.src = 'https://requirejs.org/docs/release/2.3.6/comments/require.js';
       w.document.getElementsByTagName('head')[0].appendChild(script);
     }(window));
-    setTimeout(() => resolve(void 0), 500);
+    setTimeout(() => resolve(void 0), 100); 
   });
 }
 
@@ -261,7 +265,11 @@ async function activateFBL(
   const neu3DTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'});
   const neuGFXTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'});
   const neuAnyTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neuany'});
-  
+  const fblWidgetTrackers = new FBLWidgetTrackers({
+    "Neu3D": neu3DTracker,
+    "NeuGFX": neuGFXTracker,
+    "NeuAny": neuAnyTracker,
+  })
   // Handle state restoration.
   restorer.restore(neu3DTracker, {
     command: CommandIDs.Neu3DOpen,
@@ -304,11 +312,7 @@ async function activateFBL(
   });
 
   window.app = app;
-  window.fbltrackers = {
-    'Neu3D': neu3DTracker,
-    'NeuGFX': neuGFXTracker,
-    'NeuAny': neuAnyTracker,
-  }
+  window.fbltrackers = fblWidgetTrackers;
 
   let Neu3DWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   let NeuGFXWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
@@ -317,11 +321,7 @@ async function activateFBL(
   await injectRequired();
   await loadModule(MASTER_MODULE_URL).then((plugin)=>{
     const MasterWidgetModule = plugin.MasterWidget;
-    const masterWidget = new MasterWidgetModule({
-      "Neu3D": neu3DTracker,
-      "NeuAny": neuAnyTracker,
-      "NeuGFX": neuGFXTracker,
-    });
+    const masterWidget = new MasterWidgetModule(fblWidgetTrackers);
     masterWidget.id = 'jp-FBL-Master';
     masterWidget.title.caption = 'FBL Widgets and Running Sessions';
     masterWidget.title.icon = fblIcon;
@@ -334,6 +334,24 @@ async function activateFBL(
     window.master = masterWidget;
   }).catch(error=>{
     console.log('Master Widget Loading Failed, skipping injection', error);
+  });
+
+  // add info panel
+  await loadModule(INFO_MODULE_URL).then((plugin)=>{
+    const InfoWidgetModule = plugin.InfoWidget;
+    const infoWidget = new InfoWidgetModule();
+    infoWidget.id = 'jp-FBL-Info';
+    infoWidget.title.caption = 'Information about neurons and synapses';
+    infoWidget.title.icon = listingsInfoIcon;
+    infoWidget.title.iconClass = 'jp-SideBar-tabIcon';
+    // add to last
+    if (restorer) {
+      restorer.add(infoWidget, 'FBL-Info');
+    }
+    app.shell.add(infoWidget, 'left', {rank: Infinity});
+    window.info = infoWidget;
+  }).catch(error=>{
+    console.log('Info Widget Loading Failed, skipping injection', error);
   });
 
   // Get the current widget and activate unless the args specify otherwise.
@@ -544,11 +562,7 @@ async function activateFBL(
   })
 
   return Promise.resolve(
-    new FBLWidgetTrackers({
-      "Neu3D": neu3DTracker,
-      "NeuGFX": neuGFXTracker,
-      "NeuAny": neuAnyTracker,
-    })
+    fblWidgetTrackers
   );
 }
 
