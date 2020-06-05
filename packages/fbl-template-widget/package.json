@@ -26,7 +26,8 @@
     "dev": "nodemon -e ts,js,tsx --watch src --exec \"npm run build\""
   },
   "dependencies": {
-    "@jupyterlab/application": "^2.0.0"
+    "@jupyterlab/application": "^2.0.0",
+    "react-bootstrap": "^1.0.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.25.0",
