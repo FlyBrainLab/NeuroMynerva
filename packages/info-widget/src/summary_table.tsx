@@ -68,12 +68,25 @@ export function SummaryTable(props: { data: any }) {
       }
     }
   }
-  return (
-  <>
-    <div className={"table-grid"}>
-      {display.concat(flycircuit).concat(morph)}
-    </div>
-  </>);
+
+  if ( display.length > 0){
+    return (
+      <>
+        <div className={"table-grid"}>
+          {display.concat(flycircuit).concat(morph)}
+        </div>
+      </>
+    );
+  }else{
+    return (
+      <>
+        <div className={"table-grid"}>
+          No summary information available
+        </div>
+      </>
+    );
+  }
+  
 }
 
 /**

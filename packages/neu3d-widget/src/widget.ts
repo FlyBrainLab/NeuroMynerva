@@ -36,13 +36,14 @@ declare global {
 * An Neu3D Widget
 */
 export class Neu3DWidget extends FBLWidget implements IFBLWidget {
-  constructor(options: FBLWidget.IOptions) {
+  constructor(options: Neu3D.IOptions) {
     super({
-      name:options.name || `Neu3D-${Private.count++}`, 
+      name:options.name || `Neu3D-${Private.count++}`,
       icon: Icons.neu3DIcon,
       ...options});
 
     // load in meshes
+    this.info = options.info;
     this._adultMesh = AdultMesh;
     this._larvaMesh = LarvaMesh;
 
@@ -89,8 +90,83 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   onMetadataChanged(change: any) {
     this.renderModel(change);
   }
+
+  onCommMsg(msg: any) {
+    super.onCommMsg(msg);
+    let thisMsg = msg.content.data as any;
+    if (thisMsg.widget !== 'Neu3D') {
+      return;
+    }
+
+
+    // render information onto the connected infopanel
+    if ("info" in thisMsg.data) {
+      if (("success" in thisMsg.data.info && thisMsg.data.info.success != "Fetching results from NeuroArch") || "timeout" in thisMsg.data.info)
+      {
+        // trigger datachanged event for info panel, will cause re-rendering of data
+        this.info?._dataChanged.emit(thisMsg.data);
+      }
+    }
+  }
+
+
+  /**
+   * Check if an object is in the workspace.
+   *
+   * @param rid -  rid of target object (neuron/synapse)
+   * @returns  if object in workspace
+  */
+  isInWorkspace(rid: string): boolean {
+    if(this.model?.data)
+    {
+      return (rid in this.model.data);
+    }
+    return false;
+  }
+
+  /** 
+   * Add an object into the workspace.
+   *
+   * @param uname -  uname of target object (neuron/synapse)
+   * @param uname -  uname of target object (neuron/synapse)
+   */
+  async addByUname(uname: string): Promise<any> {
+    let code = `
+    res = {}
+    res['verb'] = 'add'
+    res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
+                    "'object': {'class': ['Neuron', 'Synapse']}}]
+    `;
+
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.log('addByUname', result);
+    return result;
+  }
+
+
+  /**
+   * Remove an object into the workspace.
+   *
+   * @param uname -  uname of target object (neuron/synapse)
+   */
+  async removeByUname(uname: string): Promise<any> {
+    let code = `
+    res = {}
+    res['verb'] = 'remove'
+    res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
+                    'object': {'class': ['Neuron', 'Synapse']}}]
+    `;
+
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.log('removeByUname', result);
+    return result;
+  }
   
 
+  /**
+   * Instantiate neu3d and setup callback hooks after widget is shown
+   * @param msg 
+   */
   onAfterShow(msg: Message){
     if (!this.neu3d){
       this.neu3d = new Neu3D(
@@ -249,6 +325,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   readonly _larvaMesh: Object; // caching for dynamically import mesh
   private _neu3dContainer: HTMLDivElement;
   model: Neu3DModel;
+  info: any; // info panel widget
 };
 
 
@@ -271,5 +348,11 @@ namespace Private {
       tooltip: tooltip
     } as any);
     return btn;
+  }
+}
+
+namespace Neu3D {
+  export interface IOptions extends FBLWidget.IOptions {
+    info?: any; // info panel widget
   }
 }

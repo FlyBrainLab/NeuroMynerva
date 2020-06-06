@@ -18,61 +18,76 @@ const COLORS_POST = [
 
 export function ConnSVG(props: { pre: any, post: any }) {
   let pre_arr = [];
-  for (let [key, number] of Object.entries(props.pre["profile"])) {
-    pre_arr.push({ name: key, proportion: number });
+  if (props.pre.profile){
+    for (let [key, number] of Object.entries(props.pre.profile)) {
+      pre_arr.push({ name: key, proportion: number });
+    }
   }
+  
   let post_arr = [];
-  for (let [key, number] of Object.entries(props.post["profile"])) {
-    post_arr.push({ name: key, proportion: number });
+  if (props.post.profile){
+    for (let [key, number] of Object.entries(props.post.profile)) {
+      post_arr.push({ name: key, proportion: number });
+    }
   }
-  return (
-    <PieChart width={250} height={250}>
-      <Pie
-        data={pre_arr}
-        isAnimationActive={false}
-        cx={100}
-        cy={100}
-        innerRadius={50}
-        outerRadius={70}
-        fill="#8884d8"
-        paddingAngle={5}
-        dataKey="proportion"
-      >
-        {pre_arr.map((_, index) => (
-          <Cell
-            key={`cell-${index}`}
-            fill={COLORS_PRE[index % COLORS_PRE.length]}
+
+  if (pre_arr.length || post_arr.length){
+    return (
+      <PieChart width={250} height={250}>
+        <Pie
+          data={pre_arr}
+          isAnimationActive={false}
+          cx={100}
+          cy={100}
+          innerRadius={50}
+          outerRadius={70}
+          fill="#8884d8"
+          paddingAngle={5}
+          dataKey="proportion"
+        >
+          {pre_arr.map((_, index) => (
+            <Cell
+              key={`cell-${index}`}
+              fill={COLORS_PRE[index % COLORS_PRE.length]}
+            />
+          ))}
+        </Pie>
+        <Pie
+          data={post_arr}
+          isAnimationActive={false}
+          cx={100}
+          cy={100}
+          innerRadius={80}
+          outerRadius={100}
+          fill="#8884d8"
+          paddingAngle={5}
+          dataKey="proportion"
+        >
+          {post_arr.map((_, index) => (
+            <Cell
+              key={`cell-${index}`}
+              fill={COLORS_POST[index % COLORS_POST.length]}
+            />
+          ))}
+          <Label
+            width={30}
+            position="center"
+            content={<PrePost cx={100} cy={100} pre={100} post={100} />}
           />
-        ))}
-      </Pie>
-      <Pie
-        data={post_arr}
-        isAnimationActive={false}
-        cx={100}
-        cy={100}
-        innerRadius={80}
-        outerRadius={100}
-        fill="#8884d8"
-        paddingAngle={5}
-        dataKey="proportion"
-      >
-        {post_arr.map((_, index) => (
-          <Cell
-            key={`cell-${index}`}
-            fill={COLORS_POST[index % COLORS_POST.length]}
-          />
-        ))}
-        <Label
-          width={30}
-          position="center"
-          content={<PrePost cx={100} cy={100} pre={100} post={100} />}
-        />
-      </Pie>
-      <Tooltip />
-    </PieChart>
-  );
+        </Pie>
+        <Tooltip />
+      </PieChart>
+    );
+  } else{
+    return (<></>);
+  }
+  
 }
 
+/**
+ * Label number of synaptic partners pre/post in the same rechart label
+ * @param props 
+ */
 function PrePost(props: { cx: number; cy: number; pre: number; post: number }) {
   return (
     <React.Fragment>
