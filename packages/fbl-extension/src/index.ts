@@ -318,10 +318,12 @@ async function activateFBL(
   let NeuGFXWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   let NeuAnyWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   
+  let masterWidget: Widget = undefined;
+  let infoWidget: Widget = undefined;
   await injectRequired();
   await loadModule(MASTER_MODULE_URL).then((plugin)=>{
     const MasterWidgetModule = plugin.MasterWidget;
-    const masterWidget = new MasterWidgetModule(fblWidgetTrackers);
+    masterWidget = new MasterWidgetModule(fblWidgetTrackers);
     masterWidget.id = 'jp-FBL-Master';
     masterWidget.title.caption = 'FBL Widgets and Running Sessions';
     masterWidget.title.icon = fblIcon;
@@ -339,7 +341,7 @@ async function activateFBL(
   // add info panel
   await loadModule(INFO_MODULE_URL).then((plugin)=>{
     const InfoWidgetModule = plugin.InfoWidget;
-    const infoWidget = new InfoWidgetModule();
+    infoWidget = new InfoWidgetModule();
     infoWidget.id = 'jp-FBL-Info';
     infoWidget.title.caption = 'Information about neurons and synapses';
     infoWidget.title.icon = listingsInfoIcon;
@@ -391,7 +393,8 @@ async function activateFBL(
         <any>Neu3DWidgetModule,
         NEU3DICON,
         args,
-        neu3DTracker
+        neu3DTracker,
+        infoWidget
       );
     }
   });
@@ -626,13 +629,27 @@ export namespace FBL {
     Module: any,
     icon: LabIcon,
     moduleArgs: any, 
-    tracker: WidgetTracker<MainAreaWidget<IFBLWidget>>
+    tracker: WidgetTracker<MainAreaWidget<IFBLWidget>>,
+    info?: Widget // info panel for neu3d
   ) {
-    let widget: IFBLWidget = new Module({
-      app: app, 
-      icon: icon,
-      ...moduleArgs,
-    });
+    let widget: IFBLWidget;
+    let sessionContext = tracker.currentWidget?.content?.sessionContext ?? undefined;
+    if (info) {
+      widget = new Module({
+        app: app, 
+        icon: icon,
+        info: info,
+        sessionContext: sessionContext,
+        ...moduleArgs,
+      });
+    } else{
+      widget = new Module({
+        app: app, 
+        icon: icon,
+        sessionContext: sessionContext,
+        ...moduleArgs,
+      });
+    }
     let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
     if (!tracker.has(panel)){
       await tracker.add(panel);
