@@ -1,53 +1,61 @@
-// // FBL Master Widget Class
-// import * as React from 'react';
-// import { 
-//   ReactWidget, 
-//  } from'@jupyterlab/apputils';
+// FBL Master Widget Class
+import * as React from "react";
+import { makeStyles } from "@material-ui/core/styles";
+import ExpansionPanel from "@material-ui/core/ExpansionPanel";
+import ExpansionPanelDetails from "@material-ui/core/ExpansionPanelDetails";
+import ExpansionPanelSummary from "@material-ui/core/ExpansionPanelSummary";
+import Typography from "@material-ui/core/Typography";
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
+type IClientConfig = {
+  [key: string]: {
+    [key2: string]: any;
+  };
+};
 
-// import '../style/index.css';
+const useStyles = makeStyles(theme => ({
+  root: {
+    width: "100%"
+  },
+  heading: {
+    fontSize: theme.typography.pxToRem(15),
+    flexBasis: "33.33%",
+    flexShrink: 0
+  },
+  secondaryHeading: {
+    fontSize: theme.typography.pxToRem(15),
+    color: theme.palette.text.secondary
+  }
+}));
 
-// type IClientConfig = {
-//     [key: string]: {
-//         [key2: string]: any 
-//     }
-// }
-    
-// // /**
-// // * An FBL Master Widget
-// // */
-// // export class ClientConfig extends ReactWidget{
-// //   constructor(
-// //     config: IClientConfig
-// //   ) {
-// //     super();
-// //     this.config = config;
-// //     this.render();
-// //   }
+export function ClientConfigComponent(props: { config: IClientConfig }) {
+  let panels: Array<any> = [];
+  const classes = useStyles();
 
-// //   protected render() {
-// //     return (<ClientConfigComponent config={this.config}/>);
-// //   }
+  Object.entries(props.config).forEach(value => {
+    let key = value[0];
+    let content = value[1];
+    let details: Array<any> = [];
+    Object.entries(content).forEach(detail=>{
+      details.push(
+        <div key={detail[0]}>
+        <p>{detail[0]}</p>
+        <p>{detail[1]}</p>
+        </div>
+    )});
+    panels.push(
+      <ExpansionPanel key={key}>
+        <ExpansionPanelSummary
+          expandIcon={<ExpandMoreIcon />}
+        >
+          <Typography className={classes.heading}>{key}</Typography>
+          {/* <Typography className={classes.secondaryHeading}>Test</Typography> */}
+        </ExpansionPanelSummary>
+        <ExpansionPanelDetails>
+          {details}
+        </ExpansionPanelDetails>
+      </ExpansionPanel>
+    );
+  });
 
-// //   /**
-// //   * The Elements associated with the widget.
-// //   */
-// //   private config: IClientConfig;
-// // };
-
-
-
-
-// // /**
-// //  * Create React Component that renders client info in an accordian
-// //  */
-// // export function ClientConfigComponent(props: {
-// //     config: IClientConfig;
-// // }) {
-// //     return (
-// //         <>
-// //         <Accordian>
-// //             props.config.map
-// //         </Accordian>
-// //         </>
-// //     );
-// // }
+  return <div className={classes.root}>{panels}</div>;
+}

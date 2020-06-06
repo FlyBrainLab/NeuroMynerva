@@ -110,6 +110,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
     this.id = id;
 
+    // client id for backend
+    this.client_id = `client-${this.id}`;
+
     // specify path
     const path = options.path ?? `${basePath || ''}/${this.id}`;
     this.icon = icon ?? fblIcon;
@@ -167,6 +170,40 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
+   * Wrapper around executeRequest that is specific to current client
+   * By default the result will be sent back over Comm.
+   * @return a promise that resolves to the reply message when done 
+   */
+  executeNAQuery(code: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+    let code_to_send = `
+    fbl.widget_manager.widgets['${this.id}'].client.executeNAquery(query='${code}')
+    `
+    return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
+  }
+
+  /**
+   * Wrapper around executeRequest that is specific to current client
+   * By default the result will be sent back over Comm.
+   * @return a promise that resolves to the reply message when done 
+   */
+  executeNLPQuery(code: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+    let code_to_send = `
+    fbl.widget_manager.widgets['${this.id}'].client.executeNLPquery(${code})
+    `
+    return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
+  }
+
+  // /**
+  //  * Request Information about the connected client from kernel
+  //  */
+  // requestClientInfo() {
+  //   let code_to_send = `
+  //   fbl.widget_manager.widgets['${this.id}'].client
+  //   `
+  //   return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
+  // }
+
+  /**
    * After 
    * @param msg 
    */
@@ -174,6 +211,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     super.onAfterShow(msg);
     this.renderModel();
   }
+
   /**
    * Should handle render logic of model
    * @param change - changes to a model for incremental rendering
@@ -214,6 +252,31 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * @param msg 
    */
   onCommMsg(msg: KernelMessage.ICommMsgMsg) {
+    let thisMsg = msg.content.data as any;
+    if (typeof thisMsg === 'undefined') {
+      return;
+    }
+
+    switch (thisMsg.widget) {
+      /** Popup window shown as dialog */
+      case "popout": {
+        showDialog({
+          title: `FBL Kernel Message`,
+          body: (
+            <div>
+            <p>Widget: ${this.id}</p><br></br>
+            <p>{thisMsg.data}</p>
+            </div>)
+        }).then(()=>{
+          return Promise.resolve(void 0);
+        })
+        break;
+      }
+      default: {
+        // no-op
+        return;
+      }
+    }
     // no-op
     return;
   }
@@ -340,12 +403,28 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return this._speciesChanged;
   }
 
+  /** Code for initializing fbl in the connected kernel
+   * @return code to be executed
+   */
   initFBLCode(): string {
     return `
-    import flybrainlab as fbl
+    if 'fbl' not in globals():
+      import flybrainlab as fbl
     fbl.init()
-    result = fbl.widget_manager.add_widget('${this.id}', '${this.constructor.name}', '${this._commTarget}')
-    fbl.widget_manager.widgets['${this.id}'].send_data(result)
+    fbl.widget_manager.add_widget('${this.id}', '${this.constructor.name}', '${this._commTarget}')
+    `;
+  }
+
+  /**
+   * Code for initializing a client connected to the current widget
+   */
+  initClientCode(): string {
+    return `
+    if 'fbl' not in globals():
+      import flybrainlab as fbl
+    fbl.init()
+    _client = fbl.Client()
+    fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
     `;
   }
 
@@ -453,6 +532,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   protected comm: Kernel.IComm; // the actual comm object
   readonly name: string;
   protected _species: any;
+  protected client_id: string;
   innerContainer: HTMLDivElement;
   sessionContext: ISessionContext;
   model: FBLWidgetModel;

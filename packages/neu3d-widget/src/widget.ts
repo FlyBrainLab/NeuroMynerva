@@ -98,7 +98,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       return;
     }
 
-
     // render information onto the connected infopanel
     if ("info" in thisMsg.data) {
       if (("success" in thisMsg.data.info && thisMsg.data.info.success != "Fetching results from NeuroArch") || "timeout" in thisMsg.data.info)
