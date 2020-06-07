@@ -176,7 +176,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   executeNAQuery(code: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
     let code_to_send = `
-    fbl.widget_manager.widgets['${this.id}'].client.executeNAquery(query='${code}')
+    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].executeNAquery(query='${code}')
     `
     return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
   }
@@ -188,7 +188,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   executeNLPQuery(code: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
     let code_to_send = `
-    fbl.widget_manager.widgets['${this.id}'].client.executeNLPquery(${code})
+    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].executeNLPquery('${code}')
     `
     return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
   }
@@ -411,7 +411,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if 'fbl' not in globals():
       import flybrainlab as fbl
     fbl.init()
-    fbl.widget_manager.add_widget('${this.id}', '${this.constructor.name}', '${this._commTarget}')
+    fbl.widget_manager.add_widget('${this.id}', '${this.client_id}', '${this.constructor.name}', '${this._commTarget}')
     `;
   }
 
@@ -422,9 +422,23 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return `
     if 'fbl' not in globals():
       import flybrainlab as fbl
-    fbl.init()
-    _client = fbl.Client()
-    fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
+      fbl.init()
+    if '${this.client_id}' not in fbl.client_manager.clients:
+      _comm = fbl.MetaComm('${this.client_id}')
+      _client = fbl.Client(FFBOLabcomm = _comm)
+      fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
+    `;
+  }
+
+  initAnyClientCode(clientargs?: any): string {
+    return `
+    if 'fbl' not in globals():
+      import flybrainlab as fbl
+      fbl.init()
+    if '${this.client_id}' not in fbl.client_manager.clients:
+      _comm = fbl.MetaComm('${this.client_id}', fbl)
+      _client = fbl.Client(FFBOLabcomm = _comm)
+      fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
     `;
   }
 

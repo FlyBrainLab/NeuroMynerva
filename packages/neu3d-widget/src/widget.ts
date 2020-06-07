@@ -96,8 +96,55 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   onCommMsg(msg: any) {
     super.onCommMsg(msg);
     let thisMsg = msg.content.data as any;
-    if (thisMsg.widget !== 'Neu3D') {
+    console.log('NLP received message:', thisMsg)
+    if (thisMsg.widget !== 'NLP') {
       return;
+    }
+
+    switch (thisMsg.messageType) {
+      case "Message": {
+        /*(izi as any).success({
+          id: "success",
+          message: (thisMsg.data).info.success,
+          transitionIn: 'bounceInLeft',
+          position: 'bottomRight',
+        });*/
+        console.log('[NEU3D] Message received.', thisMsg.data);
+        break;
+      }
+      case "Data": {
+        let rawData = thisMsg.data.data
+        if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
+          // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
+          let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
+          this.neu3d.addJson(neu3Ddata);
+        }
+        else {
+          let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
+          this.neu3d.addJson(neu3Ddata);
+        }
+        break;
+      }
+      /*case "statePush": {
+        let tempstate = thisMsg.data;
+        tempstate.json.forEach((element) => {
+          this.n3dlog.push(JSON.parse(JSON.stringify(element)));
+          // console.log(JSON.parse(JSON.stringify(element)));
+          let neu3Ddata = { ffbo_json: JSON.parse(JSON.stringify(element)), type: 'morphology_json' };
+        });
+        break;
+      }
+      case "save": {
+        this._userAction.emit({ action: 'save', content: { origin: 'NLP', data: {state: this.neu3D.export_state(), json: this.n3dlog }} });
+        break;
+      }*/
+      default: {
+        console.log('[NEU3D] RESET', msg.data);
+        // this.n3dlog = [];
+        // this._receiveCommand(msg.data);
+        break;
+      }
+
     }
 
     // render information onto the connected infopanel
@@ -126,6 +173,18 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
 
   /** 
+   * Fires a query
+   */
+  querySender(): string {
+    let code = `
+    
+    fbl.client_manager.clients['${this.client_id}']['client'].executeNAquery(res)
+    `;
+
+    return code;
+  }
+
+  /** 
    * Add an object into the workspace.
    *
    * @param uname -  uname of target object (neuron/synapse)
@@ -138,6 +197,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
                     "'object': {'class': ['Neuron', 'Synapse']}}]
     `;
+
+    code = code + this.querySender();
 
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('addByUname', result);
@@ -157,6 +218,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
+
+    code = code + this.querySender();
 
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('removeByUname', result);
@@ -264,6 +327,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
         this.neu3d.resetView();
+        
         break;
       case 'adult Drosophila melanogaster (FlyCircuit)':
         for (let mesh of Object.keys(this.neu3d.meshDict)){
@@ -277,6 +341,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
         this.neu3d.resetView();
+        let code = super.initAnyClientCode('');
+        this.sessionContext.session.kernel.requestExecute({code: code}).done;
         break;
       case 'adult Drosophila melanogaster (Hemibrain)':
         for (let mesh of Object.keys(this.neu3d.meshDict)){
