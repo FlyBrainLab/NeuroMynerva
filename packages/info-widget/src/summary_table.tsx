@@ -1,5 +1,4 @@
 import * as React from "react";
-import '../style/summary.css';
 
 const displayData: string[] = [
   "name",
@@ -41,14 +40,14 @@ export function SummaryTable(props: { data: any }) {
   let flycircuit = [];
 
   for (let [key, val] of Object.entries(rawData)) {
-    if (displayData.indexOf(key)> -1) {
+    if (displayData.indexOf(key) > -1) {
       display.push(
         <div>
           <p>{jsUcfirst(key)}</p>
           <p>{val as string}</p>
         </div>
       );
-    } else if (morphData.indexOf(key)> -1) {
+    } else if (morphData.indexOf(key) > -1) {
       morph.push(
         <div>
           <p>{jsUcfirst(key)}</p>
@@ -57,7 +56,7 @@ export function SummaryTable(props: { data: any }) {
       );
     } else if (key === "flycircuit_data") {
       for (let [key2, val2] of Object.entries(val as object)) {
-        if (flyCircuitData.indexOf(key2)> -1) {
+        if (flyCircuitData.indexOf(key2) > -1) {
           flycircuit.push(
             <div>
               <p>{jsUcfirst(key2)}</p>
@@ -69,7 +68,7 @@ export function SummaryTable(props: { data: any }) {
     }
   }
 
-  if ( display.length > 0){
+  if (display.length > 0) {
     return (
       <>
         <div className={"table-grid"}>
@@ -77,16 +76,13 @@ export function SummaryTable(props: { data: any }) {
         </div>
       </>
     );
-  }else{
+  } else {
     return (
       <>
-        <div className={"table-grid"}>
-          No summary information available
-        </div>
+        <div className={"table-grid"}>No summary information available</div>
       </>
     );
   }
-  
 }
 
 /**

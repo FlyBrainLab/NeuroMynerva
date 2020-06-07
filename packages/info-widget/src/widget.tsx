@@ -87,13 +87,13 @@ interface IInfoData {
 * An Info Widget
 */
 export class InfoWidget extends ReactWidget {
-  constructor(props: {
+  constructor(props?: {
     data: IInfoData, 
-    workspace: string[],
+    inWorkspace: (uname: string) => boolean,
     neu3d: any
   }) {
     super();
-    if (props.data) {
+    if (props?.data) {
       this.data = props.data;
     } else{
       this.data = {
@@ -101,90 +101,118 @@ export class InfoWidget extends ReactWidget {
           pre: {details: [], summary: {profile: {}, number: -1}},
           post: {details: [], summary: {profile: {}, number: -1}}
         }, 
-        summary: { name: '', uname: '', rid: '', class: ''}
+        summary: {}
       }
     }
-    this.workspace = props.workspace ?? [];
-    this.neu3d = props.neu3d;
-
+  
+    // default to true
+    if (props?.inWorkspace){
+      this.inWorkspace = props.inWorkspace  ;
+    }else{
+      this.inWorkspace = (uname: string)=>false;
+    }
+    this.neu3d = props?.neu3d;
     this.addClass(INFO_CLASS_JLab);
   }
 
   protected render() {
     return (
       <div className={SECTION_CLASS}>
-      <>
-        <header className={SECTION_HEADER_CLASS}>
-          <h2>Summary</h2>
-        </header>
-        <div className={CONTAINER_CLASS}>
-          <UseSignal signal={this.dataChanged}>
-            {() => <SummaryTable data={this.data} />}
-          </UseSignal>
-        </div>
-        <header className={SECTION_HEADER_CLASS}>
-          <h2>Connectivity Profile</h2>
-        </header>
-        <div className={CONTAINER_CLASS}>
-          <UseSignal signal={this.dataChanged}>
-            {() => <ConnSVG 
-                    pre={this.data.connectivity.pre.summary}
-                    post={this.data.connectivity.post.summary} />}
-          </UseSignal>
-        </div>
-        <header className={SECTION_HEADER_CLASS}>
-          <h2>Presynaptic Partners</h2>
-        </header>
-        <div className={CONTAINER_CLASS}>
-          <UseSignal
-            signal={this.dataChanged}
-            initialArgs={{
-              data: this.data,
-              workspace: this.workspace,
-              neu3d: undefined
-            }}
-          >
-            {(_, val) => (
-              <ConnTable
-                data={val.data.connectivity.pre}
-                workspace={val.workspace}
-                addByUname={val.neu3d.addByUname}
-                removeByUname={val.neu3d.removeByUname}
-              />
-            )}
-          </UseSignal>
-        </div>
-        <header className={SECTION_HEADER_CLASS}>
-          <h2>Postsynaptic Partners</h2>
-        </header>
-        <div className={CONTAINER_CLASS}>
+      <header className={SECTION_HEADER_CLASS}>
+        <h2>Summary</h2>
+      </header>
+      <div className={CONTAINER_CLASS}>
         <UseSignal
           signal={this.dataChanged}
           initialArgs={{
             data: this.data,
-            workspace: this.workspace,
+            inWorkspace: this.inWorkspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => <SummaryTable data={val.data.summary} />}
+        </UseSignal>
+      </div>
+      <header className={SECTION_HEADER_CLASS}>
+        <h2>Connectivity Profile</h2>
+      </header>
+      <div className={CONTAINER_CLASS}>
+        <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            inWorkspace: this.inWorkspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => (
+            <ConnSVG
+              pre={val.data.connectivity.pre.summary}
+              post={val.data.connectivity.post.summary}
+            />
+          )}
+        </UseSignal>
+      </div>
+      <header className={SECTION_HEADER_CLASS}>
+        <h2>Presynaptic Partners</h2>
+      </header>
+      <div className={CONTAINER_CLASS}>
+        <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            inWorkspace: this.inWorkspace,
             neu3d: undefined
           }}
         >
           {(_, val) => (
             <ConnTable
               data={val.data.connectivity.pre}
-              workspace={val.workspace}
-              addByUname={val.neu3d.addByUname}
-              removeByUname={val.neu3d.removeByUname}
+              inWorkspace={val.inWorkspace}
+              addByUname={uname => {
+                alert(`${uname} add`);
+              }}
+              removeByUname={uname => {
+                alert(`${uname} remove`);
+              }}
             />
           )}
-        </UseSignal>      
+        </UseSignal>
       </div>
-      </>
+      <header className={SECTION_HEADER_CLASS}>
+        <h2>Postsynaptic Partners</h2>
+      </header>
+      <div className={CONTAINER_CLASS}>
+        <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            inWorkspace: this.inWorkspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => (
+            <ConnTable
+              data={val.data.connectivity.post}
+              inWorkspace={val.inWorkspace}
+              addByUname={(uname: string) => {
+                alert(`${uname} add`);
+              }}
+              removeByUname={(uname: string) => {
+                alert(`${uname} remove`);
+              }}
+            />
+          )}
+        </UseSignal>
       </div>
+    </div>
     );
   }
 
   data: IInfoData; // data to be displayed
-  workspace: string[]; // a list of neurons in the workspace
   neu3d: any;  // caller neu3d widget
-  dataChanged = new Signal<this, {data: IInfoData, workspace: string[], neu3d:any}>(this);
+  dataChanged = new Signal< this, { data: any; inWorkspace: (uname: string) => boolean; neu3d: any }>(this);
+  inWorkspace: (uname: string)=>boolean;
 };
 
 
