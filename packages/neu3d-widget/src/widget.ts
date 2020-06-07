@@ -163,8 +163,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       if (("success" in thisMsg.data.info && thisMsg.data.info.success != "Fetching results from NeuroArch") || "timeout" in thisMsg.data.info)
       {
         // trigger datachanged event for info panel, will cause re-rendering of data
-        let workspace = Object.keys(this.model.data);
-        this.info?.dataChanged.emit(thisMsg.data, workspace, this);
+        let inWorkspace = (uname: string) => {
+          return Object.keys(this.model.data).includes(uname);
+        };
+        this.info?.dataChanged.emit(thisMsg.data, inWorkspace, this);
       }
     }
   }
