@@ -324,15 +324,15 @@ async function activateFBL(
   await loadModule(MASTER_MODULE_URL).then((plugin)=>{
     const MasterWidgetModule = plugin.MasterWidget;
     masterWidget = new MasterWidgetModule(fblWidgetTrackers);
-    masterWidget.id = 'jp-FBL-Master';
+    masterWidget.id = 'FBL-Master';
     masterWidget.title.caption = 'FBL Widgets and Running Sessions';
     masterWidget.title.icon = fblIcon;
-    masterWidget.title.iconClass = 'jp-SideBar-tabIcon';
     // add to last
     if (restorer) {
       restorer.add(masterWidget, 'FBL-Master');
     }
-    app.shell.add(masterWidget, 'left', {rank: Infinity});
+    app.shell.add(masterWidget, 'left', {rank: 1000});
+    
     window.master = masterWidget;
   }).catch(error=>{
     console.log('Master Widget Loading Failed, skipping injection', error);
@@ -342,15 +342,14 @@ async function activateFBL(
   await loadModule(INFO_MODULE_URL).then((plugin)=>{
     const InfoWidgetModule = plugin.InfoWidget;
     infoWidget = new InfoWidgetModule();
-    infoWidget.id = 'jp-FBL-Info';
+    infoWidget.id = 'FBL-Info';
     infoWidget.title.caption = 'Information about neurons and synapses';
     infoWidget.title.icon = listingsInfoIcon;
-    infoWidget.title.iconClass = 'jp-SideBar-tabIcon';
     // add to last
     if (restorer) {
       restorer.add(infoWidget, 'FBL-Info');
     }
-    app.shell.add(infoWidget, 'left', {rank: Infinity});
+    app.shell.add(infoWidget, 'left', {rank: 2000});
     window.info = infoWidget;
   }).catch(error=>{
     console.log('Info Widget Loading Failed, skipping injection', error);
