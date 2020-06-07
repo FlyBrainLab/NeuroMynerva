@@ -82,15 +82,21 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
 
   onDataChanged(change: any) {
-    this.renderModel(change);
+    // this.renderModel(change);
+    // do nothing
+    return;
   }
 
   onStatesChanged(change: any) {
-    this.renderModel(change);
+    // this.renderModel(change);
+    // no-op
+    return;
   }
 
   onMetadataChanged(change: any) {
-    this.renderModel(change);
+    // do nothing
+    // this.renderModel(change);
+    return;
   }
 
   _receiveCommand(message: any) {
@@ -101,7 +107,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       delete message.commands.reset;
     }
     for (var cmd in message["commands"])
-      this.neu3d.execCommand({ "commands": [cmd], "neurons": message["commands"][cmd][0], "args": message['commands'][cmd][1] });
+      this.neu3d.execCommand({
+        "commands": [cmd],
+        "neurons": message["commands"][cmd][0], 
+        "args": message['commands'][cmd][1] 
+      });
   }
 
   onCommMsg(msg: any) {
@@ -124,15 +134,20 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         break;
       }
       case "Data": {
-        let rawData = thisMsg.data.data
-        if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
-          // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
-          let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
-          this.neu3d.addJson(neu3Ddata);
-        }
-        else {
-          let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
-          this.neu3d.addJson(neu3Ddata);
+        if (thisMsg.data.data){
+          let rawData = thisMsg.data.data
+          if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
+            // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
+            let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
+            this.neu3d.addJson(neu3Ddata);
+          }
+          else {
+            let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
+            this.neu3d.addJson(neu3Ddata);
+          }
+        } else if (thisMsg.data.info) {
+        } else{
+          // no-op
         }
         break;
       }
@@ -156,18 +171,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         break;
       }
 
-    }
-
-    // render information onto the connected infopanel
-    if ("info" in thisMsg.data) {
-      if (("success" in thisMsg.data.info && thisMsg.data.info.success != "Fetching results from NeuroArch") || "timeout" in thisMsg.data.info)
-      {
-        // trigger datachanged event for info panel, will cause re-rendering of data
-        let inWorkspace = (uname: string) => {
-          return Object.keys(this.model.data).includes(uname);
-        };
-        this.info?.dataChanged.emit(thisMsg.data, inWorkspace, this);
-      }
     }
   }
 
