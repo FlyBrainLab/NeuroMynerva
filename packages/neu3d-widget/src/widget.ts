@@ -93,6 +93,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.renderModel(change);
   }
 
+  _receiveCommand(message: any) {
+    if (!('commands' in message))
+      return;
+    if ('reset' in message['commands']) {
+      this.neu3d.reset();
+      delete message.commands.reset;
+    }
+    for (var cmd in message["commands"])
+      this.neu3d.execCommand({ "commands": [cmd], "neurons": message["commands"][cmd][0], "args": message['commands'][cmd][1] });
+  }
+
   onCommMsg(msg: any) {
     super.onCommMsg(msg);
     let thisMsg = msg.content.data as any;
@@ -139,9 +150,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         break;
       }*/
       default: {
-        console.log('[NEU3D] RESET', msg.data);
+        console.log('[NEU3D] RESET', thisMsg.data);
         // this.n3dlog = [];
-        // this._receiveCommand(msg.data);
+        this._receiveCommand(thisMsg.data);
         break;
       }
 
