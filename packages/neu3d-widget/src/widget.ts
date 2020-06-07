@@ -327,6 +327,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
         this.neu3d.resetView();
+        this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:6651/ws", ssl = None, default_key = False')}).done;
         
         break;
       case 'adult Drosophila melanogaster (FlyCircuit)':
@@ -341,8 +342,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
         this.neu3d.resetView();
-        let code = super.initAnyClientCode('');
-        this.sessionContext.session.kernel.requestExecute({code: code}).done;
+        this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode('')}).done;
         break;
       case 'adult Drosophila melanogaster (Hemibrain)':
         for (let mesh of Object.keys(this.neu3d.meshDict)){
@@ -357,6 +357,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
         window.active_neu3d_widget = this;
         this.neu3d.resetView();
+        this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:20206/ws", ssl = None, default_key = False')}).done;
         break;
       default:
         break; //no-op

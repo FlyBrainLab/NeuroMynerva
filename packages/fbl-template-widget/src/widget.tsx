@@ -437,7 +437,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       fbl.init()
     if '${this.client_id}' not in fbl.client_manager.clients:
       _comm = fbl.MetaComm('${this.client_id}', fbl)
-      _client = fbl.Client(FFBOLabcomm = _comm)
+      _client = fbl.Client(FFBOLabcomm = _comm ${clientargs})
       fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
     `;
   }
