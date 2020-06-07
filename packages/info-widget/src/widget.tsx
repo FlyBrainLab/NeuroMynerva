@@ -5,7 +5,7 @@ import * as React from 'react';
 // import { Icons, IFBLWidget } from '@flybrainlab/fbl-template-widget';
 // import { FBLPanel, FBLTracker, FBLWidgetTrackers } from '@flybrainlab/fbl-extension';
 import { 
-  Signal, ISignal
+  Signal
 } from '@lumino/signaling';
 
 import { 
@@ -15,6 +15,7 @@ import {
   // UseSignal,
   // Dialog, showDialog
  } from'@jupyterlab/apputils';
+
 
 // import { 
 //   LabIcon, closeIcon//, fileIcon 
@@ -86,10 +87,14 @@ interface IInfoData {
 * An Info Widget
 */
 export class InfoWidget extends ReactWidget {
-  constructor(data: IInfoData) {
+  constructor(props: {
+    data: IInfoData, 
+    workspace: string[],
+    neu3d: any
+  }) {
     super();
-    if (data) {
-      this.data = data;
+    if (props.data) {
+      this.data = props.data;
     } else{
       this.data = {
         connectivity: {
@@ -99,93 +104,87 @@ export class InfoWidget extends ReactWidget {
         summary: { name: '', uname: '', rid: '', class: ''}
       }
     }
-    
+    this.workspace = props.workspace ?? [];
+    this.neu3d = props.neu3d;
+
     this.addClass(INFO_CLASS_JLab);
-    this.render();
   }
 
   protected render() {
-    return (<InfoWidgetReact.InfoPanelComponent info_wdget={this} />);
-  }
-
-  get dataChanged(): ISignal<this, any> {
-    return this._dataChanged;
-  }
-
-  data: IInfoData; // data to be displayed
-  _dataChanged = new Signal<this, any>(this);
-};
-
-
-
-
-/**
- * Namespace for all React Components 
- */
-namespace InfoWidgetReact {
-  
-  export function InfoPanelComponent(props: {info_wdget: InfoWidget}) {
     return (
-    <div className={SECTION_CLASS}>
-    <>
-      <header className={SECTION_HEADER_CLASS}>
-        <h2>Summary</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
-        <SummaryTableComponent info_widget={props.info_wdget} />
+      <div className={SECTION_CLASS}>
+      <>
+        <header className={SECTION_HEADER_CLASS}>
+          <h2>Summary</h2>
+        </header>
+        <div className={CONTAINER_CLASS}>
+          <UseSignal signal={this.dataChanged}>
+            {() => <SummaryTable data={this.data} />}
+          </UseSignal>
+        </div>
+        <header className={SECTION_HEADER_CLASS}>
+          <h2>Connectivity Profile</h2>
+        </header>
+        <div className={CONTAINER_CLASS}>
+          <UseSignal signal={this.dataChanged}>
+            {() => <ConnSVG 
+                    pre={this.data.connectivity.pre.summary}
+                    post={this.data.connectivity.post.summary} />}
+          </UseSignal>
+        </div>
+        <header className={SECTION_HEADER_CLASS}>
+          <h2>Presynaptic Partners</h2>
+        </header>
+        <div className={CONTAINER_CLASS}>
+          <UseSignal
+            signal={this.dataChanged}
+            initialArgs={{
+              data: this.data,
+              workspace: this.workspace,
+              neu3d: undefined
+            }}
+          >
+            {(_, val) => (
+              <ConnTable
+                data={val.data.connectivity.pre}
+                workspace={val.workspace}
+                addByUname={val.neu3d.addByUname}
+                removeByUname={val.neu3d.removeByUname}
+              />
+            )}
+          </UseSignal>
+        </div>
+        <header className={SECTION_HEADER_CLASS}>
+          <h2>Postsynaptic Partners</h2>
+        </header>
+        <div className={CONTAINER_CLASS}>
+        <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            workspace: this.workspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => (
+            <ConnTable
+              data={val.data.connectivity.pre}
+              workspace={val.workspace}
+              addByUname={val.neu3d.addByUname}
+              removeByUname={val.neu3d.removeByUname}
+            />
+          )}
+        </UseSignal>      
       </div>
-      <header className={SECTION_HEADER_CLASS}>
-        <h2>Connectivity Profile</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
-        <ConnSVGComponent info_widget={props.info_wdget} />
+      </>
       </div>
-      <header className={SECTION_HEADER_CLASS}>
-        <h2>Presynaptic Partners</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
-        <ConnTableComponent pre={true} info_widget={props.info_wdget} />
-      </div>
-      <header className={SECTION_HEADER_CLASS}>
-        <h2>Postsynaptic Partners</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
-        <ConnTableComponent pre={false} info_widget={props.info_wdget} />
-      </div>
-    </>
-    </div>
     );
   }
 
-  function SummaryTableComponent(props: {info_widget: InfoWidget}) {
-    return (
-      <UseSignal signal={props.info_widget.dataChanged}>
-        {() => <SummaryTable data={props.info_widget.data} />}
-      </UseSignal>
-    )
-  }
+  data: IInfoData; // data to be displayed
+  workspace: string[]; // a list of neurons in the workspace
+  neu3d: any;  // caller neu3d widget
+  dataChanged = new Signal<this, {data: IInfoData, workspace: string[], neu3d:any}>(this);
+};
 
-  function ConnSVGComponent(props: {info_widget: InfoWidget}) {
-    return (
-      <UseSignal signal={props.info_widget.dataChanged}>
-        {() => <ConnSVG 
-                pre={props.info_widget.data.connectivity.pre.summary}
-                post={props.info_widget.data.connectivity.post.summary} />}
-      </UseSignal>
-    )
-  }
 
-  function ConnTableComponent(props: {pre: boolean, info_widget: InfoWidget}) {
-    if (props.pre === true) {
-      return (
-        <UseSignal signal={props.info_widget.dataChanged}>
-          {() => <ConnTable title={"Postsynaptic Partners"} data={props.info_widget.data.connectivity.post.details} />}
-        </UseSignal>)
-    } else {
-      return (
-        <UseSignal signal={props.info_widget.dataChanged}>
-          {() => <ConnTable title={"Postsynaptic Partners"} data={props.info_widget.data.connectivity.post.details} />}
-        </UseSignal>)
-    }
-  }
-}

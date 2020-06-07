@@ -1,100 +1,130 @@
 import * as React from "react";
-import MaterialTable, { Column } from "material-table";
-import { tableIcons } from "./table_icons";
+import "@fortawesome/fontawesome-free/js/all.js";
+import { ReactTabulator } from "react-tabulator";
 
-import '../style/table.css'
+export class ConnTable extends React.Component<{ 
+  data: any; 
+  workspace: any; 
+  addByUname: (uname: string)=>{};
+  removeByUname: (uname: string)=>{} 
+}> {
 
-interface Data {
-  vfb_id?: string;
-  name?: string;
-  locality?: boolean;
-  inferred?: boolean;
-  has_syn_morph?: boolean | number;
-  number?: number;
-  uname?: string;
-  rid?: string;
-  class?: string;
-  has_morph?: boolean | number;
-}
-
-const columns: Array<Column<Data>> = [
-  {
-    field: "name",
-    title: "Name"
-  },
-  {
-    field: "number",
-    title: "# Synapse",
-    defaultSort: "desc",
-    cellStyle: {maxWidth: "40px"}
+  inworkspace(rid: string) {
+    return this.workspace.includes(rid) ? true : false;
   }
-];
 
-const settings = {
-  filtering: true,
-  showTitle: false,
-  search: false,
-  toolbar: false,
-  headerStyle: {
-    fontSize: "0.5rem",
-    padding: "2px"
-  },
-  cellStyle: {
-    fontSize: "0.5rem",
-    padding: "2px"
-  },
-  customFilterAndSearch: (term: any, rowData: Data) =>
-    rowData.number ? term <= rowData.number : false,
+  parseData(connData: any, workspace: string[]) {
+    let new_data = [];
+    for (let item of connData["details"]) {
+      let neuron_data = {
+        name: item["name"],
+        number: item["number"],
+        rid: item["rid"],
+        has_syn_morph: item["has_syn_morph"],
+        inworkspace: workspace.includes(item["rid"]) ? true : false
+      };
 
-};
+      new_data.push(neuron_data);
+    }
+    return new_data;
+  }
 
+  public render() {
+    return (
+      <>
+        <ReactTabulator
+          options={{
+            pagination: "local",
+            paginationSize: 6,
+            page: 3,
+            initialSort: [{ column: "number", dir: "desc" }],
+            reactiveData: true
+          }}
+          data={this.parseData(this.props.data, this.props.workspace)}
+          columns={this.columns}
+          tooltips={true}
+          layout={"fitColumns"}
+        />
+      </>
+    );
+  }
 
-export function ConnTable(props: { title: string, data: Data[] }) {
-  return (
-    <MaterialTable
-      title={props.title}
-      columns={columns}
-      data={props.data}
-      icons={tableIcons}
-      options={settings}
-      actions={[
-        rowData => {
-          return rowData.has_morph
-            ? {
-                icon: tableIcons.Add as any,
-                disabled: rowData.has_morph ? false: true,
-                tooltip: "Add Neuron",
-                onClick: () => {
-                  //
-                }
-              }
-            : {
-                icon: tableIcons.Add as any,
-                disabled: true,
-                onClick: () => {
-                  /* anythink */
-                }
-              };
-        },
-        rowData => {
-          return rowData.has_syn_morph
-            ? {
-                icon: tableIcons.Add as any,
-                disabled: rowData.has_syn_morph ? false: true,
-                tooltip: "Add Synapse",
-                onClick: () => {
-                  /* anythink */
-                }
-              }
-            : {
-                icon: tableIcons.Add as any,
-                disabled: true,
-                onClick: () => {
-                  /* anythink */
-                }
-              };
+  readonly columns = [
+    {
+      title: "+/- Neuron",
+      field: "inworkspace",
+      hozAlign: "center",
+      headerFilter: true,
+      headerFilterParams: {
+        true: "True",
+        false: "False"
+      },
+      width: 100,
+      formatter: (cell: any, formatterParams: any) => {
+        if (cell.getValue() === true) {
+          return "<i class='fa fa-minus-circle' > </i>";
+        } else {
+          return "<i class='fa fa-plus-circle' > </i>";
         }
-      ]}
-    />
-  );
+      },
+      cellClick: (e: any, cell: any) => {
+        let { name, inworkspace} = cell.getData();
+
+        if (!inworkspace) {
+          // not in workspace
+          this.addByUname(name);
+        } else {
+          this.removeByUname(name);
+        }
+      }
+    },
+    {
+      title: "+/- Synapse",
+      field: "has_syn_morph",
+      hozAlign: "center",
+      headerFilter: true,
+      headerFilterParams: {
+        true: "True",
+        false: "False"
+      },
+      width: 110,
+      formatter: (cell: any, formatterParams: any) => {
+        if (cell.getValue() === true) {
+          return "<i class='fa fa-plus-circle' > </i>";
+        }
+        return;
+      },
+      cellClick: (e: any, cell: any) => {
+        let { name, inworkspace } = cell.getData();
+
+        if (!inworkspace) {
+          // not in workspace
+          this.addByUname(name);
+        } else {
+          this.removeByUname(name);
+        }
+      }
+    },
+    {
+      title: "Name",
+      field: "name",
+      hozAlign: "center",
+      headerFilter: true,
+      headerFilterPlaceholder: "filter name"
+    },
+    {
+      title: "Number",
+      field: "number",
+      hozAlign: "center",
+      headerFilter: "number",
+      headerFilterPlaceholder: "at least...",
+      headerFilterFunc: ">=",
+      width: 100
+    }
+  ];
+
+  data: any;
+  workspace: any;
+  addByUname: (uname: string)=>{};
+  removeByUname: (uname: string)=>{};
 }
