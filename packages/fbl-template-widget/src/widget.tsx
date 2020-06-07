@@ -325,9 +325,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
   * Dispose the current session 
   * 
-  * 1. all child widgets
-  * 2. session shutdown+dispose
-  * 3. mode dispose
+  * 1. comm dispose
+  * 2. model dispose
+  * 3. disconnect signal slots
   */
   dispose(): void {
     if (this._isDisposed === true) {
