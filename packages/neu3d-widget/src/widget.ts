@@ -243,12 +243,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return result;
   }
   
-
-  /**
-   * Instantiate neu3d and setup callback hooks after widget is shown
-   * @param msg 
-   */
-  onAfterShow(msg: Message){
+  onAfterAttach(msg: Message){
+    super.onAfterAttach(msg);
     if (!this.neu3d){
       this.neu3d = new Neu3D(
         this._neu3dContainer, 
@@ -306,6 +302,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     'visibility');
     this.neu3d.onWindowResize();
     this.renderModel();
+  }
+
+  /**
+   * Instantiate neu3d and setup callback hooks after widget is shown
+   * @param msg 
+   */
+  onAfterShow(msg: Message){
+    this.neu3d?.onWindowResize();
     super.onAfterShow(msg);
   }
 
@@ -315,7 +319,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   onResize(msg: any) {
     super.onResize(msg);
-    this.neu3d.onWindowResize();
+    this.neu3d?.onWindowResize();
   }
   
   /**
