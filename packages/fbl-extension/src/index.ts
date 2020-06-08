@@ -4,6 +4,11 @@ import {
   ILayoutRestorer
 } from '@jupyterlab/application';
 
+import {
+  DocumentRegistry
+} from '@jupyterlab/docregistry';
+
+
 import { 
   ILauncher 
 } from '@jupyterlab/launcher';
@@ -20,6 +25,8 @@ import {
   IWidgetTracker,
   ISessionContext,
   Toolbar,
+  showDialog,
+  Dialog
 } from '@jupyterlab/apputils';
 
 import{
@@ -190,6 +197,7 @@ namespace CommandIDs {
   export const NeuAnyCreate = 'fbl-neuany:create';
   export const NeuAnyOpen = 'fbl-neuany:open';
   export const NeuAnyCreateConsole = 'fbl-neuany:create-console';
+  export const CreateWorkspace = 'fbl-workspace:create';
 }
 
 
@@ -387,14 +395,14 @@ async function activateFBL(
         let plugin = await loadModule(NEU3D_MODULE_URL);
         Neu3DWidgetModule = plugin.Neu3DWidget;  
       }
-      await FBL.createFBLWidget(
-        app,
-        <any>Neu3DWidgetModule,
-        NEU3DICON,
-        args,
-        neu3DTracker,
-        infoWidget
-      );
+      await FBL.createFBLWidget({
+        app:app,
+        Module:<any>Neu3DWidgetModule,
+        icon:NEU3DICON,
+        moduleArgs:args,
+        tracker:neu3DTracker,
+        info:infoWidget
+      });
     }
   });
   app.commands.addCommand(CommandIDs.Neu3DOpen, {
@@ -405,13 +413,14 @@ async function activateFBL(
         let plugin = await loadModule(NEU3D_MODULE_URL);
         Neu3DWidgetModule = plugin.Neu3DWidget;  
       }
-      await FBL.createFBLWidget(
-        app,
-        <any>Neu3DWidgetModule,
-        NEU3DICON,
-        args,
-        neu3DTracker
-      );
+      await FBL.createFBLWidget({
+        app:app,
+        Module:<any>Neu3DWidgetModule,
+        icon:NEU3DICON,
+        moduleArgs:args,
+        tracker:neu3DTracker,
+        info:infoWidget
+      });
     }
   });  
 
@@ -424,12 +433,13 @@ async function activateFBL(
         NeuGFXWidgetModule = plugin.NeuGFXWidget;
       }
       await FBL.createFBLWidget(
-        app,
-        <any>NeuGFXWidgetModule,
-        NEUGFXICON,
-        args,
-        neuGFXTracker
-      );
+        {
+          app:app,
+          Module:<any>NeuGFXWidgetModule,
+          icon:NEUGFXICON,
+          moduleArgs:args,
+          tracker:neuGFXTracker,
+        });
     }
   });
   app.commands.addCommand(CommandIDs.NeuAnyCreate, {
@@ -441,12 +451,13 @@ async function activateFBL(
         NeuAnyWidgetModule = plugin.NeuAnyWidget;
       }
       await FBL.createFBLWidget(
-        app,
-        <any>NeuAnyWidgetModule,
-        NEUANYICON,
-        args,
-        neuAnyTracker
-      );
+        {
+          app:app,
+          Module:<any>NeuGFXWidgetModule,
+          icon:NEUGFXICON,
+          moduleArgs:args,
+          tracker:neuGFXTracker,
+        });
     }
   });
   // TODO: Open Existing according to path.
@@ -459,12 +470,13 @@ async function activateFBL(
         NeuAnyWidgetModule = plugin.NeuAnyWidget;  
       }
       await FBL.createFBLWidget(
-        app,
-        <any>NeuAnyWidgetModule,
-        NEUANYICON,
-        args,
-        neuAnyTracker
-      );
+        {
+          app:app,
+          Module:<any>NeuAnyWidgetModule,
+          icon:NEUANYICON,
+          moduleArgs:args,
+          tracker:neuAnyTracker,
+        });
     }
   });  
 
@@ -511,8 +523,87 @@ async function activateFBL(
     }
   });
 
+  // workspace
+  app.commands.addCommand(CommandIDs.CreateWorkspace, {
+    label: 'Create FBL Workspace',
+    icon: fblIcon,
+    execute: async (args) => {
+      let species: string = 'No species';
+      let abort: boolean = false;
+      await showDialog({
+        title: 'Change Species',
+        body: new FBL.SpeciesSelector(),
+        buttons: [
+          Dialog.cancelButton(),
+          Dialog.warnButton({label: 'No Species'}),
+          Dialog.okButton({label: 'Select'})
+        ]
+      }).then(result =>{
+        if (result.button.accept){
+          if (result.button.displayType === 'warn'){
+            species = 'No Species';
+          } else {
+            species = result.value;
+          }
+        } else{
+          abort = true;
+        }
+      });
+
+      if (abort) { // cancel triggers abort
+        return;
+      }
+
+
+      if (!Neu3DWidgetModule){
+        let plugin = await loadModule(NEU3D_MODULE_URL);
+        Neu3DWidgetModule = plugin.Neu3DWidget;  
+      }
+
+      if (!NeuGFXWidgetModule){
+        let plugin = await loadModule(NEUGFX_MODULE_URL);
+        NeuGFXWidgetModule = plugin.NeuGFXWidget;  
+      }
+
+      let notebook_panel = await app.commands.execute(
+        'notebook:create-new',
+        { kernelName: 'python3' }
+      )
+
+      let neu3d_panel = await FBL.createFBLWidget(
+        {
+          app: app,
+          Module:<any>Neu3DWidgetModule,
+          icon:NEU3DICON,
+          moduleArgs: args,
+          tracker: neu3DTracker,
+          species: species,
+          info: infoWidget,
+          sessionContext: notebook_panel.sessionContext,
+          add_widget_options:{ref: notebook_panel.id, mode: 'split-left'}
+        });
+      
+      await FBL.createFBLWidget(
+        {
+          app: app,
+          Module:<any>NeuGFXWidgetModule,
+          icon:NEUGFXICON,
+          moduleArgs: args,
+          tracker: neuGFXTracker,
+          species: species,
+          sessionContext: notebook_panel.sessionContext,
+          add_widget_options:{ref: neu3d_panel.id, mode: 'split-bottom'}
+        });
+    }
+  });
+
   // Add the widget to launcher
   if (launcher){
+    launcher.add({
+      command: CommandIDs.CreateWorkspace,
+      category: 'FlyBrainLab',
+      rank: 0
+    });
     launcher.add({
       command: CommandIDs.Neu3DCreate,
       category: 'FlyBrainLab',
@@ -529,6 +620,7 @@ async function activateFBL(
       rank: 0
     });
   }
+  
 
   /** 
    * Add the create-console to context Menu
@@ -569,6 +661,47 @@ async function activateFBL(
 }
 
 export namespace FBL {
+
+  /**
+   * A widget that provides a species selection.
+   */
+  export class SpeciesSelector extends Widget {
+    /**
+     * Create a new kernel selector widget.
+     */
+    constructor() {
+      const species_list = [
+        'adult Drosophila melanogaster (FlyCircuit)',
+        'adult Drosophila melanogaster (Hemibrain)',
+        'larval Drosophila melanogaster'
+      ];
+
+      const body = document.createElement('div');
+      const text = document.createElement('label');
+      text.textContent = `Select species for FBL Workspace`;
+      body.appendChild(text);
+
+      const selector = document.createElement('select');
+      for (const species of species_list){
+        const option = document.createElement('option');
+        option.text = species;
+        option.value = species;
+        selector.appendChild(option);
+      }
+      body.appendChild(selector);
+      super({node: body});
+    }
+
+    /**
+     * Get the value of the kernel selector widget.
+     */
+    getValue(): string {
+      const selector = this.node.querySelector('select') as HTMLSelectElement;
+      return selector.value as string;
+    }
+  }
+
+
   /**
    * Check if a given widget has a running session
    * @param args 
@@ -623,22 +756,31 @@ export namespace FBL {
     return Promise.resolve(targetCandidates[0]);
   }
 
-  export async function createFBLWidget(
+  export async function createFBLWidget(options: {
     app: JupyterFrontEnd, 
     Module: any,
     icon: LabIcon,
     moduleArgs: any, 
     tracker: WidgetTracker<MainAreaWidget<IFBLWidget>>,
-    info?: Widget // info panel for neu3d
-  ) {
+    species?: string, // species for workspace
+    info?: Widget, // info panel for neu3d
+    sessionContext?: ISessionContext,
+    add_widget_options?: DocumentRegistry.IOpenOptions
+  }) : Promise<MainAreaWidget<IFBLWidget>> {
     let widget: IFBLWidget;
-    let sessionContext = tracker.currentWidget?.content?.sessionContext ?? undefined;
+    const {
+      app, Module, icon, moduleArgs, tracker, species, info, add_widget_options
+    } = options;
+
+    let sessionContext = options.sessionContext || tracker.currentWidget?.content?.sessionContext;
+
     if (info) {
       widget = new Module({
         app: app, 
         icon: icon,
         info: info,
         sessionContext: sessionContext,
+        species: species,
         ...moduleArgs,
       });
     } else{
@@ -646,6 +788,7 @@ export namespace FBL {
         app: app, 
         icon: icon,
         sessionContext: sessionContext,
+        species: species,
         ...moduleArgs,
       });
     }
@@ -660,11 +803,12 @@ export namespace FBL {
       void tracker.save(panel);
     });
     // Attach the widget to the main work area if it's not there
-    app.shell.add(panel, 'main');
+    app.shell.add(panel, 'main', add_widget_options);
     widget.update();
-    panel.update()
+    panel.update();
     // Activate the widget
     app.shell.activateById(panel.id);
+    return panel;
   }
 
   export function createConsole(

@@ -656,20 +656,26 @@ namespace Private {
   }
 
   /**
-   * A widget that provides a kernel selection.
+   * A widget that provides a species selection.
    */
   class SpeciesSelector extends Widget {
     /**
      * Create a new kernel selector widget.
      */
     constructor(widget: IFBLWidget) {
+      const species_list = [
+        'adult Drosophila melanogaster (FlyCircuit)',
+        'adult Drosophila melanogaster (Hemibrain)',
+        'larval Drosophila melanogaster'
+      ];
+
       const body = document.createElement('div');
       const text = document.createElement('label');
       text.textContent = `Select species for: "${widget.id}"`;
       body.appendChild(text);
 
       const selector = document.createElement('select');
-      for (const species of ['adult Drosophila melanogaster (FlyCircuit)', 'adult Drosophila melanogaster (Hemibrain)', 'larval Drosophila melanogaster']){
+      for (const species of species_list){
         const option = document.createElement('option');
         option.text = species;
         option.value = species;
