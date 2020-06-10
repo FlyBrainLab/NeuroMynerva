@@ -107,7 +107,7 @@ export class InfoWidget extends ReactWidget {
   
     // default to true
     if (props?.inWorkspace){
-      this.inWorkspace = props.inWorkspace  ;
+      this.inWorkspace = props.inWorkspace;
     }else{
       this.inWorkspace = (uname: string)=>false;
     }
@@ -170,10 +170,10 @@ export class InfoWidget extends ReactWidget {
               data={val.data.connectivity.pre}
               inWorkspace={val.inWorkspace}
               addByUname={uname => {
-                alert(`${uname} add`);
+                val.neu3d?.addByUname(uname);
               }}
               removeByUname={uname => {
-                alert(`${uname} remove`);
+                val.neu3d?.removeByUname(uname);
               }}
             />
           )}
@@ -191,18 +191,19 @@ export class InfoWidget extends ReactWidget {
             neu3d: undefined
           }}
         >
-          {(_, val) => (
-            <ConnTable
+          {(_, val) => {
+            return (<ConnTable
               data={val.data.connectivity.post}
               inWorkspace={val.inWorkspace}
               addByUname={(uname: string) => {
-                alert(`${uname} add`);
+                val.neu3d?.addByUname(uname);
               }}
               removeByUname={(uname: string) => {
-                alert(`${uname} remove`);
+                val.neu3d?.removeByUname(uname);
               }}
             />
           )}
+        }
         </UseSignal>
       </div>
     </div>

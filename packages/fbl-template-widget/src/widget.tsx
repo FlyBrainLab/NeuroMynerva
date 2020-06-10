@@ -193,6 +193,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
   }
 
+
   // /**
   //  * Request Information about the connected client from kernel
   //  */

@@ -99,6 +99,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return;
   }
 
+  /**
+   * Handle Command CommMsg
+   * @param message 
+   */
   _receiveCommand(message: any) {
     if (!('commands' in message))
       return;
@@ -114,63 +118,79 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       });
   }
 
+  /**
+   * Handle Messages for Comm or Info
+   * @param msg 
+   */
   onCommMsg(msg: any) {
     super.onCommMsg(msg);
     let thisMsg = msg.content.data as any;
     console.log('NLP received message:', thisMsg)
-    if (thisMsg.widget !== 'NLP') {
+    if (!['NLP', 'INFO'].includes(thisMsg.widget)) {
       return;
     }
 
-    switch (thisMsg.messageType) {
-      case "Message": {
-        /*(izi as any).success({
-          id: "success",
-          message: (thisMsg.data).info.success,
-          transitionIn: 'bounceInLeft',
-          position: 'bottomRight',
-        });*/
-        console.log('[NEU3D] Message received.', thisMsg.data);
-        break;
-      }
-      case "Data": {
-        if (thisMsg.data.data){
-          let rawData = thisMsg.data.data
-          if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
-            // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
-            let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
-            this.neu3d.addJson(neu3Ddata);
-          }
-          else {
-            let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
-            this.neu3d.addJson(neu3Ddata);
-          }
-        } else if (thisMsg.data.info) {
-        } else{
-          // no-op
+    if (thisMsg.widget == 'NLP') {
+      switch (thisMsg.messageType) {
+        case "Message": {
+          /*(izi as any).success({
+            id: "success",
+            message: (thisMsg.data).info.success,
+            transitionIn: 'bounceInLeft',
+            position: 'bottomRight',
+          });*/
+          console.log('[NEU3D] Message received.', thisMsg.data);
+          break;
         }
-        break;
-      }
-      /*case "statePush": {
-        let tempstate = thisMsg.data;
-        tempstate.json.forEach((element) => {
-          this.n3dlog.push(JSON.parse(JSON.stringify(element)));
-          // console.log(JSON.parse(JSON.stringify(element)));
-          let neu3Ddata = { ffbo_json: JSON.parse(JSON.stringify(element)), type: 'morphology_json' };
-        });
-        break;
-      }
-      case "save": {
-        this._userAction.emit({ action: 'save', content: { origin: 'NLP', data: {state: this.neu3D.export_state(), json: this.n3dlog }} });
-        break;
-      }*/
-      default: {
-        console.log('[NEU3D] RESET', thisMsg.data);
-        // this.n3dlog = [];
-        this._receiveCommand(thisMsg.data);
-        break;
-      }
+        case "Data": {
+          if (thisMsg.data.data){
+            let rawData = thisMsg.data.data
+            if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
+              // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
+              let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
+              this.neu3d.addJson(neu3Ddata);
+            }
+            else {
+              let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
+              this.neu3d.addJson(neu3Ddata);
+            }
+          } else if (thisMsg.data.info) {
+          } else{
+            // no-op
+          }
+          break;
+        }
+        /*case "statePush": {
+          let tempstate = thisMsg.data;
+          tempstate.json.forEach((element) => {
+            this.n3dlog.push(JSON.parse(JSON.stringify(element)));
+            // console.log(JSON.parse(JSON.stringify(element)));
+            let neu3Ddata = { ffbo_json: JSON.parse(JSON.stringify(element)), type: 'morphology_json' };
+          });
+          break;
+        }
+        case "save": {
+          this._userAction.emit({ action: 'save', content: { origin: 'NLP', data: {state: this.neu3D.export_state(), json: this.n3dlog }} });
+          break;
+        }*/
+        default: {
+          console.log('[NEU3D] RESET', thisMsg.data);
+          // this.n3dlog = [];
+          this._receiveCommand(thisMsg.data);
+          break;
+        }
 
+      }
+    } else { // INFO
+      if (thisMsg.data.messageType !== 'Data') {
+        return;
+      }
+      // trigger datachanged event for info panel, will cause re-rendering of data
+      this.info?.dataChanged.emit({
+        data: thisMsg.data.data.data,
+        inWorkspace: (uname:string)=>{return this.isInWorkspace(uname)},
+        neu3d: this
+      });
     }
   }
 
@@ -194,7 +214,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   querySender(): string {
     let code = `
-    
     fbl.client_manager.clients['${this.client_id}']['client'].executeNAquery(res)
     `;
 
@@ -242,7 +261,21 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     console.log('removeByUname', result);
     return result;
   }
+
+  /**
+   * Get Info of a given neuron
+   * @return a promise that resolves to the reply message when done 
+   */
+  executeInfoQuery(uname: string): any {
+    let code_to_send = `
+    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${uname}')
+    `
+    return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
+  }
   
+  /** 
+   * Instantiate Neu3D and add to DOM after widget attached to DOM 
+   * */
   onAfterAttach(msg: Message){
     super.onAfterAttach(msg);
     if (!this.neu3d){
@@ -262,14 +295,24 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       );
     }
 
+    /** Get Neuron Information */
+    this.neu3d.on('click', (e: INeu3DMessage) => {
+      this.executeInfoQuery(e.value);
+    });
+
+    /** Add Mesh */
     this.neu3d.meshDict.on('add', (e:INeu3DMessage) => {
       this.model.addMesh(e.prop, e.value);
       this._modelChanged.emit(e);
     });
+
+    /** Remove Mesh */
     this.neu3d.meshDict.on('remove', (e:INeu3DMessage) => {
       this.model.removeMesh(e.prop)
       this._modelChanged.emit(e);
     });
+
+    /** Pin/UnPin */
     this.neu3d.meshDict.on('change', 
     (e:INeu3DMessage) =>{
       switch (e.value) {
@@ -285,6 +328,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this._modelChanged.emit(e);
     },
     'pinned');
+
+    /** Hide/Show */
     this.neu3d.meshDict.on('change', 
     (e:INeu3DMessage) =>{
       switch (e.value) {

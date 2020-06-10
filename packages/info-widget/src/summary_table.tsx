@@ -1,4 +1,5 @@
 import * as React from "react";
+import '../style/summary.css';
 
 const displayData: string[] = [
   "name",
@@ -41,15 +42,24 @@ export function SummaryTable(props: { data: any }) {
 
   for (let [key, val] of Object.entries(rawData)) {
     if (displayData.indexOf(key) > -1) {
-      display.push(
-        <div>
-          <p>{jsUcfirst(key)}</p>
-          <p>{val as string}</p>
-        </div>
-      );
+      if (key.toLowerCase() === "name") {
+        display.unshift(
+          <div key={key}>
+            <p>{jsUcfirst(key)}</p>
+            <p>{val as string}</p>
+          </div>
+        );
+      } else {
+        display.push(
+          <div key={key}>
+            <p>{jsUcfirst(key)}</p>
+            <p>{val as string}</p>
+          </div>
+        );
+      }
     } else if (morphData.indexOf(key) > -1) {
       morph.push(
-        <div>
+        <div key={key}>
           <p>{jsUcfirst(key)}</p>
           <p>{val as string}</p>
         </div>
@@ -58,7 +68,7 @@ export function SummaryTable(props: { data: any }) {
       for (let [key2, val2] of Object.entries(val as object)) {
         if (flyCircuitData.indexOf(key2) > -1) {
           flycircuit.push(
-            <div>
+            <div key={key2}>
               <p>{jsUcfirst(key2)}</p>
               <p>{val2}</p>
             </div>

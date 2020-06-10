@@ -5,7 +5,7 @@ import "tabulator-tables/dist/css/tabulator.min.css"; //import Tabulator stylesh
 
 export class ConnTable extends React.Component<{
   data: any;
-  inWorkspace: (uname: string) => boolean;
+  inWorkspace: (rid: string) => boolean;
   addByUname: (uname: string) => void;
   removeByUname: (uname: string) => void;
 }> {
@@ -14,6 +14,7 @@ export class ConnTable extends React.Component<{
     for (let item of connData["details"]) {
       let neuron_data = {
         name: item["name"],
+        uname: item["uname"] ?? item["name"],
         number: item["number"],
         rid: item["rid"],
         has_syn_morph: item["has_syn_morph"],
@@ -57,7 +58,7 @@ export class ConnTable extends React.Component<{
       headerFilterPlaceholder: "in workspace",
       // width: 100,
       formatter: (cell: any, formatterParams: any) => {
-        if (cell.getValue() === true) {
+        if (cell.getValue() == true) { // 1 or true
           if (this.props.inWorkspace(cell.getData().rid)) {
             return "<i class='fa fa-minus-circle' > </i>";
           } else {
@@ -67,12 +68,12 @@ export class ConnTable extends React.Component<{
         return;
       },
       cellClick: (e: any, cell: any) => {
-        let { name, rid } = cell.getData();
+        let { rid, uname } = cell.getData();
         if (!this.props.inWorkspace(rid)) {
           // not in workspace
-          this.props.addByUname(name);
+          this.props.addByUname(uname);
         } else {
-          this.props.removeByUname(name);
+          this.props.removeByUname(uname);
         }
       }
     },
@@ -88,19 +89,19 @@ export class ConnTable extends React.Component<{
       headerFilterPlaceholder: "in workspace",
       // maxWidth: 110,
       formatter: (cell: any, formatterParams: any) => {
-        if (cell.getValue() === true) {
+        if (cell.getValue() == true) {
           return "<i class='fa fa-plus-circle' > </i>";
         }
         return;
       },
       cellClick: (e: any, cell: any) => {
-        let { name, rid } = cell.getData();
+        let { uname, rid } = cell.getData();
 
         if (!this.props.inWorkspace(rid)) {
           // not in workspace
-          this.props.addByUname(name);
+          this.props.addByUname(uname);
         } else {
-          this.props.removeByUname(name);
+          this.props.removeByUname(uname);
         }
       }
     },
