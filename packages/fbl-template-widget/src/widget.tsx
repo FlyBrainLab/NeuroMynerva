@@ -436,7 +436,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if 'fbl' not in globals():
       import flybrainlab as fbl
       fbl.init()
-    if '${this.client_id}' not in fbl.client_manager.clients:
+    if '${this.client_id}' not in fbl.client_manager.clients or True: # Fix the situations in which a client is to be generated
       _comm = fbl.MetaComm('${this.client_id}', fbl)
       _client = fbl.Client(FFBOLabcomm = _comm ${clientargs})
       fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
