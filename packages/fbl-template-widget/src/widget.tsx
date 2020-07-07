@@ -334,7 +334,20 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (this._isDisposed === true) {
       return;
     }
-    this.comm?.dispose();
+    const code_to_send =`
+    try:
+      fbl.widget_manager.widgets['${this.id}'].isDisposed = True
+      fbl.widget_manager.widgets['${this.id}'].commOpen = False
+    except:
+      pass
+    `;
+    if (this.sessionContext?.session?.kernel){
+      this.sessionContext?.session?.kernel.requestExecute({code: code_to_send}).done.then(()=>{
+        this.comm?.dispose();
+      });
+    } else {
+      this.comm?.dispose();
+    }
     this.model?.dispose();
     Signal.disconnectAll(this._modelChanged);
     super.dispose();

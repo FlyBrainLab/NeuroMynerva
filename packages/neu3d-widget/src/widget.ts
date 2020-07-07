@@ -220,6 +220,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return code;
   }
 
+
+  /**
+   * Method passed to info panel to ensure stateful data
+   * 
+   * Addresses 
+   * @param command 
+   */
+  infoCommandWrapper(command: any){ 
+
+  }
+
   /** 
    * Add an object into the workspace.
    *

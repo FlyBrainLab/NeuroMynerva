@@ -84,6 +84,17 @@ interface IInfoData {
 }
 
 /**
+ * Empty data to be used in case there is no data coming in
+ */
+const empty_data: IInfoData = {
+  connectivity: {
+    pre: {details: [], summary: {profile: {}, number: -1}},
+    post: {details: [], summary: {profile: {}, number: -1}}
+  }, 
+  summary: {}
+};
+
+/**
 * An Info Widget
 */
 export class InfoWidget extends ReactWidget {
@@ -96,13 +107,7 @@ export class InfoWidget extends ReactWidget {
     if (props?.data) {
       this.data = props.data;
     } else{
-      this.data = {
-        connectivity: {
-          pre: {details: [], summary: {profile: {}, number: -1}},
-          post: {details: [], summary: {profile: {}, number: -1}}
-        }, 
-        summary: {}
-      }
+      this.data = empty_data;
     }
   
     // default to true
@@ -115,6 +120,16 @@ export class InfoWidget extends ReactWidget {
     this.addClass(INFO_CLASS_JLab);
   }
 
+  /** Reset Info to empty */
+  reset() {
+    this.dataChanged.emit({
+      data: empty_data,
+      inWorkspace: this.inWorkspace,
+      neu3d: this.neu3d
+    })
+  }
+
+  /** Render */
   protected render() {
     return (
       <div className={SECTION_CLASS}>
@@ -130,7 +145,13 @@ export class InfoWidget extends ReactWidget {
             neu3d: undefined
           }}
         >
-          {(_, val) => <SummaryTable data={val.data.summary} />}
+          {(_, val) => {
+            if (val.data?.summary){
+              return <SummaryTable data={val.data.summary} />  
+            } else{
+              return <SummaryTable data={empty_data.summary} />
+            }}
+          }
         </UseSignal>
       </div>
       <header className={SECTION_HEADER_CLASS}>
@@ -145,12 +166,19 @@ export class InfoWidget extends ReactWidget {
             neu3d: undefined
           }}
         >
-          {(_, val) => (
-            <ConnSVG
-              pre={val.data.connectivity.pre.summary}
-              post={val.data.connectivity.post.summary}
-            />
-          )}
+          {(_, val) => {
+            if (val.data?.connectivity){
+              return <ConnSVG
+                      pre={val.data.connectivity.pre.summary}
+                      post={val.data.connectivity.post.summary}
+                    />
+            } else{
+              return <ConnSVG
+                      pre={empty_data.connectivity.pre.summary}
+                      post={empty_data.connectivity.post.summary}
+                    />
+            }
+          }}
         </UseSignal>
       </div>
       <header className={SECTION_HEADER_CLASS}>
@@ -165,18 +193,31 @@ export class InfoWidget extends ReactWidget {
             neu3d: undefined
           }}
         >
-          {(_, val) => (
-            <ConnTable
-              data={val.data.connectivity.pre}
-              inWorkspace={val.inWorkspace}
-              addByUname={uname => {
-                val.neu3d?.addByUname(uname);
-              }}
-              removeByUname={uname => {
-                val.neu3d?.removeByUname(uname);
-              }}
-            />
-          )}
+          {(_, val) => {
+            if (val.data?.connectivity){
+              return  <ConnTable
+                data={val.data.connectivity.pre}
+                inWorkspace={val.inWorkspace}
+                addByUname={uname => {
+                  val.neu3d?.addByUname(uname);
+                }}
+                removeByUname={uname => {
+                  val.neu3d?.removeByUname(uname);
+                }}
+              />
+            } else{
+              return <ConnTable
+                data={empty_data.connectivity.pre}
+                inWorkspace={this.inWorkspace}
+                addByUname={uname => {
+                  val.neu3d?.addByUname(uname);
+                }}
+                removeByUname={uname => {
+                  val.neu3d?.removeByUname(uname);
+                }}
+              />
+            }
+          }}
         </UseSignal>
       </div>
       <header className={SECTION_HEADER_CLASS}>
@@ -192,18 +233,30 @@ export class InfoWidget extends ReactWidget {
           }}
         >
           {(_, val) => {
-            return (<ConnTable
-              data={val.data.connectivity.post}
-              inWorkspace={val.inWorkspace}
-              addByUname={(uname: string) => {
-                val.neu3d?.addByUname(uname);
-              }}
-              removeByUname={(uname: string) => {
-                val.neu3d?.removeByUname(uname);
-              }}
-            />
-          )}
-        }
+            if (val.data?.connectivity){
+              return  <ConnTable
+                data={val.data.connectivity.post}
+                inWorkspace={val.inWorkspace}
+                addByUname={uname => {
+                  val.neu3d?.addByUname(uname);
+                }}
+                removeByUname={uname => {
+                  val.neu3d?.removeByUname(uname);
+                }}
+              />
+            } else{
+              return <ConnTable
+                data={empty_data.connectivity.post}
+                inWorkspace={this.inWorkspace}
+                addByUname={uname => {
+                  val.neu3d?.addByUname(uname);
+                }}
+                removeByUname={uname => {
+                  val.neu3d?.removeByUname(uname);
+                }}
+              />
+            }
+          }}
         </UseSignal>
       </div>
     </div>

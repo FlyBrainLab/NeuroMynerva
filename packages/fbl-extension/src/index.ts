@@ -207,7 +207,7 @@ namespace CommandIDs {
  * Initialization data for the neu3d-extension extension.
  */
 const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
-  id: 'fbl-extension',
+  id: '@flybrainlab/fbl-extension',
   autoStart: true,
   requires: [ICommandPalette, ILauncher, ILayoutRestorer],
   provides: IFBLWidgetTrackers,
@@ -401,7 +401,8 @@ async function activateFBL(
         icon:NEU3DICON,
         moduleArgs:args,
         tracker:neu3DTracker,
-        info:infoWidget
+        info:infoWidget,
+        species: args.species as string ?? 'No species'
       });
     }
   });
@@ -419,7 +420,8 @@ async function activateFBL(
         icon:NEU3DICON,
         moduleArgs:args,
         tracker:neu3DTracker,
-        info:infoWidget
+        info:infoWidget,
+        species: args.species as string ?? 'No species'
       });
     }
   });  
@@ -439,6 +441,7 @@ async function activateFBL(
           icon:NEUGFXICON,
           moduleArgs:args,
           tracker:neuGFXTracker,
+          species: args.species as string ?? 'No species'
         });
     }
   });
@@ -457,6 +460,7 @@ async function activateFBL(
           icon:NEUGFXICON,
           moduleArgs:args,
           tracker:neuGFXTracker,
+          species: args.species as string ?? 'No species'
         });
     }
   });
@@ -476,6 +480,7 @@ async function activateFBL(
           icon:NEUANYICON,
           moduleArgs:args,
           tracker:neuAnyTracker,
+          species: args.species as string ?? 'No species'
         });
     }
   });  

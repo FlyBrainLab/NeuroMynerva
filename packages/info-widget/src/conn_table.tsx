@@ -13,8 +13,8 @@ export class ConnTable extends React.Component<{
     let new_data = [];
     for (let item of connData["details"]) {
       let neuron_data = {
-        name: item["name"],
-        uname: item["uname"] ?? item["name"],
+        name: item["name"] ?? item['name'] ?? item['rid'],
+        uname: item["uname"] ?? item["name"] ?? item['rid'],
         number: item["number"],
         rid: item["rid"],
         has_syn_morph: item["has_syn_morph"],
