@@ -356,6 +356,25 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this._modelChanged.emit(e);
     },
     'visibility');
+
+    /** Raw Setting */
+    this.neu3d.settings.on('change',
+    (e: INeu3DMessage) => {
+      this.model.metadata = this.neu3d.settings;
+      this.model._metadataChanged.emit(this.neu3d.settings);
+      // this..emit(e);
+    },
+    'change');
+
+    /** Camera setting */
+    this.neu3d.settings.on('change',
+    (e: INeu3DMessage) => {
+      this.model.metadata = this.neu3d.settings;
+      this.model._metadataChanged.emit(this.neu3d.settings);
+      // this..emit(e);
+    },
+    'change');
+
     this.neu3d.onWindowResize();
     this.renderModel();
   }
