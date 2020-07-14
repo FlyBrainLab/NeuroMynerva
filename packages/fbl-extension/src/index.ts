@@ -487,7 +487,7 @@ async function activateFBL(
       await FBL.createFBLWidget(
         {
           app:app,
-          Module:<any>NeuGFXWidgetModule,
+          Module:<any>NeuAnyWidgetModule,
           icon:NEUGFXICON,
           moduleArgs:args,
           tracker:neuGFXTracker,
