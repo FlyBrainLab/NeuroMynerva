@@ -44,9 +44,10 @@ import {
 
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
 import { listingsInfoIcon } from '@jupyterlab/ui-components'
+import { MasterWidget } from './master';
 
 const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
-const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
+// const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
 const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
 const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
 const NEUANY_MODULE_URL = "http://localhost:7999/build/bundle.js"; //placeholder
@@ -150,9 +151,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
   trackers: {[name: string]: FBLTracker};
 }
 
-// NOTE: this interface should be used by all widgets using npm install/import
-// for now it needs to be copy-pasted around (taken from fbl-template-widget)
-export interface IFBLWidget extends Widget{
+export interface IFBLWidget extends Widget {
   /**
    * The sessionContext keeps track of the current running session
    * associated with the widget.
@@ -175,13 +174,35 @@ export interface IFBLWidget extends Widget{
    */
   model: any;
 
+  /**
+   * Name of Widget
+   */
+  name: string
 
+  /**
+   * Signal that emits new species name when changed
+   */
   speciesChanged: ISignal<IFBLWidget, string>;
+
+  /**
+   * Signal that emits model change
+   */
   modelChanged: ISignal<IFBLWidget, object>;
+
+  /**
+   * Icon associated with the widget
+   */
   icon?: LabIcon;
+
+  /**
+   * Toolbar to be added to the MainAreaWidget
+   * 
+   * TODO: This is currently defined here due to an issue with using 
+   *   MainAreaWidget class directly
+   */
   toolbar?: Toolbar<Widget>;
-  name: string;
 }
+
 
 
 /**
@@ -329,22 +350,32 @@ async function activateFBL(
   let masterWidget: Widget = undefined;
   let infoWidget: Widget = undefined;
   await injectRequired();
-  await loadModule(MASTER_MODULE_URL).then((plugin)=>{
-    const MasterWidgetModule = plugin.MasterWidget;
-    masterWidget = new MasterWidgetModule(fblWidgetTrackers);
-    masterWidget.id = 'FBL-Master';
-    masterWidget.title.caption = 'FBL Widgets and Running Sessions';
-    masterWidget.title.icon = fblIcon;
-    // add to last
-    if (restorer) {
-      restorer.add(masterWidget, 'FBL-Master');
-    }
-    app.shell.add(masterWidget, 'left', {rank: 1000});
+  masterWidget = new MasterWidget(fblWidgetTrackers);
+  masterWidget.id = 'FBL-Master';
+  masterWidget.title.caption = 'FBL Widgets and Running Sessions';
+  masterWidget.title.icon = fblIcon;
+  // add to last
+  if (restorer) {
+    restorer.add(masterWidget, 'FBL-Master');
+  }
+  app.shell.add(masterWidget, 'left', {rank: 1000});
+  window.master = masterWidget;
+  // await loadModule(MASTER_MODULE_URL).then((plugin)=>{
+  //   const MasterWidgetModule = plugin.MasterWidget;
+  //   masterWidget = new MasterWidgetModule(fblWidgetTrackers);
+  //   masterWidget.id = 'FBL-Master';
+  //   masterWidget.title.caption = 'FBL Widgets and Running Sessions';
+  //   masterWidget.title.icon = fblIcon;
+  //   // add to last
+  //   if (restorer) {
+  //     restorer.add(masterWidget, 'FBL-Master');
+  //   }
+  //   app.shell.add(masterWidget, 'left', {rank: 1000});
     
-    window.master = masterWidget;
-  }).catch(error=>{
-    console.log('Master Widget Loading Failed, skipping injection', error);
-  });
+  //   window.master = masterWidget;
+  // }).catch(error=>{
+  //   console.log('Master Widget Loading Failed, skipping injection', error);
+  // });
 
   // add info panel
   await loadModule(INFO_MODULE_URL).then((plugin)=>{

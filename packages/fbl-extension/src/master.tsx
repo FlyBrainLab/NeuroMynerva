@@ -1,7 +1,8 @@
 // FBL Master Widget Class
 import * as React from 'react';
-import { Icons, IFBLWidget } from '@flybrainlab/fbl-template-widget';
-import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '@flybrainlab/fbl-extension';
+import { fblIcon } from './icons';
+import { IFBLWidget } from './index';
+
 import { 
   ReactWidget, 
   ToolbarButtonComponent,
@@ -12,6 +13,8 @@ import {
 import { 
   LabIcon, closeIcon//, fileIcon 
 } from '@jupyterlab/ui-components';
+
+import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from './index';
 import '../style/index.css';
 
 const MASTER_CLASS_JLab = 'jp-FBL-Master';
@@ -181,7 +184,7 @@ namespace FBLWidgetReact {
   function Item(props: { panel: FBLPanel }) {
     const {panel} = props;
     const widget = panel.content;
-    const icon: LabIcon = Icons.fblIcon;
+    const icon: LabIcon = fblIcon;
     
     // if (widget.icon?.react){
     //   icon = widget.icon;
