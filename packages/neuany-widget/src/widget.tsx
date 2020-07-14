@@ -234,10 +234,12 @@ export class NeuAnyWidget extends FBLWidget implements IFBLWidget {
     super.populateToolBar();
   }
   
+  get species(): string{
+    return this._species;
+  }
+
   /**
    * Set species
-   * @param new_species new species to be added
-   *    - If sepcies is `adult` or `larva`, this will display mesh and change metadata settings
    */
   set species(new_species: string) {
     Private.logToWidget(this, `[FBL Event] species setter called: ${new_species}.`);

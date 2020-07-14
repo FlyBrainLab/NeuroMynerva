@@ -125,6 +125,18 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     return;
   }
 
+  get species(): string{
+    return this._species;
+  }
+  
+  set species(new_species: string) {
+    if (new_species === this._species) {
+      return;
+    }
+    this._species = new_species;
+    this._speciesChanged.emit(this._species);
+  }
+
   /**
   * The Elements associated with the widget.
   */

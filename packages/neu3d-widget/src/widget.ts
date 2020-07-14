@@ -1,6 +1,7 @@
 import { IFBLWidget, FBLWidget } from '@flybrainlab/fbl-template-widget';
 import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
+import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton } from '@jupyterlab/apputils';
 import { Icons } from '@flybrainlab/fbl-template-widget';
 import { LabIcon } from '@jupyterlab/ui-components';
@@ -10,7 +11,12 @@ import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
 import { HemibrainMesh } from './hemibrain_mesh';
 
+
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
+
+function objEmpty(obj:any): boolean {
+  return Object.keys(obj).length === 0 && obj.constructor === Object;
+}
 
 /**
  * Data sent from neu3d's `on` callbacks
@@ -56,6 +62,49 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this._neu3dContainer.style.width = '100%';
     this.node.appendChild(this._neu3dContainer);
     window.neu3d_widget = this;
+
+    
+    if (options.model?.metadata || options.model?.states) {
+      this.neu3DReady.then(()=>{
+        this._blockingDiv = document.createElement('div');
+        this._blockingDiv.className = "jp-Dialog-header";
+        this._blockingDiv.style.height= '80px';
+        this._blockingDiv.style.top= 'calc(50% - 40px)';
+        this._blockingDiv.style.position = 'absolute';
+        this._blockingDiv.style.width= '100%';
+        this._blockingDiv.style.backgroundColor = 'var(--jp-warn-color3)';
+        this._blockingDiv.style.opacity = '.8';
+        this._blockingDiv.style.display = 'flex';
+        this._blockingDiv.style.alignItems = 'center';
+        this._blockingDiv.style.justifyContent = 'center';
+        this._blockingDiv.style.fontSize = '2rem';
+        this._blockingDiv.innerText = `Reload previous visualization settings?`
+        let acceptBtn = document.createElement('button');
+        acceptBtn.innerText = "Yes"
+        acceptBtn.className = "jp-Dialog-button jp-mod-accept jp-mod-styled";
+        acceptBtn.onclick = ()=>{
+          if (options.model?.metadata){
+            this.neu3d.import_settings(options.model.metadata)
+          }
+          if (options.model?.states){
+            this.neu3d.import_state(options.model.states);
+          }
+          this._blockingDiv.remove();
+        };
+        let cancelBtn = document.createElement('button');
+        cancelBtn.innerText = "No"
+        cancelBtn.className = "jp-Dialog-button jp-mod-reject jp-mod-styled";
+        cancelBtn.onclick = ()=>{
+          this.model.metadata = this.neu3d.export_settings();
+          this.model.states = this.neu3d.export_state();
+          this._blockingDiv.remove();
+        };
+        this._blockingDiv.appendChild(cancelBtn);
+        this._blockingDiv.appendChild(acceptBtn);
+
+        this.node.insertBefore(this._blockingDiv, this.node.childNodes[0]);
+      })
+    }
   }
 
   initFBLCode(): string {
@@ -357,26 +406,66 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     },
     'visibility');
 
-    /** Raw Setting */
-    this.neu3d.settings.on('change',
-    (e: INeu3DMessage) => {
-      this.model.metadata = this.neu3d.settings;
-      this.model._metadataChanged.emit(this.neu3d.settings);
-      // this..emit(e);
-    },
-    'change');
+    /** Visualization Setting */
+    this.neu3d.settings.on("change", ((e:any) => {
+      let settings = this.neu3d.export_settings();
+      this.model.metadata = settings;
+      this.model._metadataChanged.emit(settings);
+      this._modelChanged.emit(e);
+    }), [
+        "pinLowOpacity", "pinOpacity", "defaultOpacity", "backgroundOpacity",
+        "backgroundWireframeOpacity", "synapseOpacity",
+        "highlightedObjectOpacity", "nonHighlightableOpacity", "lowOpacity"
+      ]);
 
-    /** Camera setting */
-    this.neu3d.settings.on('change',
-    (e: INeu3DMessage) => {
-      this.model.metadata = this.neu3d.settings;
-      this.model._metadataChanged.emit(this.neu3d.settings);
-      // this..emit(e);
-    },
-    'change');
+    this.neu3d.settings.on('change', ((e:any) => {
+      let settings = this.neu3d.export_settings();
+      this.model.metadata = settings;
+      this.model._metadataChanged.emit(settings);
+      this._modelChanged.emit(e);
+    }), ['radius', 'strength', 'threshold', 'enabled']);
+  
+    this.neu3d.settings.toneMappingPass.on('change', ((e:any) => {
+      let settings = this.neu3d.export_settings();
+      this.model.metadata = settings;
+      this.model._metadataChanged.emit(settings);
+      this._modelChanged.emit(e);
+    }), 'brightness');
 
-    this.neu3d.onWindowResize();
+    this.neu3d.settings.on('change', ((e:any) => {
+      let settings = this.neu3d.export_settings();
+      this.model.metadata = settings;
+      this.model._metadataChanged.emit(settings);
+      this._modelChanged.emit(e);
+    }), 'backgroundColor');
+
+    /** trackball control end interaction save camera*/
+    this.neu3d.controls.addEventListener('end', (e:any)=>{
+      let states = this.neu3d.export_state();
+      this.model.states = states;
+      this.model._statesChanged.emit(states);
+      this._modelChanged.emit(e);
+    });
+
+    /** State Setting */
+    this.neu3d.states.on('change',
+    (e: any) => {
+      let states = this.neu3d.export_state();
+      this.model.states = states;
+      this.model._statesChanged.emit(states);
+      this._modelChanged.emit(e);
+    }, 'highlight');
+
+    if (!objEmpty(this.model.metadata)) {
+      this.neu3d.import_settings(this.model.metadata);
+    }
+    if (!objEmpty(this.model.states)) {
+      this.neu3d.import_state(this.model.states);
+    }
+    this.model.metadata = this.neu3d.export_settings();
+    this.model.states = this.neu3d.export_state();
     this.renderModel();
+    this._neu3DReady.resolve(void 0);
   }
 
   /**
@@ -385,6 +474,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   onAfterShow(msg: Message){
     this.neu3d?.onWindowResize();
+    if (!objEmpty(this.model.metadata)) {
+      this.neu3d.import_settings(this.model.metadata);
+    }
+    if (!objEmpty(this.model.states)) {
+      this.neu3d.import_state(this.model.states);
+    }
     super.onAfterShow(msg);
   }
 
@@ -397,6 +492,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.neu3d?.onWindowResize();
   }
   
+  /** 
+   * Returns species
+   */
+  get species(): string {
+    return this._species
+  }
+
+  get neu3DReady(): Promise<void> {
+    return this._neu3DReady.promise;
+  }
+
   /**
    * Set species
    * @param newSpecies new species to be added
@@ -408,56 +514,64 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     }
     this._species = newSpecies;
     this._speciesChanged.emit(newSpecies);
-    
-    switch (this._species) {
-      case 'larval Drosophila melanogaster':
-        for (let mesh of Object.keys(this.neu3d.meshDict)){
-          if (this.neu3d.meshDict[mesh].background) {
-            this.neu3d.remove(mesh);
+    this.neu3DReady.then(()=>{
+      switch (this._species) {
+        case 'larval Drosophila melanogaster':
+          for (let mesh of Object.keys(this.neu3d.meshDict)){
+            if (this.neu3d.meshDict[mesh].background) {
+              this.neu3d.remove(mesh);
+            }
           }
-        }
-        this.neu3d._metadata.resetPosition = {x: 32.727408729704834, y: -436.2980011559806, z: -36.71433643232834};
-        this.neu3d._metadata.upVector = {x: 0.09683632485855452, y: 0.9768955647317704, z: 0.19051976746566937};
-        this.neu3d._metadata.cameraTarget = {x: 44.591928805676524, y: -21.014991704094935, z: 49.28748557815412};
-        this.neu3d.updateControls();
-        this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
-        window.active_neu3d_widget = this;
-        this.neu3d.resetView();
-        this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:6651/ws", ssl = None, default_key = False')}).done;
-        
-        break;
-      case 'adult Drosophila melanogaster (FlyCircuit)':
-        for (let mesh of Object.keys(this.neu3d.meshDict)){
-          if (this.neu3d.meshDict[mesh].background) {
-            this.neu3d.remove(mesh);
+          this.neu3d._metadata.resetPosition =  {x: 42.057169835814626, y: 18.465885594337543, z: -509.65272951348953};
+          this.neu3d._metadata.upVector = {x: 0.0022681554337180836, y: -0.9592325957384876, z: 0.2826087096034669};
+          this.neu3d._metadata.cameraTarget = {x: 42.11358557008077, y: 74.90946190543991, z: 58.654427921234685};
+          // this.neu3d._metadata.resetPosition = {x: 32.727408729704834, y: -436.2980011559806, z: -36.71433643232834};
+          // this.neu3d._metadata.upVector = {x: 0.09683632485855452, y: 0.9768955647317704, z: 0.19051976746566937};
+          // this.neu3d._metadata.cameraTarget = {x: 44.591928805676524, y: -21.014991704094935, z: 49.28748557815412};
+          this.neu3d.updateControls();
+          this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
+          window.active_neu3d_widget = this;
+          this.neu3d.resetView();
+          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:6651/ws", ssl = None, default_key = False')}).done;
+          break;
+        case 'adult Drosophila melanogaster (FlyCircuit)':
+          for (let mesh of Object.keys(this.neu3d.meshDict)){
+            if (this.neu3d.meshDict[mesh].background) {
+              this.neu3d.remove(mesh);
+            }
           }
-        }
-        this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
-        this.neu3d._metadata.upVector = {x: 0., y: 1., z: 0.};
-        this.neu3d.updateControls();
-        this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
-        window.active_neu3d_widget = this;
-        this.neu3d.resetView();
-        this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode('')}).done;
-        break;
-      case 'adult Drosophila melanogaster (Hemibrain)':
-        for (let mesh of Object.keys(this.neu3d.meshDict)){
-          if (this.neu3d.meshDict[mesh].background) {
-            this.neu3d.remove(mesh);
+          this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
+          this.neu3d._metadata.upVector = {x: 0., y: 1., z: 0.};
+          this.neu3d.updateControls();
+          this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
+          window.active_neu3d_widget = this;
+          this.neu3d.resetView();
+          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode('')}).done;
+          break;
+        case 'adult Drosophila melanogaster (Hemibrain)':
+          for (let mesh of Object.keys(this.neu3d.meshDict)){
+            if (this.neu3d.meshDict[mesh].background) {
+              this.neu3d.remove(mesh);
+            }
           }
-        }
-        this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
-        this.neu3d._metadata.upVector = {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184};
-        this.neu3d._metadata.cameraTarget = {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273};
-        this.neu3d.updateControls();
-        this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
-        window.active_neu3d_widget = this;
-        this.neu3d.resetView();
-        this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:20206/ws", ssl = None, default_key = False')}).done;
-        break;
-      default:
-        break; //no-op
-    }
+          this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
+          this.neu3d._metadata.upVector = {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184};
+          this.neu3d._metadata.cameraTarget = {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273};
+          this.neu3d.updateControls();
+          this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
+          window.active_neu3d_widget = this;
+          this.neu3d.resetView();
+          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:20206/ws", ssl = None, default_key = False')}).done;
+          break;
+        default:
+          for (let mesh of Object.keys(this.neu3d.meshDict)){
+            if (this.neu3d.meshDict[mesh].background) {
+              this.neu3d.remove(mesh);
+            }
+          }
+          break; //no-op
+      }
+    });
   }
 
   populateToolBar(): void {
@@ -503,7 +617,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   readonly _adultMesh: Object; // caching for dynamically imported mesh
   readonly _larvaMesh: Object; // caching for dynamically import mesh
   readonly _hemibrainMesh: Object; // caching for dynamically import mesh
+  private _neu3DReady = new PromiseDelegate<void>();
   private _neu3dContainer: HTMLDivElement;
+  private _blockingDiv: HTMLDivElement;
   model: Neu3DModel;
   info: any; // info panel widget
 };

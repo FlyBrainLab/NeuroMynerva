@@ -542,6 +542,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
 
   /** 
    * Returns species
+   * Note: setter/getter for species need to be redefined in child class
+   * See reference: https://github.com/microsoft/TypeScript/issues/338
   */
   get species(): string {
     return this._species
@@ -680,7 +682,8 @@ namespace Private {
       const species_list = [
         'adult Drosophila melanogaster (FlyCircuit)',
         'adult Drosophila melanogaster (Hemibrain)',
-        'larval Drosophila melanogaster'
+        'larval Drosophila melanogaster',
+        'No Species'
       ];
 
       const body = document.createElement('div');
