@@ -24,13 +24,12 @@
     "eslint:check": "eslint . --ext .ts,.tsx",
     "prepare": "jlpm run clean && jlpm run build",
     "watch": "nodemon -e ts,js,tsx --watch src --exec \"npm run build\"",
-    "dev": "concurrently \"http-server -p 7996\" \"npm:watch\""
+    "dev": "concurrently \"npm:watch\""
   },
   "dependencies": {
     "@jupyterlab/application": "^2.0.0",
     "@jupyterlab/running": "^2.1.1",
     "@jupyterlab/ui-components": "^2.1.1",
-    "@flybrainlab/fbl-extension": "file:../fbl-extension",
     "@flybrainlab/fbl-template-widget": "file:../fbl-template-widget"
   },
   "devDependencies": {

@@ -1,7 +1,6 @@
 import $ from 'jquery';
-import { IFBLWidget, FBLWidget } from '@flybrainlab/fbl-template-widget';
+import { IFBLWidget, FBLWidget, Icons } from '@flybrainlab/fbl-template-widget';
 import { ToolbarButton } from '@jupyterlab/apputils';
-import { Icons } from '@flybrainlab/fbl-template-widget';
 import { LabIcon } from '@jupyterlab/ui-components';
 import '../style/index.css';
 import { NeuGFXModel, INeuGFXModel } from './model';

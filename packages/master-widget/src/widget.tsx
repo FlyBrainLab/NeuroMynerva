@@ -1,17 +1,27 @@
 // FBL Master Widget Class
 import * as React from 'react';
 import { Icons, IFBLWidget } from '@flybrainlab/fbl-template-widget';
-import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '@flybrainlab/fbl-extension';
+// import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '@flybrainlab/fbl-extension';
 import { 
   ReactWidget, 
   ToolbarButtonComponent,
   UseSignal,
   Dialog, showDialog
- } from'@jupyterlab/apputils';
+} from'@jupyterlab/apputils';
+
+import {
+  MainAreaWidget, 
+  IWidgetTracker,
+} from '@jupyterlab/apputils';
+
+import{
+  Session
+} from '@jupyterlab/services';
 
 import { 
   LabIcon, closeIcon//, fileIcon 
 } from '@jupyterlab/ui-components';
+
 import '../style/index.css';
 
 const MASTER_CLASS_JLab = 'jp-FBL-Master';
@@ -63,6 +73,78 @@ const ITEM_LABEL_CLASS = 'jp-FBL-Master-itemLabel';
 const DISPOSE_BUTTON_CLASS = 'jp-FBL-Master-itemDispose';
 
 
+export type FBLPanel = MainAreaWidget<IFBLWidget>;
+export type FBLTracker = IWidgetTracker<FBLPanel>;
+
+export interface IFBLWidgetTrackers {
+  add(name: string, tracker: FBLTracker): void;
+  trackers:  {[name: string]: FBLTracker};
+  sessionsDict: {[sessionPath: string]: FBLPanel[] };
+  sessions: Session.ISessionConnection[];
+}
+
+/**
+ * Class for maintaining a list of FBLWidgetTrackers
+ */
+export class FBLWidgetTrackers implements IFBLWidgetTrackers {
+  constructor(trackers?: {[name: string]: FBLTracker}){
+    if (trackers){
+      this.trackers = trackers;
+    }else{
+      this.trackers = {};
+    }
+  }
+  /**
+   * Add a fbl widget tracker
+   * @param tracker
+   */
+  add(name: string, tracker: FBLTracker): void {
+    if (!(name in this.trackers)){
+      this.trackers[name] = tracker;
+    }
+  }
+
+  /** 
+   * Return alternate view of the trackers, keyed by session
+   */
+  get sessionsDict(): {[sessionPath: string]: FBLPanel[] } {
+    let sessionsDict: {[sessionPath: string]: FBLPanel[] } = {};
+    for (const t of Object.values(this.trackers)){
+      t.forEach((panel)=>{
+        const widget = panel.content;
+        if (widget.sessionContext?.session){
+          if (!widget.sessionContext.isDisposed){
+            if (!(widget.sessionContext.session.path in sessionsDict)) {
+              sessionsDict[widget.sessionContext.session.path] = new Array<FBLPanel>();
+            }
+            sessionsDict[widget.sessionContext.session.path].push(panel);
+          }
+        }
+      });
+    }
+    return sessionsDict;
+  }
+
+  /** 
+   * Return a array of unique sessions
+   */
+  get sessions(): Session.ISessionConnection[] {
+    const sessions: Session.ISessionConnection[] = [];
+    for (const t of Object.values(this.trackers)){
+      t.forEach((panel)=>{
+        const widget = panel.content;
+        if (widget.sessionContext?.session){
+          if (!widget.sessionContext.isDisposed){
+            sessions.push(widget.sessionContext.session);
+          }
+        }
+      })
+    }
+    return Array.from(new Set(sessions));
+  }
+
+  trackers: {[name: string]: FBLTracker};
+}
 
 /**
 * An FBL Master Widget

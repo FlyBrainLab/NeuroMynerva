@@ -24,7 +24,7 @@
     "eslint:check": "eslint . --ext .ts,.tsx",
     "prepare": "jlpm run clean && jlpm run build",
     "watch": "nodemon -e ts,js,tsx --watch src --exec \"npm run build\"",
-    "dev": "concurrently \"http-server -p 7995\" \"npm:watch\""
+    "dev": "concurrently \"npm:watch\""
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",

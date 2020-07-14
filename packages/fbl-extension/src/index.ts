@@ -1,3 +1,5 @@
+// import { Neu3DWidget } from '@flybrainlab/neu3d';
+
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin,
@@ -44,7 +46,6 @@ import {
 
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
 import { listingsInfoIcon } from '@jupyterlab/ui-components'
-
 const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
 const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
 const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
