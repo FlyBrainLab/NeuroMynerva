@@ -1,6 +1,7 @@
 import { IFBLWidget, FBLWidget } from '@flybrainlab/fbl-template-widget';
-import Neu3D from 'neu3d';
+import { Neu3D } from 'neu3d';
 import { Message } from '@lumino/messaging';
+import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton } from '@jupyterlab/apputils';
 import { Icons } from '@flybrainlab/fbl-template-widget';
@@ -148,6 +149,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return;
   }
 
+  get workspaceChanged(): ISignal<this, any> {
+    return this._workspaceChanged;
+  }
+
   /**
    * Handle Command CommMsg
    * @param message 
@@ -237,9 +242,18 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       // trigger datachanged event for info panel, will cause re-rendering of data
       this.info?.dataChanged.emit({
         data: thisMsg.data.data.data,
-        inWorkspace: (uname:string)=>{return this.isInWorkspace(uname)},
+        inWorkspace: this.isInWorkspace,
         neu3d: this
       });
+
+      this.workspaceChanged.connect(()=>{
+        console.log('workspace changed', thisMsg);
+        this.info?.dataChanged.emit({
+          data: thisMsg.data.data.data,
+          inWorkspace: this.isInWorkspace,
+          neu3d: this
+        });
+      }, this);
     }
   }
 
@@ -364,12 +378,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.neu3d.meshDict.on('add', (e:INeu3DMessage) => {
       this.model.addMesh(e.prop, e.value);
       this._modelChanged.emit(e);
+      this._workspaceChanged.emit(e);
     });
 
     /** Remove Mesh */
     this.neu3d.meshDict.on('remove', (e:INeu3DMessage) => {
       this.model.removeMesh(e.prop)
       this._modelChanged.emit(e);
+      this._workspaceChanged.emit(e);
     });
 
     /** Pin/UnPin */
@@ -620,6 +636,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   private _neu3DReady = new PromiseDelegate<void>();
   private _neu3dContainer: HTMLDivElement;
   private _blockingDiv: HTMLDivElement;
+  private _workspaceChanged = new Signal<this, any>(this);
   model: Neu3DModel;
   info: any; // info panel widget
 };
