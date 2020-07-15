@@ -336,8 +336,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
     const code_to_send =`
     try:
-      fbl.widget_manager.widgets['${this.id}'].isDisposed = True
-      fbl.widget_manager.widgets['${this.id}'].commOpen = False
+      del fbl.widget_manager.widgets['${this.id}']
+      if len(fbl.client_manager.clients['${this.client_id}']>1):
+          fbl.client_manager.clients['${this.client_id}']['widgets'].remove('${this.id}')
+      else:
+          del fbl.client_manager.clients['${this.client_id}']
     except:
       pass
     `;
