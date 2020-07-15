@@ -21,7 +21,7 @@
     "url": "https://github.com/FlyBrainLab/NeuroMynerva"
   },
   "scripts": {
-    "build": "tsc && webpack",
+    "build": "tsc",
     "clean": "rimraf lib tsconfig.tsbuildinfo",
     "clean:node_modules": "rimraf node_modules lib tsconfig.tsbuildinfo",
     "eslint": "eslint . --ext .ts,.tsx --fix",

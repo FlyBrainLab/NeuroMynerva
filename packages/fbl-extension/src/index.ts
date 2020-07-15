@@ -1,3 +1,7 @@
+import { NeuAnyWidget } from '@flybrainlab/neuany-widget';
+import { InfoWidget } from '@flybrainlab/info-widget';
+import { NeuGFXWidget } from '@flybrainlab/neugfx-widget';
+import { Neu3DWidget } from '@flybrainlab/neu3d-widget';
 // import { Neu3DWidget } from '@flybrainlab/neu3d';
 
 import {
@@ -37,7 +41,7 @@ import{
 } from '@jupyterlab/services';
 
 import {
-  LabIcon
+  LabIcon, listingsInfoIcon
 } from '@jupyterlab/ui-components'
 import { ISignal } from '@lumino/signaling';
 import { 
@@ -45,12 +49,14 @@ import {
  } from '@lumino/widgets';
 
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
-import { listingsInfoIcon } from '@jupyterlab/ui-components'
-const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
-const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
-const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
-const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
-const NEUANY_MODULE_URL = "http://localhost:7999/build/bundle.js"; //placeholder
+import { MasterWidget } from './master';
+
+
+// const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
+// const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
+// const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
+// const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
+// const NEUANY_MODULE_URL = "http://localhost:7999/build/bundle.js"; //placeholder
 // const MASTER_CLASS_NAME = '.jp-FBL-Master';
 // const INFO_CLASS_NAME = '.jp-FBL-Info';
 const NEU3D_CLASS_NAME = '.jp-FBL-Neu3D';
@@ -151,9 +157,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
   trackers: {[name: string]: FBLTracker};
 }
 
-// NOTE: this interface should be used by all widgets using npm install/import
-// for now it needs to be copy-pasted around (taken from fbl-template-widget)
-export interface IFBLWidget extends Widget{
+export interface IFBLWidget extends Widget {
   /**
    * The sessionContext keeps track of the current running session
    * associated with the widget.
@@ -176,13 +180,35 @@ export interface IFBLWidget extends Widget{
    */
   model: any;
 
+  /**
+   * Name of Widget
+   */
+  name: string
 
+  /**
+   * Signal that emits new species name when changed
+   */
   speciesChanged: ISignal<IFBLWidget, string>;
+
+  /**
+   * Signal that emits model change
+   */
   modelChanged: ISignal<IFBLWidget, object>;
+
+  /**
+   * Icon associated with the widget
+   */
   icon?: LabIcon;
+
+  /**
+   * Toolbar to be added to the MainAreaWidget
+   * 
+   * TODO: This is currently defined here due to an issue with using 
+   *   MainAreaWidget class directly
+   */
   toolbar?: Toolbar<Widget>;
-  name: string;
 }
+
 
 
 /**
@@ -216,53 +242,7 @@ const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
 };
 
 /**
- * Load Module dynamically, makes sure that the module is only loaded once
- * @param url the URL to load the module from
- * @param plugin the plugin that contains the widget module. 
- *  will need to resolve to specific module like `plugin.Neu3DWidget` after return
- */
-async function loadModule(url: String): Promise<any> {
-  await injectRequired();
-  return new Promise<any>((resolve, reject)=>{
-    (<any>window).require([url], 
-      (plugin: any)=>{
-        console.log(`Loaded plugin from ${url} with RequireJS`, plugin);
-        resolve(plugin);
-      }, (error: any) => {
-        reject(error);
-      }
-    );
-  });
-}
-
-/**
- * Injected RequiredJS into the window if it's not there already
- * @param hasRequire indicate if require has been loaded by this extension already
- * @return a promise that resolves to true after requireJS is loaded
- */
-function injectRequired(): Promise<any> {
-  return new Promise<any>((resolve, reject)=>{
-    (function(w) {
-      if (w.hasOwnProperty('require') && (typeof((w as any).require) === 'function')) {
-        resolve(void 0);
-      }
-      const script = w.document.createElement('script');
-      script.type = 'text/javascript';
-      script.async = true;
-      script.src = 'https://requirejs.org/docs/release/2.3.6/comments/require.js';
-      w.document.getElementsByTagName('head')[0].appendChild(script);
-    }(window));
-    setTimeout(() => resolve(void 0), 100); 
-  });
-}
-
-/**
  * Activate the FBL widget extension.
- * The extension is automatically loaded, which injects RequireJS into browser if it's not there already
- * The command `neu3d:open` then does the following:
- *     1. load your WidgetModule from your local http-server (hard-coded to be served on port 7999, can be 
- *          changed in the `npm:dev` script in `package.json`)
- *     2. in the callback for loading the WidgetModule, the usual launch sequence for JLab extension is initiated.
  */
 async function activateFBL(
   app: JupyterFrontEnd, 
@@ -323,46 +303,36 @@ async function activateFBL(
   window.app = app;
   window.fbltrackers = fblWidgetTrackers;
 
-  let Neu3DWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
-  let NeuGFXWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
-  let NeuAnyWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
+  // let Neu3DWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
+  // let NeuGFXWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
+  // let NeuAnyWidgetModule: Widget = undefined;  // widget constructor, loaded on first instantiation of neu3dwidget
   
   let masterWidget: Widget = undefined;
   let infoWidget: Widget = undefined;
-  await injectRequired();
-  await loadModule(MASTER_MODULE_URL).then((plugin)=>{
-    const MasterWidgetModule = plugin.MasterWidget;
-    masterWidget = new MasterWidgetModule(fblWidgetTrackers);
-    masterWidget.id = 'FBL-Master';
-    masterWidget.title.caption = 'FBL Widgets and Running Sessions';
-    masterWidget.title.icon = fblIcon;
-    // add to last
-    if (restorer) {
-      restorer.add(masterWidget, 'FBL-Master');
-    }
-    app.shell.add(masterWidget, 'left', {rank: 1000});
-    
-    window.master = masterWidget;
-  }).catch(error=>{
-    console.log('Master Widget Loading Failed, skipping injection', error);
-  });
 
-  // add info panel
-  await loadModule(INFO_MODULE_URL).then((plugin)=>{
-    const InfoWidgetModule = plugin.InfoWidget;
-    infoWidget = new InfoWidgetModule();
-    infoWidget.id = 'FBL-Info';
-    infoWidget.title.caption = 'Information about neurons and synapses';
-    infoWidget.title.icon = listingsInfoIcon;
-    // add to last
-    if (restorer) {
-      restorer.add(infoWidget, 'FBL-Info');
-    }
-    app.shell.add(infoWidget, 'left', {rank: 2000});
-    window.info = infoWidget;
-  }).catch(error=>{
-    console.log('Info Widget Loading Failed, skipping injection', error);
-  });
+  masterWidget = new MasterWidget(fblWidgetTrackers);
+  masterWidget.id = 'FBL-Master';
+  masterWidget.title.caption = 'FBL Widgets and Running Sessions';
+  masterWidget.title.icon = fblIcon;
+  // add to last
+  if (restorer) {
+    restorer.add(masterWidget, 'FBL-Master');
+  }
+  app.shell.add(masterWidget, 'left', {rank: 1000});
+  window.master = masterWidget;
+
+
+  infoWidget = new InfoWidget();
+  infoWidget.id = 'FBL-Info';
+  infoWidget.title.caption = 'Information about neurons and synapses';
+  infoWidget.title.icon = listingsInfoIcon;
+  // add to last
+  if (restorer) {
+    restorer.add(infoWidget, 'FBL-Info');
+  }
+  app.shell.add(infoWidget, 'left', {rank: 2000});
+  window.info = infoWidget;
+
 
   // Get the current widget and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyPartialJSONObject): MainAreaWidget<IFBLWidget> | null {
@@ -392,13 +362,9 @@ async function activateFBL(
     label: 'Create Neu3D Instance',
     icon: NEU3DICON,
     execute: async (args) => {
-      if (!Neu3DWidgetModule){
-        let plugin = await loadModule(NEU3D_MODULE_URL);
-        Neu3DWidgetModule = plugin.Neu3DWidget;  
-      }
       await FBL.createFBLWidget({
         app:app,
-        Module:<any>Neu3DWidgetModule,
+        Module:Neu3DWidget,
         icon:NEU3DICON,
         moduleArgs:args,
         tracker:neu3DTracker,
@@ -411,13 +377,9 @@ async function activateFBL(
     label: 'Open Neu3D Instance',
     icon: NEU3DICON,
     execute: async (args) => {
-      if (!Neu3DWidgetModule){
-        let plugin = await loadModule(NEU3D_MODULE_URL);
-        Neu3DWidgetModule = plugin.Neu3DWidget;  
-      }
       await FBL.createFBLWidget({
         app:app,
-        Module:<any>Neu3DWidgetModule,
+        Module:Neu3DWidget,
         icon:NEU3DICON,
         moduleArgs:args,
         tracker:neu3DTracker,
@@ -431,14 +393,10 @@ async function activateFBL(
     label: 'Create NeuGFX Instance',
     icon: NEUGFXICON,
     execute: async (args) => {
-      if (!NeuGFXWidgetModule){
-        let plugin = await loadModule(NEUGFX_MODULE_URL);
-        NeuGFXWidgetModule = plugin.NeuGFXWidget;
-      }
       await FBL.createFBLWidget(
         {
           app:app,
-          Module:<any>NeuGFXWidgetModule,
+          Module:NeuGFXWidget,
           icon:NEUGFXICON,
           moduleArgs:args,
           tracker:neuGFXTracker,
@@ -450,14 +408,10 @@ async function activateFBL(
     label: 'Create NeuAny Instance (Placeholder)',
     icon: NEUANYICON,
     execute: async (args) => {
-      if (!NeuAnyWidgetModule){
-        let plugin = await loadModule(NEUANY_MODULE_URL);
-        NeuAnyWidgetModule = plugin.NeuAnyWidget;
-      }
       await FBL.createFBLWidget(
         {
           app:app,
-          Module:<any>NeuGFXWidgetModule,
+          Module:NeuAnyWidget,
           icon:NEUGFXICON,
           moduleArgs:args,
           tracker:neuGFXTracker,
@@ -470,14 +424,10 @@ async function activateFBL(
     label: 'Open NeuAny Instance',
     icon: NEUANYICON,
     execute: async (args) => {
-      if (!NeuAnyWidgetModule){
-        let plugin = await loadModule(NEUANY_MODULE_URL);
-        NeuAnyWidgetModule = plugin.NeuAnyWidget;  
-      }
       await FBL.createFBLWidget(
         {
           app:app,
-          Module:<any>NeuAnyWidgetModule,
+          Module:NeuAnyWidget,
           icon:NEUANYICON,
           moduleArgs:args,
           tracker:neuAnyTracker,
@@ -560,17 +510,6 @@ async function activateFBL(
         return;
       }
 
-
-      if (!Neu3DWidgetModule){
-        let plugin = await loadModule(NEU3D_MODULE_URL);
-        Neu3DWidgetModule = plugin.Neu3DWidget;  
-      }
-
-      if (!NeuGFXWidgetModule){
-        let plugin = await loadModule(NEUGFX_MODULE_URL);
-        NeuGFXWidgetModule = plugin.NeuGFXWidget;  
-      }
-
       let notebook_panel = await app.commands.execute(
         'notebook:create-new',
         { kernelName: 'python3' }
@@ -579,7 +518,7 @@ async function activateFBL(
       let neu3d_panel = await FBL.createFBLWidget(
         {
           app: app,
-          Module:<any>Neu3DWidgetModule,
+          Module:Neu3DWidget,
           icon:NEU3DICON,
           moduleArgs: args,
           tracker: neu3DTracker,
@@ -592,7 +531,7 @@ async function activateFBL(
       await FBL.createFBLWidget(
         {
           app: app,
-          Module:<any>NeuGFXWidgetModule,
+          Module:NeuGFXWidget,
           icon:NEUGFXICON,
           moduleArgs: args,
           tracker: neuGFXTracker,

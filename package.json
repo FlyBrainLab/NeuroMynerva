@@ -8,9 +8,12 @@
       "dev": "lerna run --parallel dev",
       "clean": "lerna run --parallel clean",
       "clean:node_modules": "lerna run --parallel clean:node_modules && rimraf node_modules",
-      "link": "lerna exec jlpm link",
+      "link": "jlpm run link:setup && jlpm run link:template && jlpm run link:neu3d",
       "unlink": "lerna exec jlpm unlink",
-      "link:lab": "lerna exec --scope @flybrainlab/fbl-extension -- jupyter labextension link . "
+      "link:lab": "lerna exec --scope @flybrainlab/fbl-extension -- jupyter labextension link . ",
+      "link:setup": "lerna exec --scope @flybrainlab/*-widget --scope neu3d -- jlpm link",
+      "link:template": "lerna exec --scope @flybrainlab/neu*-widget jlpm link \"@flybrainlab/fbl-template-widget\" ",
+      "link:neu3d": "lerna exec --scope @flybrainlab/neu3d-widget jlpm link \"neu3d\" "
     },
     "devDependencies": {
       "lerna": "^3.19.0",

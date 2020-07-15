@@ -8,15 +8,17 @@ import { PathExt, Time } from '@jupyterlab/coreutils';
 import { Widget } from '@lumino/widgets';
 import {
   ISessionContext, SessionContext, 
-  sessionContextDialogs, showDialog, Dialog,
-  UseSignal, ReactWidget
+  sessionContextDialogs, showDialog
 } from '@jupyterlab/apputils';
 import { Signal, ISignal } from '@lumino/signaling';
-import { Toolbar, ToolbarButtonComponent } from '@jupyterlab/apputils';
+import { Toolbar } from '@jupyterlab/apputils';
 import { fblIcon } from './icons';
 import { LabIcon } from '@jupyterlab/ui-components';
 import '../style/index.css';
 import { FBLWidgetModel, IFBLWidgetModel } from './model';
+import { 
+  createSpeciesButton, createSessionDialogButton
+} from './session_dialog';
 
 export interface IFBLWidget extends Widget {
   /**
@@ -70,8 +72,6 @@ export interface IFBLWidget extends Widget {
   toolbar?: Toolbar<Widget>;
 }
 
-
-const TOOLBAR_SPECIES_CLASS = 'jp-FBL-Species';
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
 
 /**
@@ -520,8 +520,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * @param toolbar 
    */
   populateToolBar(): void {
-    this.toolbar.addItem('Species Changer', Private.createSpeciesButton(this));
+    
     this.toolbar.addItem('spacer', Toolbar.createSpacerItem());
+    this.toolbar.addItem('Species Changer', createSpeciesButton(this));
+    this.toolbar.addItem('Session Dialog', createSessionDialogButton(this));
     this.toolbar.addItem('restart', Toolbar.createRestartButton(this.sessionContext));
     this.toolbar.addItem('kernelName', Toolbar.createKernelNameItem(this.sessionContext));
     this.toolbar.addItem('kernelStatus', Toolbar.createKernelStatusItem(this.sessionContext));
@@ -559,7 +561,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   protected _speciesChanged = new Signal<this, string>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
-  protected comm: Kernel.IComm; // the actual comm object
+  comm: Kernel.IComm; // the actual comm object
   readonly name: string;
   protected _species: any;
   protected client_id: string;
@@ -671,94 +673,7 @@ namespace Private {
     }
   }
 
-  /**
-   * A widget that provides a species selection.
-   */
-  class SpeciesSelector extends Widget {
-    /**
-     * Create a new kernel selector widget.
-     */
-    constructor(widget: IFBLWidget) {
-      const species_list = [
-        'adult Drosophila melanogaster (FlyCircuit)',
-        'adult Drosophila melanogaster (Hemibrain)',
-        'larval Drosophila melanogaster',
-        'No Species'
-      ];
-
-      const body = document.createElement('div');
-      const text = document.createElement('label');
-      text.textContent = `Select species for: "${widget.id}"`;
-      body.appendChild(text);
-
-      const selector = document.createElement('select');
-      for (const species of species_list){
-        const option = document.createElement('option');
-        option.text = species;
-        option.value = species;
-        selector.appendChild(option);
-      }
-      body.appendChild(selector);
-      super({node: body});
-    }
-
-    /**
-     * Get the value of the kernel selector widget.
-     */
-    getValue(): string {
-      const selector = this.node.querySelector('select') as HTMLSelectElement;
-      return selector.value as string;
-    }
-  }
-
-
-  /**
-   * React component for a species name button.
-   * This wraps the ToolbarButtonComponent and watches the species 
-   * keyword
-   */
-  function SpeciesComponent(
-    props: { widget: IFBLWidget }
-  ) {
-    const { widget } = props;
-    const callback = () => showDialog({
-      title: 'Change Species',
-      body: new SpeciesSelector(widget),
-      buttons: [
-        Dialog.cancelButton(),
-        Dialog.warnButton({label: 'Change'})
-      ]
-    }).then(result =>{
-      if (result.button.accept){
-        widget.species = result.value;
-      }
-    });
-
-    const signal = widget.speciesChanged;
-    const species = widget.species;
-    return (
-      <UseSignal signal={signal} initialArgs={species}>
-        {(_, species) => (
-          <ToolbarButtonComponent
-            className={TOOLBAR_SPECIES_CLASS}
-            onClick={callback}
-            label={species}
-            tooltip={'Change Species'}
-          />
-        )}
-      </UseSignal>
-    );
-  }
-
-  export function createSpeciesButton(
-    widget: IFBLWidget
-  ): Widget {
-    const el = ReactWidget.create(
-      <SpeciesComponent widget={widget}/>
-    );
-    el.addClass(TOOLBAR_SPECIES_CLASS);
-    return el;
-  }
+  
 }
 
 namespace ANSI {

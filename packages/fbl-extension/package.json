@@ -31,7 +31,6 @@
     "@flybrainlab/neu3d-widget": "file:../neu3d-widget",
     "@flybrainlab/neuany-widget": "file:../neuany-widget",
     "@flybrainlab/neugfx-widget": "file:../neugfx-widget",
-    "@flybrainlab/master-widget": "file:../master-widget",
     "@flybrainlab/info-widget": "file:../info-widget"
   },
   "devDependencies": {
