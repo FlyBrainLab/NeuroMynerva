@@ -635,11 +635,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       'showAll', 
       Private.createButton(Icons.eyeIcon, "Show All", 'jp-Neu3D-Btn jp-SearBar-showAll', 
       () => { this.neu3d.showAll() }));
+    // this.toolbar.addItem(
+    //   'screenshot', 
+    //   Private.createButton(Icons.cameraIcon,"Download Screenshot", 'jp-Neu3D-Btn jp-SearBar-camera', 
+    //   () => { this.neu3d._take_screenshot = true;}));
     this.toolbar.addItem(
-      'screenshot', 
-      Private.createButton(Icons.cameraIcon,"Download Screenshot", 'jp-Neu3D-Btn jp-SearBar-camera', 
-      () => { this.neu3d._take_screenshot = true;}));
-      this.toolbar.addItem(
       'unpinAll', 
       Private.createButton(Icons.mapUpinIcon, "Unpin All", 'jp-Neu3D-Btn jp-SearBar-unpin', 
       () => { this.neu3d.unpinAll(); }));
