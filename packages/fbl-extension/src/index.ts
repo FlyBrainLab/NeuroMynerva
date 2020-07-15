@@ -42,9 +42,11 @@ import {
   Widget
  } from '@lumino/widgets';
 
+
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
 import { listingsInfoIcon } from '@jupyterlab/ui-components'
 import { MasterWidget } from './master';
+
 
 const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
 // const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
@@ -360,23 +362,7 @@ async function activateFBL(
   }
   app.shell.add(masterWidget, 'left', {rank: 1000});
   window.master = masterWidget;
-  // await loadModule(MASTER_MODULE_URL).then((plugin)=>{
-  //   const MasterWidgetModule = plugin.MasterWidget;
-  //   masterWidget = new MasterWidgetModule(fblWidgetTrackers);
-  //   masterWidget.id = 'FBL-Master';
-  //   masterWidget.title.caption = 'FBL Widgets and Running Sessions';
-  //   masterWidget.title.icon = fblIcon;
-  //   // add to last
-  //   if (restorer) {
-  //     restorer.add(masterWidget, 'FBL-Master');
-  //   }
-  //   app.shell.add(masterWidget, 'left', {rank: 1000});
-    
-  //   window.master = masterWidget;
-  // }).catch(error=>{
-  //   console.log('Master Widget Loading Failed, skipping injection', error);
-  // });
-
+  
   // add info panel
   await loadModule(INFO_MODULE_URL).then((plugin)=>{
     const InfoWidgetModule = plugin.InfoWidget;
@@ -488,9 +474,9 @@ async function activateFBL(
         {
           app:app,
           Module:<any>NeuAnyWidgetModule,
-          icon:NEUGFXICON,
+          icon:NEUANYICON,
           moduleArgs:args,
-          tracker:neuGFXTracker,
+          tracker:neuAnyTracker,
           species: args.species as string ?? 'No species'
         });
     }

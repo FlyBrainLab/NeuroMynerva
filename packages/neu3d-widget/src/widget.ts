@@ -84,10 +84,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         acceptBtn.innerText = "Yes"
         acceptBtn.className = "jp-Dialog-button jp-mod-accept jp-mod-styled";
         acceptBtn.onclick = ()=>{
-          if (options.model?.metadata){
+          if (!objEmpty(options.model?.metadata)){
             this.neu3d.import_settings(options.model.metadata)
           }
-          if (options.model?.states){
+          if (!objEmpty(options.model?.states)){
             this.neu3d.import_state(options.model.states);
           }
           this._blockingDiv.remove();

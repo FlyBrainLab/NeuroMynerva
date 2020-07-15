@@ -438,7 +438,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       import flybrainlab as fbl
       fbl.init()
     if '${this.client_id}' not in fbl.client_manager.clients:
-      _comm = fbl.MetaComm('${this.client_id}')
+      _comm = fbl.MetaComm('${this.client_id}', fbl)
       _client = fbl.Client(FFBOLabcomm = _comm)
       fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
     `;
@@ -487,7 +487,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
       });
     }
 
-    const code = this.initFBLCode();
+    
+    const code = this.initClientCode() + this.initFBLCode();
 
     kernel.requestExecute({ code: code }).done.then((reply) => {
       if (reply && reply.content.status === 'error'){
