@@ -35,11 +35,15 @@ body{
   color: #F37626;
 }
 
+.jsoneditor-search {
+    display: none !important;
+}
+
 .searchButton {
   position: absolute;  
   right: -50px;
   width: 40px;
-  height: 36px;
+  height: 32px;
   border: 1px solid #F37626;
   background: #F37626;
   text-align: center;
