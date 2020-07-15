@@ -1,5 +1,5 @@
 import { IFBLWidget, FBLWidget } from '@flybrainlab/fbl-template-widget';
-import { Neu3D } from 'neu3d';
+import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
