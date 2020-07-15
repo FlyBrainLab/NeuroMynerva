@@ -116,6 +116,7 @@ body{
     border:none;
     z-index: 9999;
     opacity: 0.5;   
+    display: none;
     margin: auto; 
 }
 

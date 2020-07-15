@@ -976,7 +976,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         }
       )
     );
-
+    /*
     toolbar.addItem(
       'workspace-save',
       this._createButton('fas fa-save', 'Save Workspace', 'jp-SearchBar-Settings',
@@ -990,7 +990,7 @@ export class FFBOLabWidget extends Widget implements IFFBOLabWidget{
         () => {this.node.appendChild(filefloat);}
       )
     );
-
+  */
     toolbar.addItem(
       'open-notebook',
       this._createButton('fas fa-book-open', 'Open Notebook', 'jp-SearchBar-Open-Notebook',
