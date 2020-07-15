@@ -15,7 +15,16 @@ interface IMeshDictItem {
   pinned?: boolean,
   filename?: string,  // specified if downloaded mesh
   filetype?: 'swc' | string,  // 'swc'
-  dataStr?: string // datastring of swcs
+  dataStr?: string, // datastring of swcs
+  sample?: Array<number>, // content of loading raw object
+  parent?: Array<number>, // content of loading raw object
+  identifier?: Array<number>, // content of loading raw object
+  x?: Array<number>, // content of loading raw object
+  y?: Array<number>, // content of loading raw object
+  z?: Array<number>, // content of loading raw object
+  r?: Array<number>,  // content of loading raw object
+  object?: any // THREEJS 3D Object
+  type?: 'morphology_json' | 'general_json' | string; // type, used to keep track of morphology json objects
 }
 
 /**
@@ -204,7 +213,27 @@ namespace Private {
         filetype: mesh['filetype'],
         dataStr: mesh['dataStr']
       }
-    } else {
+    } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })) { // raw data
+      return {
+        label: mesh['label'],
+        highlight: mesh['highlight'],
+        opacity: mesh['opacity'],
+        visibility: mesh['visibility'],
+        background: mesh['background'],
+        color: mesh['color'],
+        pinned: mesh['pinned'],
+        sample: mesh['sample'],
+        parent: mesh['parent'],
+        identifier: mesh['identifier'],
+        x: mesh['x'],
+        y: mesh['y'],
+        z: mesh['z'],
+        r: mesh['r'],
+        object: mesh.object ?? {},
+        type: 'morphology_json'
+      }
+    }
+    else {
       return {}; // neither mesh nor swc
     }
     

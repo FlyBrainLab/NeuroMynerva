@@ -84,11 +84,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         acceptBtn.innerText = "Yes"
         acceptBtn.className = "jp-Dialog-button jp-mod-accept jp-mod-styled";
         acceptBtn.onclick = ()=>{
-          if (!objEmpty(options.model?.metadata)){
-            this.neu3d.import_settings(options.model.metadata)
-          }
-          if (!objEmpty(options.model?.states)){
-            this.neu3d.import_state(options.model.states);
+          try {
+            if (!objEmpty(options.model?.metadata)) {
+              this.neu3d.import_settings(options.model.metadata)
+            }
+            if (!objEmpty(options.model?.states)) {
+              this.neu3d.import_state(options.model.states);
+            }
+          } catch (error) {
+            this.model.metadata = this.neu3d.export_settings();
+            this.model.states = this.neu3d.export_state();
+            console.error(`[Neu3D-Widget] Visualization Settings Restore Failed. Ignoring previous settings.`, error);
           }
           this._blockingDiv.remove();
         };
@@ -120,15 +126,34 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.model.statesChanged.connect(this.onStatesChanged, this);
   }
 
+  /**
+   * Render objects stored within model
+   * 
+   * Currently used for state restoration on reload
+   * Currently re-rendering the whole scene regardless
+   * 
+   * TODO: Handle incremental rendering for model change
+   * 
+   * @param change 
+   */
   renderModel(change?: any): void {
-    if (change) {
-      // TODO: Handle incremental rendering for model change
-      // currently re-rendering the whole scene regardless
-      this.neu3d.addJson({ ffbo_json: this.model.data });
-    } else {
-      // complete reset
-      this.neu3d.addJson({ ffbo_json: this.model.data });
+    for (const [key, value] of Object.entries(this.model.data)) {
+      let data: any = {};
+      data[key] = value;
+      if ('type' in (value as any)) {
+        this.neu3d.addJson({ ffbo_json: data, type: (value as any).type });
+      } else{
+        this.neu3d.addJson({ ffbo_json: data });
+      }
     }
+
+
+    // if (change) {
+    //   this.neu3d.addJson({ ffbo_json: this.model.data });
+    // } else {
+    //   // complete reset
+    //   this.neu3d.addJson({ ffbo_json: this.model.data });
+    // }
   }
 
   onDataChanged(change: any) {
@@ -208,8 +233,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
               let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
               this.neu3d.addJson(neu3Ddata);
             }
-          } else if (thisMsg.data.info) {
-          } else{
+          } else {
             // no-op
           }
           break;
