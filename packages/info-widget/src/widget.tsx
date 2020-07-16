@@ -10,20 +10,19 @@ import {
 
 import { 
   ReactWidget, 
-  UseSignal
-  // ToolbarButtonComponent,
+  UseSignal,
   // UseSignal,
   // Dialog, showDialog
  } from'@jupyterlab/apputils';
 
 
-// import { 
-//   LabIcon, closeIcon//, fileIcon 
-// } from '@jupyterlab/ui-components';
 import '../style/index.css';
 import { SummaryTable } from './summary_table';
 import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
+
+import { SessionDialogComponent } from '@flybrainlab/fbl-template-widget';
+
 
 const INFO_CLASS_JLab = 'jp-FBL-Info';
 
@@ -133,6 +132,24 @@ export class InfoWidget extends ReactWidget {
   protected render() {
     return (
       <div className={SECTION_CLASS}>
+      <div className={SECTION_HEADER_CLASS}>
+        <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            inWorkspace: this.inWorkspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => {
+            if (val.neu3d){
+              return <SessionDialogComponent widget={val.neu3d}></SessionDialogComponent>
+            } else {
+              return <></>
+            }
+          }}
+        </UseSignal>
+      </div>
       <header className={SECTION_HEADER_CLASS}>
         <h2>Summary</h2>
       </header>

@@ -26,6 +26,7 @@
     "dev": "tsc -w"
   },
   "dependencies": {
+    "@flybrainlab/fbl-template-widget": "file:../fbl-template-widget",
     "@jupyterlab/application": "^2.0.0",
     "@jupyterlab/launcher": "^2.1.1",
     "@jupyterlab/ui-components": "^2.1.1"
