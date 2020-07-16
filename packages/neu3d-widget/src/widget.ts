@@ -302,14 +302,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         neu3d: this
       });
 
-      this.workspaceChanged.connect(()=>{
-        console.log('workspace changed', thisMsg);
-        this.info?.dataChanged.emit({
-          data: thisMsg.data.data.data,
-          inWorkspace: this.isInWorkspace,
-          neu3d: this
-        });
-      }, this);
+      // this.workspaceChanged.connect(()=>{
+      //   console.log('workspace changed', thisMsg);
+      //   this.info?.dataChanged.emit({
+      //     data: thisMsg.data.data.data,
+      //     inWorkspace: this.isInWorkspace,
+      //     neu3d: this
+      //   });
+      // }, this);
     }
   }
 
@@ -677,7 +677,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.toolbar.addItem(
       'upload', 
       Private.createButton(Icons.uploadIcon, "Upload SWC File", 'jp-Neu3D-Btn jp-SearBar-upload', 
-        () => { document.getElementById('neu3d-file-upload').click(); }));
+        () => { this.neu3d.fileUploadInput.click();}));
     this.toolbar.addItem(
       'reset', 
       Private.createButton(Icons.syncIcon, "Reset View", 'jp-Neu3D-Btn jp-SearBar-reset', 
