@@ -58,11 +58,43 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
     this.addClass(Neu3D_CLASS_JLab);
     
-    this._neu3dContainer = document.createElement('div')
-    this._neu3dContainer.style.height = '100%';
+    this._neu3dContainer = document.createElement('div');
+    this._neu3dContainer.style.height = 'calc(100% - 40px)';
     this._neu3dContainer.style.width = '100%';
     this.node.appendChild(this._neu3dContainer);
+    this._neu3dSearchbar = document.createElement('div');
+    this._neu3dSearchbar.classList.add("navbar");
+    this._neu3dSearchbar.style.height = '40px';
+    this._neu3dSearchbar.style.background = '#333333';
+    this.node.appendChild(this._neu3dSearchbar);
+    var searchWrapper = document.createElement('div');
+    searchWrapper.classList.add("neu3dSearchWrapper");
+    var searchInput = document.createElement('input');
+    searchInput.classList.add("neu3dSearchInput");
+    searchInput.type = "text";
+    searchInput.placeholder = "Write Query (Example: show neurons in ellipsoid body)";
+    var searchButton = document.createElement('button');
+    searchButton.classList.add("neu3dSearchButton");
+    searchButton.type = "submit";
+    var searchButtonIcon = document.createElement('i');
+    searchButtonIcon.classList.add("fa");
+    searchButtonIcon.classList.add("fa-search");
+    searchButton.appendChild(searchButtonIcon);
+    searchWrapper.appendChild(searchInput);
+    searchWrapper.appendChild(searchButton);
+    this._neu3dSearchbar.appendChild(searchWrapper);
     window.neu3d_widget = this;
+    var _this = this;
+    searchButton.onclick = function () {
+      _this.executeNLPquery(searchInput.value);
+      searchInput.value = "";
+    }
+    searchInput.addEventListener('keyup', ({key}) => {
+      if (key === "Enter") {
+        _this.executeNLPquery(searchInput.value);
+        searchInput.value = "";
+      }
+    });
 
     
     if (options.model?.metadata || options.model?.states) {
@@ -308,6 +340,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
 
 
+  /** 
+   * Fires an NLP query
+   */
+  NLPquerySender(): string {
+    let code = `
+    fbl.client_manager.clients['${this.client_id}']['client'].executeNLPquery(res)
+    `;
+
+    return code;
+  }
+
   /**
    * Method passed to info panel to ensure stateful data
    * 
@@ -321,7 +364,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   /** 
    * Add an object into the workspace.
    *
-   * @param uname -  uname of target object (neuron/synapse)
    * @param uname -  uname of target object (neuron/synapse)
    */
   async addByUname(uname: string): Promise<any> {
@@ -339,6 +381,23 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return result;
   }
 
+    /** 
+   * Send an NLP query.
+   *
+   * @param query -  query to send(text)
+   */
+  async executeNLPquery(query: string): Promise<any> {
+    let code = `
+    res = '${query}'
+
+    `;
+
+    code = code + this.NLPquerySender();
+
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.log('NLPquery', result);
+    return result;
+  }
 
   /**
    * Remove an object into the workspace.
@@ -659,6 +718,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   readonly _hemibrainMesh: Object; // caching for dynamically import mesh
   private _neu3DReady = new PromiseDelegate<void>();
   private _neu3dContainer: HTMLDivElement;
+  private _neu3dSearchbar: HTMLDivElement;
   private _blockingDiv: HTMLDivElement;
   private _workspaceChanged = new Signal<this, any>(this);
   model: Neu3DModel;
