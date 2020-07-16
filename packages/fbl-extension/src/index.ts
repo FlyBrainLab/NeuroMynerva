@@ -794,7 +794,16 @@ export namespace FBL {
       app, Module, icon, moduleArgs, tracker, species, info, add_widget_options
     } = options;
 
+
     let sessionContext = options.sessionContext || tracker.currentWidget?.content?.sessionContext;
+
+    if (sessionContext === undefined){
+      moduleArgs['kernelPreference'] = {
+        shouldStart: false,
+        canStart: true,
+        name: 'No Kernel'
+      }
+    }
 
     if (info) {
       widget = new Module({
