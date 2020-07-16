@@ -1002,9 +1002,9 @@ div.jsoneditor-menu {
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  color: white;
-  background-color: #3883fa;
-  border-bottom: 1px solid #3883fa;
+  color: rgb(243, 118, 38);
+  background-color: rgb(243, 118, 38);
+  border-top: 1px solid #F37626;
 }
 
 div.jsoneditor-menu > button,
