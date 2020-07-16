@@ -27,6 +27,7 @@
     "dev": "concurrently \"http-server -p 7995\" \"npm:watch\""
   },
   "dependencies": {
+    "@flybrainlab/fbl-template-widget": "file:../fbl-template-widget",
     "@fortawesome/fontawesome-free": "^5.13.0",
     "@jupyterlab/application": "^2.0.0",
     "@jupyterlab/running": "^2.1.1",
