@@ -70,6 +70,9 @@ export interface IFBLWidget extends Widget {
    *   MainAreaWidget class directly
    */
   toolbar?: Toolbar<Widget>;
+
+
+  clientId?: string;
 }
 
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
@@ -88,6 +91,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       species,
       sessionContext,
       icon,
+      clientId
     } = options;
 
     
@@ -112,7 +116,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this.id = id;
 
     // client id for backend
-    this.client_id = `client-${this.id}`;
+    this.clientId = clientId || `client-${this.id}`;
 
     // specify path
     const path = options.path ?? `${basePath || ''}/${this.id}`;
@@ -338,10 +342,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     const code_to_send =`
     try:
       del fbl.widget_manager.widgets['${this.id}']
-      if len(fbl.client_manager.clients['${this.client_id}']>1):
-          fbl.client_manager.clients['${this.client_id}']['widgets'].remove('${this.id}')
+      if len(fbl.client_manager.clients['${this.clientId}']>1):
+          fbl.client_manager.clients['${this.clientId}']['widgets'].remove('${this.id}')
       else:
-          del fbl.client_manager.clients['${this.client_id}']
+          del fbl.client_manager.clients['${this.clientId}']
     except:
         pass
     `;
@@ -430,7 +434,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
-    fbl.widget_manager.add_widget('${this.id}', '${this.client_id}', '${this.constructor.name}', '${this._commTarget}')
+    fbl.widget_manager.add_widget('${this.id}', '${this.clientId}', '${this.constructor.name}', '${this._commTarget}')
     `;
   }
 
@@ -442,10 +446,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
-    if '${this.client_id}' not in fbl.client_manager.clients:
-        _comm = fbl.MetaComm('${this.client_id}', fbl)
+    if '${this.clientId}' not in fbl.client_manager.clients:
+        _comm = fbl.MetaComm('${this.clientId}', fbl)
         _client = fbl.Client(FFBOLabcomm = _comm)
-        fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
+        fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
     `;
   }
 
@@ -454,10 +458,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
-    if '${this.client_id}' not in fbl.client_manager.clients or True: # Fix the situations in which a client is to be generated
-        _comm = fbl.MetaComm('${this.client_id}', fbl)
+    if '${this.clientId}' not in fbl.client_manager.clients or True: # Fix the situations in which a client is to be generated
+        _comm = fbl.MetaComm('${this.clientId}', fbl)
         _client = fbl.Client(FFBOLabcomm = _comm ${clientargs})
-        fbl.client_manager.add_client('${this.client_id}', _client, client_widgets=['${this.id}'])
+        fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
     `;
   }
 
@@ -578,7 +582,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   comm: Kernel.IComm; // the actual comm object
   readonly name: string;
   protected _species: any;
-  protected client_id: string;
+  clientId: string;
   innerContainer: HTMLDivElement;
   sessionContext: ISessionContext;
   model: FBLWidgetModel;
@@ -645,6 +649,12 @@ export namespace FBLWidget {
      * Optionally Specify Widget Id 
      */
     id?: string
+
+
+    /** 
+     * Id
+    */
+    clientId?: string
   }
 
 }

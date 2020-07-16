@@ -72,7 +72,8 @@ declare global {
 }
 
 export type FBLPanel = MainAreaWidget<IFBLWidget>;
-export type FBLTracker = IWidgetTracker<FBLPanel>;
+export type IFBLTracker = IWidgetTracker<FBLPanel>;
+export type FBLTracker = WidgetTracker<FBLPanel>;
 
 export interface IFBLWidgetTrackers {
   add(name: string, tracker: FBLTracker): void;
@@ -203,6 +204,9 @@ export interface IFBLWidget extends Widget {
    *   MainAreaWidget class directly
    */
   toolbar?: Toolbar<Widget>;
+
+
+  clientId?: string;
 }
 
 
@@ -293,16 +297,13 @@ async function activateFBL(
   restorer: ILayoutRestorer
 ): Promise<IFBLWidgetTrackers> {
   console.log("FBL Extension Activated");
-  const neu3DTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'});
-  const neuGFXTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'});
-  const neuAnyTracker = new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neuany'});
   const fblWidgetTrackers = new FBLWidgetTrackers({
-    "Neu3D": neu3DTracker,
-    "NeuGFX": neuGFXTracker,
-    "NeuAny": neuAnyTracker,
+    "Neu3D": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'}),
+    "NeuGFX": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'}),
+    "NeuAny": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neuany'}),
   })
   // Handle state restoration.
-  restorer.restore(neu3DTracker, {
+  restorer.restore(fblWidgetTrackers.trackers.Neu3D, {
     command: CommandIDs.Neu3DOpen,
     args: widget => {
       const { path, name } = widget.content.sessionContext;
@@ -312,6 +313,7 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
+        clientId: widget.content.clientId,
         id: widget.content.id,
         species: widget.content.species,
         path: path,
@@ -322,7 +324,29 @@ async function activateFBL(
     when: app.serviceManager.ready
   });
 
-  restorer.restore(neuAnyTracker, {
+
+  restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
+    command: CommandIDs.NeuGFXOpen,
+    args: widget => {
+      const { path, name } = widget.content.sessionContext;
+      return {
+        model: {
+          data: widget.content.model?.data,
+          metadata: widget.content.model?.metadata,
+          states: widget.content.model?.states
+        },
+        clientId: widget.content.clientId,
+        id: widget.content.id,
+        species: widget.content.species,
+        path: path,
+        name: name
+      };
+    },
+    name: widget => widget.content.sessionContext.name,
+    when: app.serviceManager.ready
+  });
+
+  restorer.restore(fblWidgetTrackers.trackers.NeuAny, {
     command: CommandIDs.NeuAnyOpen,
     args: widget => {
       const { path, name } = widget.content.sessionContext;
@@ -332,6 +356,7 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
+        clientId: widget.content.clientId,
         id: widget.content.id,
         species: widget.content.species,
         path: path,
@@ -385,13 +410,13 @@ async function activateFBL(
     let widget = undefined;
     switch (args['widget']) {
       case 'neu3d':
-        widget = neu3DTracker.currentWidget;
+        widget = fblWidgetTrackers.trackers.Neu3D.currentWidget;
         break;
       case 'neugfx':
-        widget = neuGFXTracker.currentWidget;
+        widget = fblWidgetTrackers.trackers.NeuGFX.currentWidget;
         break;
       case 'neuany':
-        widget = neuAnyTracker.currentWidget;
+        widget = fblWidgetTrackers.trackers.NeuAny.currentWidget;
         break;
       default: // not understood
         console.warn(`Cannot getCurrent widget of type ${args['widget']}.`)
@@ -417,7 +442,7 @@ async function activateFBL(
         Module:<any>Neu3DWidgetModule,
         icon:NEU3DICON,
         moduleArgs:args,
-        tracker:neu3DTracker,
+        tracker:fblWidgetTrackers.trackers.Neu3D,
         info:infoWidget,
         species: args.species as string ?? 'No species'
       });
@@ -436,7 +461,7 @@ async function activateFBL(
         Module:<any>Neu3DWidgetModule,
         icon:NEU3DICON,
         moduleArgs:args,
-        tracker:neu3DTracker,
+        tracker:fblWidgetTrackers.trackers.Neu3D,
         info:infoWidget,
         species: args.species as string ?? 'No species'
       });
@@ -457,7 +482,7 @@ async function activateFBL(
           Module:<any>NeuGFXWidgetModule,
           icon:NEUGFXICON,
           moduleArgs:args,
-          tracker:neuGFXTracker,
+          tracker:fblWidgetTrackers.trackers.NeuGFX,
           species: args.species as string ?? 'No species'
         });
     }
@@ -476,7 +501,7 @@ async function activateFBL(
           Module:<any>NeuAnyWidgetModule,
           icon:NEUANYICON,
           moduleArgs:args,
-          tracker:neuAnyTracker,
+          tracker:fblWidgetTrackers.trackers.NeuAny,
           species: args.species as string ?? 'No species'
         });
     }
@@ -496,7 +521,7 @@ async function activateFBL(
           Module:<any>NeuAnyWidgetModule,
           icon:NEUANYICON,
           moduleArgs:args,
-          tracker:neuAnyTracker,
+          tracker:fblWidgetTrackers.trackers.NeuAny,
           species: args.species as string ?? 'No species'
         });
     }
@@ -587,31 +612,34 @@ async function activateFBL(
         NeuGFXWidgetModule = plugin.NeuGFXWidget;  
       }
 
+      // 1. create notebook
       let notebook_panel = await app.commands.execute(
         'notebook:create-new',
         { kernelName: 'python3' }
       )
 
+      // 2. create neu3d
       let neu3d_panel = await FBL.createFBLWidget(
         {
           app: app,
           Module:<any>Neu3DWidgetModule,
           icon:NEU3DICON,
           moduleArgs: args,
-          tracker: neu3DTracker,
+          tracker: fblWidgetTrackers.trackers.Neu3D,
           species: species,
           info: infoWidget,
           sessionContext: notebook_panel.sessionContext,
           add_widget_options:{ref: notebook_panel.id, mode: 'split-left'}
         });
       
+      // 2. create neugfx with the same client id
       await FBL.createFBLWidget(
         {
           app: app,
           Module:<any>NeuGFXWidgetModule,
           icon:NEUGFXICON,
-          moduleArgs: args,
-          tracker: neuGFXTracker,
+          moduleArgs: {clientId: neu3d_panel.content.clientId, ...args},
+          tracker: fblWidgetTrackers.trackers.NeuGFX,
           species: species,
           sessionContext: notebook_panel.sessionContext,
           add_widget_options:{ref: neu3d_panel.id, mode: 'split-bottom'}
