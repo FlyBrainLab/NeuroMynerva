@@ -96,7 +96,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       }
     });
 
-    
     if (options.model?.metadata || options.model?.states) {
       this.neu3DReady.then(()=>{
         this._blockingDiv = document.createElement('div');
@@ -371,7 +370,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     res = {}
     res['verb'] = 'add'
     res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
-                    "'object': {'class': ['Neuron', 'Synapse']}}]
+                    'object': {'class': ['Neuron', 'Synapse']}}]
     `;
 
     code = code + this.querySender();
