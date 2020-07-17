@@ -46,9 +46,9 @@ import {
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
 import { listingsInfoIcon } from '@jupyterlab/ui-components'
 import { MasterWidget } from './master';
+import { InfoWidget } from './info/widget';
 
-
-const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
+// const INFO_MODULE_URL = "http://localhost:7995/build/bundle.js";
 // const MASTER_MODULE_URL = "http://localhost:7996/build/bundle.js";
 const NEUGFX_MODULE_URL = "http://localhost:7997/build/bundle.js";
 const NEU3D_MODULE_URL = "http://localhost:7998/build/bundle.js";
@@ -389,21 +389,16 @@ async function activateFBL(
   window.master = masterWidget;
   
   // add info panel
-  await loadModule(INFO_MODULE_URL).then((plugin)=>{
-    const InfoWidgetModule = plugin.InfoWidget;
-    infoWidget = new InfoWidgetModule();
-    infoWidget.id = 'FBL-Info';
-    infoWidget.title.caption = 'Information about neurons and synapses';
-    infoWidget.title.icon = listingsInfoIcon;
-    // add to last
-    if (restorer) {
-      restorer.add(infoWidget, 'FBL-Info');
-    }
-    app.shell.add(infoWidget, 'left', {rank: 2000});
-    window.info = infoWidget;
-  }).catch(error=>{
-    console.log('Info Widget Loading Failed, skipping injection', error);
-  });
+  infoWidget = new InfoWidget();
+  infoWidget.id = 'FBL-Info';
+  infoWidget.title.caption = 'Information about neurons and synapses';
+  infoWidget.title.icon = listingsInfoIcon;
+  // add to last
+  if (restorer) {
+    restorer.add(infoWidget, 'FBL-Info');
+  }
+  app.shell.add(infoWidget, 'left', {rank: 2000});
+  window.info = infoWidget;
 
   // Get the current widget and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyPartialJSONObject): MainAreaWidget<IFBLWidget> | null {

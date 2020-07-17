@@ -11,18 +11,13 @@ import {
 import { 
   ReactWidget, 
   UseSignal,
-  // UseSignal,
-  // Dialog, showDialog
  } from'@jupyterlab/apputils';
 
 
-import '../style/index.css';
+import '../../style/index.css';
 import { SummaryTable } from './summary_table';
 import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
-
-import { SessionDialogComponent } from '@flybrainlab/fbl-template-widget';
-
 
 const INFO_CLASS_JLab = 'jp-FBL-Info';
 
@@ -121,31 +116,51 @@ export class InfoWidget extends ReactWidget {
 
   onAfterAttach(msg: any){
     super.onAfterAttach(msg);
-    this.tabConnPre = new ConnTable({
-      container: '#info-connTable-pre',
-      data: this.data.connectivity.pre.details,
-      neu3d: this.neu3d
-    });
-    this.tabConnPost = new ConnTable({
-      container: '#info-connTable-post',
-      data: this.data.connectivity.post.details,
-      neu3d: this.neu3d
-    })
+    let preDiv = document.getElementById("info-connTable-pre");
+    let postDiv = document.getElementById("info-connTable-post");
+
+    if (preDiv){
+      this.tabConnPre = new ConnTable({
+        container: preDiv,
+        data: this.data.connectivity.pre.details,
+        neu3d: this.neu3d
+      });
+    }
+
+    if (postDiv) {
+      this.tabConnPost = new ConnTable({
+        container: postDiv,
+        data: this.data.connectivity.post.details,
+        neu3d: this.neu3d
+      })
+    }
     
-    console.log(this.tabConnPre);
-    console.log(this.tabConnPost);
+    console.log(preDiv, this.tabConnPre);
+    console.log(postDiv, this.tabConnPost);
 
     this.dataChanged.connect((sender, {data, inWorkspace, neu3d})=> 
     {
-      let preData = this.parseConnData(data.connectivity.pre || empty_data.connectivity.pre.details, neu3d);
-      let postData = this.parseConnData(data.connectivity.post || empty_data.connectivity.post.details, neu3d);
+      let preData = this.parseConnData(data.connectivity?.pre || empty_data.connectivity.pre.details, neu3d);
+      let postData = this.parseConnData(data.connectivity?.post || empty_data.connectivity.post.details, neu3d);
       this.tabConnPre.neu3d = neu3d;
       this.tabConnPost.neu3d = neu3d;
       this.tabConnPre.data = preData;
       this.tabConnPost.data = postData;
       this.tabConnPre.tabulator.setData(preData);
       this.tabConnPost.tabulator.setData(postData);
+      console.log(preData);
+      console.log(postData)
+      if (this.tabConnPre.hasSynMorph(preData)){
+        this.tabConnPre.addSynColumn();
+      } else {
+        this.tabConnPre.removeSynColumn();
+      }
 
+      if (this.tabConnPost.hasSynMorph(postData)){
+        this.tabConnPost.addSynColumn();
+      } else {
+        this.tabConnPost.removeSynColumn();
+      }
     }, this);
 
   }
@@ -164,6 +179,7 @@ export class InfoWidget extends ReactWidget {
         rid: item["rid"],
         syn_uname: item.syn_uname,
         s_rid: item.s_rid,
+        syn_rid: item.syn_rid,
         has_syn_morph: item["has_syn_morph"],
         has_morph: item["has_morph"]
       };
@@ -187,7 +203,7 @@ export class InfoWidget extends ReactWidget {
   protected render() {
     return (
       <div className={SECTION_CLASS}>
-      <div className={SECTION_HEADER_CLASS}>
+      {/* <div className={SECTION_HEADER_CLASS}>
         <UseSignal
           signal={this.dataChanged}
           initialArgs={{
@@ -204,7 +220,7 @@ export class InfoWidget extends ReactWidget {
             }
           }}
         </UseSignal>
-      </div>
+      </div> */}
       <header className={SECTION_HEADER_CLASS}>
         <h2>Summary</h2>
       </header>
@@ -246,9 +262,9 @@ export class InfoWidget extends ReactWidget {
                     />
             } else{
               return <ConnSVG
-                      pre={empty_data.connectivity.pre.summary}
-                      post={empty_data.connectivity.post.summary}
-                    />
+                pre={empty_data.connectivity.pre.summary}
+                post={empty_data.connectivity.post.summary}
+              />
             }
           }}
         </UseSignal>
@@ -339,8 +355,8 @@ export class InfoWidget extends ReactWidget {
 
   // dataConnPre: any;
   // dataConnPost: any;
-  tabConnPre: any;
-  tabConnPost: any;
+  tabConnPre: ConnTable;
+  tabConnPost: ConnTable;
   data: IInfoData; // data to be displayed
   neu3d: any;  // caller neu3d widget
   dataChanged = new Signal< this, { data: any; inWorkspace: any; neu3d: any }>(this);

@@ -1,5 +1,5 @@
 import * as React from "react";
-import '../style/summary.css';
+import '../../style/summary.css';
 
 const displayData: string[] = [
   "name",
@@ -69,7 +69,9 @@ function reformatField(id: string, value: any) {
 
 function onAddRemoveClick(rid:string, uname: string, neu3d: any) {
   let button = document.getElementById("info-summarytable-addremove-neuron");
+  console.log(rid, uname, neu3d)
   if (neu3d.isInWorkspace(rid)) {
+    button.style.display = 'inline-block';
     neu3d.removeByUname(uname).then(()=>{
       if (neu3d.isInWorkspace(rid)) {
         button.innerHTML = '-';
@@ -77,7 +79,8 @@ function onAddRemoveClick(rid:string, uname: string, neu3d: any) {
         button.innerHTML = '+';
       }
     })
-  } else {
+  } else if (!neu3d.isInWorkspace(rid)) {
+    button.style.display = 'inline-block';
     neu3d.addByUname(uname).then(()=>{
       if (neu3d.isInWorkspace(rid)) {
         button.innerHTML = '-';
@@ -85,6 +88,8 @@ function onAddRemoveClick(rid:string, uname: string, neu3d: any) {
         button.innerHTML = '+';
       }
     })
+  } else {
+    button.style.display = 'none';
   }
 }
 
@@ -124,7 +129,7 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
         </tr>
       );
     } else if (key === "flycircuit_data") {
-      for (let [key2, val2] of Object.entries(val as object)) {
+      for (let [key2, val2] of Object.entries(val)) {
         if (flyCircuitData.indexOf(key2) > -1) {
           flycircuit.push(
             <tr key={key2}>
@@ -155,11 +160,16 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
   } else {
     return (
       <>
+      <div 
+        className={"table-grid lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+        data-mime-type={"text/markdown"}
+        >
         <table className={"summary-table"}>
           <tbody>
             <div className={"summary-table table-grid"}>No summary information available</div>
           </tbody>
         </table>
+      </div>
       </>
     );
   }

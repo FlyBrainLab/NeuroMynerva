@@ -26,17 +26,23 @@
     "dev": "tsc -w"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.14.0",
     "@jupyterlab/application": "^2.0.0",
     "@jupyterlab/launcher": "^2.1.1",
-    "@jupyterlab/ui-components": "^2.1.1"
+    "@jupyterlab/ui-components": "^2.1.1",
+    "@types/recharts": "^1.8.14",
+    "recharts": "^1.8.5",
+    "tabulator-tables": "^4.7.2"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
+    "css-loader": "^3.5.3",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-prettier": "^3.1.2",
     "prettier": "1.16.4",
+    "raw-loader": "^4.0.1",
     "rimraf": "^3.0.2",
     "typescript": "~3.7.0"
   },
