@@ -34,6 +34,38 @@ const morphData: string[] = [
   "averageDiameter"
 ];
 
+/**
+ * Reformat Field
+ */
+function reformatField(id: string, value: any) {
+  if (typeof(value) === 'string') {
+    return value as string;
+  } else if (Array.isArray(value)) {
+    let items: any = [];
+    value.forEach((v, idx)=>{
+      items.push(<option key={idx} value={v as string}>{v as string}</option>);
+    });
+    return (
+      <select id={id}>
+        {items}
+      </select>
+    )
+  } else if (typeof(value) === 'object') {
+    // let keys = Object.keys(value);
+    let items: any = [];
+    for (const [key, val] of Object.entries(value)) {
+      items.push(<option key={key} value={val as string}>{key as string}: {val as string}</option>);
+    }
+    return (
+      <select id={id}>
+        {items}
+      </select>
+    )
+  } else {
+    return '';
+  }
+}
+
 export function SummaryTable(props: { data: any }) {
   const rawData = props.data;
   let display = [];
@@ -44,34 +76,34 @@ export function SummaryTable(props: { data: any }) {
     if (displayData.indexOf(key) > -1) {
       if (key.toLowerCase() === "name") {
         display.unshift(
-          <div key={key}>
-            <p>{jsUcfirst(key)}</p>
-            <p>{val as string}</p>
-          </div>
+          <tr key={key}>
+            <td>{jsUcfirst(key)}</td>
+            <td>{reformatField(key, val)}</td>
+          </tr>
         );
       } else {
         display.push(
-          <div key={key}>
-            <p>{jsUcfirst(key)}</p>
-            <p>{val as string}</p>
-          </div>
+          <tr key={key}>
+            <td>{jsUcfirst(key)}</td>
+            <td>{reformatField(key, val)}</td>
+          </tr>
         );
       }
     } else if (morphData.indexOf(key) > -1) {
       morph.push(
-        <div key={key}>
-          <p>{jsUcfirst(key)}</p>
-          <p>{val as string}</p>
-        </div>
+        <tr key={key}>
+          <td>{jsUcfirst(key)}</td>
+          <td>{reformatField(key, val)}</td>
+        </tr>
       );
     } else if (key === "flycircuit_data") {
       for (let [key2, val2] of Object.entries(val as object)) {
         if (flyCircuitData.indexOf(key2) > -1) {
           flycircuit.push(
-            <div key={key2}>
-              <p>{jsUcfirst(key2)}</p>
-              <p>{val2}</p>
-            </div>
+            <tr key={key2}>
+              <td>{jsUcfirst(key2)}</td>
+              <td>{reformatField(key2, val2)}</td>
+            </tr>
           );
         }
       }
@@ -81,15 +113,26 @@ export function SummaryTable(props: { data: any }) {
   if (display.length > 0) {
     return (
       <>
-        <div className={"table-grid"}>
-          {display.concat(flycircuit).concat(morph)}
+        <div 
+        className={"table-grid lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+        data-mime-type={"text/markdown"}
+        >
+          <table className={"summary-table"}>
+            <tbody>
+              {display.concat(flycircuit).concat(morph)}
+            </tbody>
+          </table>
         </div>
       </>
     );
   } else {
     return (
       <>
-        <div className={"table-grid"}>No summary information available</div>
+        <table className={"summary-table"}>
+          <tbody>
+            <div className={"summary-table table-grid"}>No summary information available</div>
+          </tbody>
+        </table>
       </>
     );
   }

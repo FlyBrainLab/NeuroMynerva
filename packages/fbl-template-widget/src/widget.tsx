@@ -538,7 +538,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * @param toolbar 
    */
   populateToolBar(): void {
-    
     this.toolbar.addItem('spacer', Toolbar.createSpacerItem());
     this.toolbar.addItem('Species Changer', createSpeciesButton(this));
     this.toolbar.addItem('Session Dialog', createSessionDialogButton(this));

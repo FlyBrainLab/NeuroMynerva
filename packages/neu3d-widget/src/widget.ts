@@ -376,25 +376,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     code = code + this.querySender();
 
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('addByUname', result);
-    return result;
-  }
-
-    /** 
-   * Send an NLP query.
-   *
-   * @param query -  query to send(text)
-   */
-  async executeNLPquery(query: string): Promise<any> {
-    let code = `
-    res = '${query}'
-
-    `;
-
-    code = code + this.NLPquerySender();
-
-    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('NLPquery', result);
+    console.log('addByUname', uname, result);
     return result;
   }
 
@@ -414,7 +396,66 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     code = code + this.querySender();
 
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('removeByUname', result);
+    console.log('removeByUname', uname, result);
+    return result;
+  }
+
+  /** 
+   * Add an object into the workspace.
+   *
+   * @param rid -  rid of target object (neuron/synapse)
+   */
+  async addByRid(rid: string): Promise<any> {
+    let code = `
+    res = {}
+    res['verb'] = 'add'
+    res['query']= [{'action': {'method': {'query': {'rid': '${rid}'}}},
+                    'object': {'rid': '${rid}'}}]
+    `;
+
+    code = code + this.querySender();
+
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.log('addByRid', rid, result);
+    return result;
+  }
+
+
+  /** 
+   * Remove an object from the workspace.
+   *
+   * @param rid -  rid of target object (neuron/synapse)
+   */
+  async removeByRid(rid: string): Promise<any> {
+    let code = `
+    res = {}
+    res['verb'] = 'remove'
+    res['query']= [{'action': {'method': {'query': {'rid': '${rid}'}}},
+                    'object': {'rid': '${rid}'}}]
+    `;
+
+    code = code + this.querySender();
+
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.log('removeByRid', rid, result);
+    return result;
+  }
+
+  /** 
+   * Send an NLP query.
+   *
+   * @param query -  query to send(text)
+   */
+  async executeNLPquery(query: string): Promise<any> {
+    let code = `
+    res = '${query}'
+
+    `;
+
+    code = code + this.NLPquerySender();
+
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.log('NLPquery', result);
     return result;
   }
 

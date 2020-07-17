@@ -1,49 +1,90 @@
-import * as React from "react";
 import "@fortawesome/fontawesome-free/js/all.js";
-import { ReactTabulator } from "react-tabulator";
+// import { ReactTabulator } from "react-tabulator";
+import Tabulator from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css"; //import Tabulator stylesheet
 
-export class ConnTable extends React.Component<{
-  data: any;
-  inWorkspace: (rid: string) => boolean;
-  addByUname: (uname: string) => void;
-  removeByUname: (uname: string) => void;
-}> {
-  parseData(connData: any) {
-    let new_data = [];
-    for (let item of connData["details"]) {
-      let neuron_data = {
-        name: item["name"] ?? item['name'] ?? item['rid'],
-        uname: item["uname"] ?? item["name"] ?? item['rid'],
-        number: item["number"],
-        rid: item["rid"],
-        has_syn_morph: item["has_syn_morph"],
-        has_morph: item["has_morph"]
-      };
+export class ConnTable {
+  constructor(props: {
+    container: any;
+    data: any;
+    neu3d: any;
+  }) {
+    this.data = props.data;
+    this.neu3d = props.neu3d;
+    //instantiate Tabulator when element is mounted
+    this.tabulator = new Tabulator(props.container, {
+      data: this.data, //link data to table
+      columns: this.columns, //define table columns
+      tooltips: true,
+      pagination: "local",
+      paginationSize: 6,
+      page: 3,
+      initialSort: [{ column: "number", dir: "desc" }],
+      layout: "fitColumns"
+    });
 
-      new_data.push(neuron_data);
+    if (!this.hasSynMorph(this.data)) {
+      this.tabulator.deleteColumn("has_syn_morph");
     }
-    return new_data;
   }
 
-  public render() {
-    return (
-      <>
-        <ReactTabulator
-          options={{
-            pagination: "local",
-            paginationSize: 6,
-            page: 3,
-            initialSort: [{ column: "number", dir: "desc" }]
-          }}
-          data={this.parseData(this.props.data)}
-          columns={this.columns}
-          tooltips={true}
-          layout={"fitColumns"}
-        />
-      </>
-    );
+  hasSynMorph(connData: Array<any>) {
+    for (let entry of connData) {
+      if (entry.has_syn_morph) {
+        return true
+      }
+    }
+    return false;
   }
+
+  removeSynColumn(){
+    if (this.tabulator.getColumn("has_syn_morph")) {
+      this.tabulator.deleteColumn("has_syn_morph");
+    }
+  }
+
+  addSynColumn(){
+    if (!this.tabulator.getColumn("has_syn_morph")) {
+      this.tabulator.addColumn(this.synColumn, true, "name");
+    }
+  }
+
+  readonly synColumn = {
+    title: "+/- Synapse",
+    field: "has_syn_morph",
+    hozAlign: "center",
+    headerFilter: true,
+    headerFilterParams: {
+      true: "True",
+      false: "False"
+    },
+    headerFilterPlaceholder: "in workspace",
+    width: 110,
+    formatter: (cell: any, formatterParams: any) => {
+      if (cell.getValue()) {
+        if (this.neu3d?.isInWorkspace(cell.getData().s_rid)) {
+          return "<i class='fa fa-minus-circle' > </i>";
+        } else {
+          return "<i class='fa fa-plus-circle' > </i>";
+        }
+      }
+      return;
+    },
+    cellClick: (e: any, cell: any) => {
+      let { syn_uname, s_rid } = cell.getData();
+
+      if (!this.neu3d?.isInWorkspace(s_rid)) {
+        // not in workspace
+        this.neu3d?.addByUname(syn_uname).then(()=>{
+          cell.getRow().reformat();
+        })
+      } else {
+        this.neu3d?.removeByUname(syn_uname).then(()=>{
+          cell.getRow().reformat();
+        })
+      }
+    }
+  };
 
   readonly columns = [
     {
@@ -56,10 +97,10 @@ export class ConnTable extends React.Component<{
         false: "False"
       },
       headerFilterPlaceholder: "in workspace",
-      // width: 100,
+      width: 100,
       formatter: (cell: any, formatterParams: any) => {
-        if (cell.getValue() == true) { // 1 or true
-          if (this.props.inWorkspace(cell.getData().rid)) {
+        if (cell.getValue()) {
+          if (this.neu3d?.isInWorkspace(cell.getData().rid)) {
             return "<i class='fa fa-minus-circle' > </i>";
           } else {
             return "<i class='fa fa-plus-circle' > </i>";
@@ -68,43 +109,22 @@ export class ConnTable extends React.Component<{
         return;
       },
       cellClick: (e: any, cell: any) => {
-        let { rid, uname } = cell.getData();
-        if (!this.props.inWorkspace(rid)) {
-          // not in workspace
-          this.props.addByUname(uname);
-        } else {
-          this.props.removeByUname(uname);
-        }
-      }
-    },
-    {
-      title: "+/- Synapse",
-      field: "has_syn_morph",
-      hozAlign: "center",
-      headerFilter: true,
-      headerFilterParams: {
-        true: "True",
-        false: "False"
-      },
-      headerFilterPlaceholder: "in workspace",
-      // maxWidth: 110,
-      formatter: (cell: any, formatterParams: any) => {
-        if (cell.getValue() == true) {
-          return "<i class='fa fa-plus-circle' > </i>";
-        }
-        return;
-      },
-      cellClick: (e: any, cell: any) => {
         let { uname, rid } = cell.getData();
-
-        if (!this.props.inWorkspace(rid)) {
+        if (!this.neu3d?.isInWorkspace(rid)) {
           // not in workspace
-          this.props.addByUname(uname);
+          console.log('addbyRid', rid, uname)
+          this.neu3d?.addByUname(uname).then(()=>{
+            cell.getRow().reformat();
+          })
         } else {
-          this.props.removeByUname(uname);
+          console.log('removebyRid', rid, uname)
+          this.neu3d?.removeByUname(uname).then(()=>{
+            cell.getRow().reformat();
+          })
         }
       }
     },
+    this.synColumn,
     {
       title: "Name",
       field: "name",
@@ -119,7 +139,11 @@ export class ConnTable extends React.Component<{
       headerFilter: "number",
       headerFilterPlaceholder: "at least...",
       headerFilterFunc: ">=",
-      // width: 100
+      width: 100
     }
   ];
+
+  data: any;
+  tabulator: any;
+  neu3d: any;
 }
