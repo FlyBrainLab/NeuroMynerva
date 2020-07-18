@@ -20,7 +20,17 @@ export class ConnTable {
       paginationSize: 6,
       page: 3,
       initialSort: [{ column: "number", dir: "desc" }],
-      layout: "fitColumns"
+      layout: "fitColumns",
+      rowMouseOver: (e: any, row:any) => {
+        const rid = row.getData().rid;
+        if (this.neu3d?.isInWorkspace(rid)){
+          this.neu3d.neu3d.highlight(rid);
+        }
+      },
+      rowMouseOut: (e: any, row:any) =>{
+        // reset highlight
+        this.neu3d.neu3d.highlight()
+      }
     });
 
     if (!this.hasSynMorph(this.data)) {
