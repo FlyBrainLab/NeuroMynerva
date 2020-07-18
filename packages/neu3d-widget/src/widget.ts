@@ -15,9 +15,24 @@ import { HemibrainMesh } from './hemibrain_mesh';
 
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
 
-function objEmpty(obj:any): boolean {
+/**
+ * Check if object is empty
+ * @param obj 
+ */
+function objEmpty(obj: any): boolean {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
+
+/**
+ * Convert integer Hex to rgb format
+ * @param hex 
+ */
+function toHexString( hex: number ) {
+  hex = Math.floor( hex );
+  ( '000000' + hex.toString( 16 ) ).slice( - 6 );
+  return 
+}
+
 
 /**
  * Data sent from neu3d's `on` callbacks
@@ -175,6 +190,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ ffbo_json: data, type: (value as any).type });
       } else{
         this.neu3d.addJson({ ffbo_json: data });
+      }
+
+      if (typeof(data.color) === 'number') {
+        this.neu3d.setColor(key, toHexString(data.color));
       }
     }
 

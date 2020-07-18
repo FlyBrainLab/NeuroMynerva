@@ -134,9 +134,6 @@ export class InfoWidget extends ReactWidget {
         neu3d: this.neu3d
       })
     }
-    
-    console.log(preDiv, this.tabConnPre);
-    console.log(postDiv, this.tabConnPost);
 
     this.dataChanged.connect((sender, {data, inWorkspace, neu3d})=> 
     {
@@ -148,8 +145,6 @@ export class InfoWidget extends ReactWidget {
       this.tabConnPost.data = postData;
       this.tabConnPre.tabulator.setData(preData);
       this.tabConnPost.tabulator.setData(postData);
-      console.log(preData);
-      console.log(postData)
       if (this.tabConnPre.hasSynMorph(preData)){
         this.tabConnPre.addSynColumn();
       } else {

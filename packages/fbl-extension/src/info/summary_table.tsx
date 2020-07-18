@@ -67,31 +67,32 @@ function reformatField(id: string, value: any) {
 }
 
 
-function onAddRemoveClick(rid:string, uname: string, neu3d: any) {
-  let button = document.getElementById("info-summarytable-addremove-neuron");
-  console.log(rid, uname, neu3d)
-  if (neu3d.isInWorkspace(rid)) {
-    button.style.display = 'inline-block';
-    neu3d.removeByUname(uname).then(()=>{
-      if (neu3d.isInWorkspace(rid)) {
-        button.innerHTML = '-';
-      } else {
-        button.innerHTML = '+';
-      }
-    })
-  } else if (!neu3d.isInWorkspace(rid)) {
-    button.style.display = 'inline-block';
-    neu3d.addByUname(uname).then(()=>{
-      if (neu3d.isInWorkspace(rid)) {
-        button.innerHTML = '-';
-      } else {
-        button.innerHTML = '+';
-      }
-    })
-  } else {
-    button.style.display = 'none';
-  }
-}
+// /**
+//  * Toggle button add/remove on click. Button stateful to if neuron in workspace
+//  * @param rid 
+//  * @param uname 
+//  * @param neu3d 
+//  */
+// function onAddRemoveClick(rid:string, uname: string, neu3d: any) {
+//   let button = document.getElementById("info-summarytable-addremove-neuron");
+//   if (neu3d.isInWorkspace(rid)) {
+//     neu3d.removeByUname(uname).then(()=>{
+//       if (neu3d.isInWorkspace(rid)) {
+//         button.innerHTML = '-';
+//       } else {
+//         button.innerHTML = '+';
+//       }
+//     })
+//   } else {
+//     neu3d.addByUname(uname).then(()=>{
+//       if (neu3d.isInWorkspace(rid)) {
+//         button.innerHTML = '-';
+//       } else {
+//         button.innerHTML = '+';
+//       }
+//     })
+//   }
+// }
 
 export function SummaryTable(props: {data: any, neu3d: any }) {
   const rawData = props.data;
@@ -106,10 +107,10 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
           <tr key={key}>
             <td>{jsUcfirst(key)}</td>
             <td>{reformatField(key, val)}
-              <button onClick={()=>{
+              {/* <button onClick={()=>{
                 onAddRemoveClick(props.data.rid, props.data.uname, props.neu3d)}}
                 id="info-summarytable-addremove-neuron"
-              >-</button>
+              >-</button> */}
             </td>
           </tr>
         );
