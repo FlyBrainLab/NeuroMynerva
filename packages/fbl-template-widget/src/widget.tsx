@@ -148,6 +148,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     // Create Toolbar (to be consumed by MainAreaWidget in `fbl-extension`);
     const toolbar = this.toolbar = new Toolbar();
     toolbar.node.style.height = 'var(--jp-private-toolbar-height)';
+    toolbar.node.style.overflowX = 'scroll';
     this.populateToolBar();
   
     // initialize session
