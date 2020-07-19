@@ -1,0 +1,53 @@
+
+.jp-FBL-Info {
+    display: flex;
+    flex-direction: column;
+    min-width: var(--jp-sidebar-min-width);
+    color: var(--jp-ui-font-color1);
+    background: var(--jp-layout-color1);
+    /* This is needed so that all font sizing of children done in ems is
+     * relative to this base size */
+    font-size: var(--jp-ui-font-size1); 
+}
+
+.jp-FBL-Info-section {
+display: flex;
+flex: 0 1 auto;
+flex-direction: column;
+overflow: auto;
+}
+
+.jp-FBL-Info-sectionHeader {
+flex: 0 0 auto;
+align-items: center;
+justify-content: space-between;
+height: 28px;
+display: flex;
+border-bottom: var(--jp-border-width) solid var(--jp-border-color2);
+margin-top: 8px;
+}
+
+.jp-FBL-Info-sectionHeader h2 {
+flex: 0 0 auto;
+font-weight: 600;
+text-transform: uppercase;
+letter-spacing: 1px;
+font-size: var(--jp-ui-font-size0);
+padding: 8px 8px 8px 12px;
+margin: 0px;
+}
+
+.jp-FBL-Info-sectionHeader .jp-ToolbarButtonComponent {
+flex: 0 0 auto;
+}
+
+.jp-FBL-Info-sectionContainer {
+flex: 1 1 auto;
+margin: 0;
+padding: 0;
+overflow: auto;
+display: flex;
+align-items: center;
+flex-direction: column;
+justify-content: center;  
+}
