@@ -1772,7 +1772,7 @@ natural-compare@^1.4.0:
 
 "neu3d@git+https://github.com/fruitflybrain/neu3d.git#fbl":
   version "1.0.12"
-  resolved "git+https://github.com/fruitflybrain/neu3d.git#6bb8db3f96d29a9fceef61a8f1d48b3efc9e71ff"
+  resolved "git+https://github.com/fruitflybrain/neu3d.git#b4412c3bc307727592fc1e108bc67e2616c29c8d"
   dependencies:
     "@fortawesome/fontawesome-free" "5.12.0"
     bootstrap "^4.5.0"

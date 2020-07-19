@@ -12,7 +12,7 @@ import {
 import { SummaryTable } from './summary_table';
 import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
-import '../../../style/widgets/info/info.css';
+import '../../../style/widgets/info-widget/info.css';
 
 const INFO_CLASS_JLab = 'jp-FBL-Info';
 

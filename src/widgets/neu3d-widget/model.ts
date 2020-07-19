@@ -1,5 +1,5 @@
 import { ISignal, Signal } from '@lumino/signaling';
-import { FBLWidgetModel, IFBLWidgetModel } from '../template/index';
+import { FBLWidgetModel, IFBLWidgetModel } from '../template-widget/index';
 
 /**
 * ID and a few selected attributes of the associated mesh dict items

@@ -19,6 +19,7 @@ import {
   createSpeciesButton, 
   createSessionDialogButton
 } from './session_dialog';
+import '../../../style/widgets/template-widget/template.css';
 
 export interface IFBLWidget extends Widget {
   /**
@@ -148,7 +149,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     // Create Toolbar (to be consumed by MainAreaWidget in `fbl-extension`);
     const toolbar = this.toolbar = new Toolbar();
     toolbar.node.style.height = 'var(--jp-private-toolbar-height)';
-    toolbar.node.style.overflowX = 'scroll';
+    toolbar.node.classList.add('fbl-widget-toolbar');
     this.populateToolBar();
   
     // initialize session

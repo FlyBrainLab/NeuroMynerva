@@ -14,9 +14,9 @@ import {
 } from '@jupyterlab/ui-components';
 
 import { fblIcon } from '../../icons';
-import { IFBLWidget } from '../template/index';
+import { IFBLWidget } from '../template-widget/index';
 import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '../../index';
-import '../../../style/widgets/master/master.css';
+import '../../../style/widgets/master-widget/master.css';
 
 const MASTER_CLASS_JLab = 'jp-FBL-Master';
 

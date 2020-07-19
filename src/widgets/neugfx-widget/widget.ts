@@ -3,9 +3,9 @@ import $ from 'jquery';
 import { ToolbarButton } from '@jupyterlab/apputils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { NeuGFXModel, INeuGFXModel } from './model';
-import { IFBLWidget, FBLWidget } from '../template/index';
+import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import { Icons } from '../../index';
-import '../../../style/widgets/neugfx/neugfx.css';
+import '../../../style/widgets/neugfx-widget/neugfx.css';
 
 const NeuGFX_CLASS_JLab = "jp-FBL-NeuGFX";
 
@@ -16,9 +16,6 @@ declare global {
     jq: any;
   }
 }
-
-
-
 
 /**
 * An NeuGFX Widget

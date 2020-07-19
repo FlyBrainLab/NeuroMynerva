@@ -1,5 +1,5 @@
 import * as React from "react";
-import '../../../style/widgets/info/summary.css';
+import '../../../style/widgets/info-widget/summary.css';
 
 const displayData: string[] = [
   "name",

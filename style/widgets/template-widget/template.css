@@ -1,0 +1,9 @@
+.fbl-widget-toolbar {
+    overflow-x: scroll;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+.fbl-widget-toolbar::-webkit-scrollbar {
+    display: none;
+}

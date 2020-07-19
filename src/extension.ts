@@ -43,11 +43,11 @@ import {
 
 
 import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
-import { MasterWidget } from './widgets/master/index';
-import { IFBLWidget } from './widgets/template/index';
-import { InfoWidget } from './widgets/info/index';
-import { NeuGFXWidget } from './widgets/neugfx/index';
-import { Neu3DWidget } from './widgets/neu3d/index';
+import { MasterWidget } from './widgets/master-widget/index';
+import { IFBLWidget } from './widgets/template-widget/index';
+import { InfoWidget } from './widgets/info-widget/index';
+import { NeuGFXWidget } from './widgets/neugfx-widget/index';
+import { Neu3DWidget } from './widgets/neu3d-widget/index';
 import '../style/index.css';
 
 

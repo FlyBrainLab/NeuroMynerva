@@ -1,5 +1,5 @@
 
-import { Neu3D } from 'neu3d';
+import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
@@ -10,9 +10,9 @@ import { Neu3DModel, INeu3DModel } from './model';
 import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
 import { HemibrainMesh } from './hemibrain_mesh';
-import { IFBLWidget, FBLWidget } from '../template/index';
+import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import * as Icons from '../../icons';
-import '../../../style/widgets/neu3d/neu3d.css';
+import '../../../style/widgets/neu3d-widget/neu3d.css';
 
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
 

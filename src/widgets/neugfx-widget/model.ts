@@ -1,4 +1,4 @@
-import { FBLWidgetModel, IFBLWidgetModel } from '../template/index';
+import { FBLWidgetModel, IFBLWidgetModel } from '../template-widget/index';
 import { ISignal, Signal } from '@lumino/signaling';
 
 /**
