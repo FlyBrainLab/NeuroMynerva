@@ -145,7 +145,7 @@ function SpeciesComponent(
 * This wraps the ToolbarButtonComponent and watches the species 
 * keyword
 */
-function SessionDialogComponent(
+export function SessionDialogComponent(
     props: { widget: FBLWidget }
 ) {
     const { widget } = props;
@@ -161,7 +161,7 @@ function SessionDialogComponent(
         <ToolbarButtonComponent
             className={TOOLBAR_SPECIES_CLASS}
             onClick={callback}
-            icon={listingsInfoIcon}
+            icon={widget.icon ?? listingsInfoIcon}
             tooltip={'View Session Details'}
         />
     );
