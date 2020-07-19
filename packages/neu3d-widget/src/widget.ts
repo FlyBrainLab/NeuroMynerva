@@ -29,8 +29,7 @@ function objEmpty(obj: any): boolean {
  */
 function toHexString( hex: number ) {
   hex = Math.floor( hex );
-  ( '000000' + hex.toString( 16 ) ).slice( - 6 );
-  return 
+  return ( '000000' + hex.toString( 16 ) ).slice( - 6 );
 }
 
 
@@ -186,14 +185,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     for (const [key, value] of Object.entries(this.model.data)) {
       let data: any = {};
       data[key] = value;
+      const color = (value as any).color;
+      if (typeof(color) === 'number') {
+        (value as any).color = toHexString(color);
+      }
       if ('type' in (value as any)) {
         this.neu3d.addJson({ ffbo_json: data, type: (value as any).type });
       } else{
         this.neu3d.addJson({ ffbo_json: data });
-      }
-
-      if (typeof(data.color) === 'number') {
-        this.neu3d.setColor(key, toHexString(data.color));
       }
     }
 

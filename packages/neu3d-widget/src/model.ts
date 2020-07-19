@@ -196,7 +196,7 @@ namespace Private {
         opacity: mesh['opacity'],
         visibility: mesh['visibility'],
         background: mesh['background'],
-        color: mesh['color'],
+        // color: mesh['color'],
         pinned: mesh['pinned'],
         filetype: mesh['filetype'],
         filename: mesh['filename']
@@ -208,7 +208,7 @@ namespace Private {
         opacity: mesh['opacity'],
         visibility: mesh['visibility'],
         background: mesh['background'],
-        color: mesh['color'],
+        // color: mesh['color'],
         pinned: mesh['pinned'],
         filetype: mesh['filetype'],
         dataStr: mesh['dataStr']
@@ -220,7 +220,7 @@ namespace Private {
         opacity: mesh['opacity'],
         visibility: mesh['visibility'],
         background: mesh['background'],
-        color: mesh['color'],
+        // color: mesh['color'],
         pinned: mesh['pinned'],
         sample: mesh['sample'],
         parent: mesh['parent'],
@@ -229,7 +229,7 @@ namespace Private {
         y: mesh['y'],
         z: mesh['z'],
         r: mesh['r'],
-        object: mesh.object ?? {},
+        // object: mesh.object ?? {},
         type: 'morphology_json'
       }
     }
