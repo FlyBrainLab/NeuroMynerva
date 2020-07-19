@@ -28,3 +28,7 @@ align-self: center;
 color: var(--font-color-p);
 }
   
+.summary-table {
+    width: 100%;
+    margin: 0;
+}

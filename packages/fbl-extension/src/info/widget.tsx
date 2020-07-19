@@ -10,17 +10,11 @@ import {
 
 import { 
   ReactWidget, 
-  UseSignal
-  // ToolbarButtonComponent,
-  // UseSignal,
-  // Dialog, showDialog
+  UseSignal,
  } from'@jupyterlab/apputils';
 
 
-// import { 
-//   LabIcon, closeIcon//, fileIcon 
-// } from '@jupyterlab/ui-components';
-import '../style/index.css';
+import '../../style/index.css';
 import { SummaryTable } from './summary_table';
 import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
@@ -120,6 +114,77 @@ export class InfoWidget extends ReactWidget {
     this.addClass(INFO_CLASS_JLab);
   }
 
+  onAfterAttach(msg: any){
+    super.onAfterAttach(msg);
+    let preDiv = document.getElementById("info-connTable-pre");
+    let postDiv = document.getElementById("info-connTable-post");
+
+    if (preDiv){
+      this.tabConnPre = new ConnTable({
+        container: preDiv,
+        data: this.data.connectivity.pre.details,
+        neu3d: this.neu3d
+      });
+    }
+
+    if (postDiv) {
+      this.tabConnPost = new ConnTable({
+        container: postDiv,
+        data: this.data.connectivity.post.details,
+        neu3d: this.neu3d
+      })
+    }
+
+    this.dataChanged.connect((sender, {data, inWorkspace, neu3d})=> 
+    {
+      let preData = this.parseConnData(data.connectivity?.pre || empty_data.connectivity.pre.details, neu3d);
+      let postData = this.parseConnData(data.connectivity?.post || empty_data.connectivity.post.details, neu3d);
+      this.tabConnPre.neu3d = neu3d;
+      this.tabConnPost.neu3d = neu3d;
+      this.tabConnPre.data = preData;
+      this.tabConnPost.data = postData;
+      this.tabConnPre.tabulator.setData(preData);
+      this.tabConnPost.tabulator.setData(postData);
+      if (this.tabConnPre.hasSynMorph(preData)){
+        this.tabConnPre.addSynColumn();
+      } else {
+        this.tabConnPre.removeSynColumn();
+      }
+
+      if (this.tabConnPost.hasSynMorph(postData)){
+        this.tabConnPost.addSynColumn();
+      } else {
+        this.tabConnPost.removeSynColumn();
+      }
+    }, this);
+
+  }
+  
+  /**
+   * Parse Connectivity Data
+   * @param connData connectivity data
+   */
+  parseConnData(connData: any, neu3d: any) {
+    let new_data = [];
+    for (let item of connData["details"]) {
+      let neuron_data = {
+        name: item["name"] ?? item['name'] ?? item['rid'],
+        uname: item["uname"] ?? item["name"] ?? item['rid'],
+        number: item["number"],
+        rid: item["rid"],
+        syn_uname: item.syn_uname,
+        s_rid: item.s_rid,
+        syn_rid: item.syn_rid,
+        has_syn_morph: item["has_syn_morph"],
+        has_morph: item["has_morph"]
+      };
+
+      new_data.push(neuron_data);
+    }
+    return new_data;
+  }
+
+
   /** Reset Info to empty */
   reset() {
     this.dataChanged.emit({
@@ -133,6 +198,24 @@ export class InfoWidget extends ReactWidget {
   protected render() {
     return (
       <div className={SECTION_CLASS}>
+      {/* <div className={SECTION_HEADER_CLASS}>
+        <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            inWorkspace: this.inWorkspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => {
+            if (val.neu3d){
+              return <SessionDialogComponent widget={val.neu3d}></SessionDialogComponent>
+            } else {
+              return <></>
+            }
+          }}
+        </UseSignal>
+      </div> */}
       <header className={SECTION_HEADER_CLASS}>
         <h2>Summary</h2>
       </header>
@@ -147,9 +230,9 @@ export class InfoWidget extends ReactWidget {
         >
           {(_, val) => {
             if (val.data?.summary){
-              return <SummaryTable data={val.data.summary} />  
+              return <SummaryTable data={val.data.summary} neu3d={val.neu3d} />  
             } else{
-              return <SummaryTable data={empty_data.summary} />
+              return <SummaryTable data={empty_data.summary} neu3d={val.neu3d} />
             }}
           }
         </UseSignal>
@@ -174,9 +257,9 @@ export class InfoWidget extends ReactWidget {
                     />
             } else{
               return <ConnSVG
-                      pre={empty_data.connectivity.pre.summary}
-                      post={empty_data.connectivity.post.summary}
-                    />
+                pre={empty_data.connectivity.pre.summary}
+                post={empty_data.connectivity.post.summary}
+              />
             }
           }}
         </UseSignal>
@@ -185,7 +268,8 @@ export class InfoWidget extends ReactWidget {
         <h2>Presynaptic Partners</h2>
       </header>
       <div className={CONTAINER_CLASS}>
-        <UseSignal
+        <div id="info-connTable-pre"/>
+        {/* <UseSignal
           signal={this.dataChanged}
           initialArgs={{
             data: this.data,
@@ -198,33 +282,34 @@ export class InfoWidget extends ReactWidget {
               return  <ConnTable
                 data={val.data.connectivity.pre}
                 inWorkspace={val.inWorkspace}
-                addByUname={uname => {
-                  val.neu3d?.addByUname(uname);
+                addByRid={(rid: string) => {
+                  val.neu3d?.addByRid(rid);
                 }}
-                removeByUname={uname => {
-                  val.neu3d?.removeByUname(uname);
+                removeByRid={(rid: string) => {
+                  val.neu3d?.removeByRid(rid);
                 }}
               />
             } else{
               return <ConnTable
                 data={empty_data.connectivity.pre}
                 inWorkspace={this.inWorkspace}
-                addByUname={uname => {
-                  val.neu3d?.addByUname(uname);
+                addByRid={(rid: string) => {
+                  val.neu3d?.addByRid(rid);
                 }}
-                removeByUname={uname => {
-                  val.neu3d?.removeByUname(uname);
+                removeByRid={(rid: string) => {
+                  val.neu3d?.removeByRid(rid);
                 }}
               />
             }
           }}
-        </UseSignal>
+        </UseSignal> */}
       </div>
       <header className={SECTION_HEADER_CLASS}>
         <h2>Postsynaptic Partners</h2>
       </header>
       <div className={CONTAINER_CLASS}>
-        <UseSignal
+      <div id="info-connTable-post"/>
+        {/* <UseSignal
           signal={this.dataChanged}
           initialArgs={{
             data: this.data,
@@ -237,36 +322,40 @@ export class InfoWidget extends ReactWidget {
               return  <ConnTable
                 data={val.data.connectivity.post}
                 inWorkspace={val.inWorkspace}
-                addByUname={uname => {
-                  val.neu3d?.addByUname(uname);
+                addByRid={(rid: string) => {
+                  val.neu3d?.addByRid(rid);
                 }}
-                removeByUname={uname => {
-                  val.neu3d?.removeByUname(uname);
+                removeByRid={(rid: string) => {
+                  val.neu3d?.removeByRid(rid);
                 }}
               />
             } else{
               return <ConnTable
                 data={empty_data.connectivity.post}
                 inWorkspace={this.inWorkspace}
-                addByUname={uname => {
-                  val.neu3d?.addByUname(uname);
+                addByRid={(rid: string) => {
+                  val.neu3d?.addByRid(rid);
                 }}
-                removeByUname={uname => {
-                  val.neu3d?.removeByUname(uname);
+                removeByRid={(rid: string) => {
+                  val.neu3d?.removeByRid(rid);
                 }}
               />
             }
           }}
-        </UseSignal>
+        </UseSignal> */}
       </div>
     </div>
     );
   }
 
+  // dataConnPre: any;
+  // dataConnPost: any;
+  tabConnPre: ConnTable;
+  tabConnPost: ConnTable;
   data: IInfoData; // data to be displayed
   neu3d: any;  // caller neu3d widget
-  dataChanged = new Signal< this, { data: any; inWorkspace: (uname: string) => boolean; neu3d: any }>(this);
-  inWorkspace: (uname: string)=>boolean;
+  dataChanged = new Signal< this, { data: any; inWorkspace: any; neu3d: any }>(this);
+  inWorkspace: (rid: string)=>boolean;
 };
 
 

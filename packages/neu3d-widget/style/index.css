@@ -7,3 +7,34 @@
     position: absolute !important;
     top: 0px !important;
 }
+
+.neu3dSearchWrapper {
+    text-align: right;
+}
+
+.neu3dSearchInput {
+    vertical-align: top;
+    width: 350px;
+    border: 3px solid #337ab7;
+    border-right: none;
+    padding: 5px;
+    height: 20px;
+    border-radius: 5px 0 0 5px;
+    outline: none;
+    color: #9DBFAF;
+    margin-top: 2px;
+  }
+
+.neu3dSearchButton {
+    margin-right: 8px;
+    width: 36px;
+    height: 32px;
+    border: 1px solid #337ab7;
+    background: #337ab7;
+    text-align: center;
+    color: #fff;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    font-size: 20px;
+    margin-top: 2px;
+  }
