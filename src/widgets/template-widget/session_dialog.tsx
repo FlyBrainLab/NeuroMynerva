@@ -8,15 +8,15 @@ import { PathExt } from '@jupyterlab/coreutils';
 import {
     Widget
 } from '@lumino/widgets';
-import {
-    listingsInfoIcon
-} from '@jupyterlab/ui-components'
 import { 
     Toolbar, ToolbarButtonComponent 
 } from '@jupyterlab/apputils';
 import {
     IFBLWidget, FBLWidget
 } from './widget';
+import { 
+    fblSettingIcon
+} from '../../icons';
 
 const TOOLBAR_SPECIES_CLASS = 'jp-FBL-Species';
 
@@ -161,7 +161,7 @@ export function SessionDialogComponent(
         <ToolbarButtonComponent
             className={TOOLBAR_SPECIES_CLASS}
             onClick={callback}
-            icon={widget.icon ?? listingsInfoIcon}
+            icon={ fblSettingIcon }
             tooltip={'View Session Details'}
         />
     );

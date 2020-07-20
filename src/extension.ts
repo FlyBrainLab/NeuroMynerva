@@ -35,14 +35,14 @@ import{
 } from '@jupyterlab/services';
 
 import {
-  LabIcon, listingsInfoIcon
+  LabIcon
 } from '@jupyterlab/ui-components'
 import { 
   Widget
  } from '@lumino/widgets';
 
 
-import { fblIcon, neu3DIcon, neuGFXIcon } from './icons';
+import { fblIcon, neu3DIcon, neuGFXIcon, neuInfoIcon, masterIcon } from './icons';
 import { MasterWidget } from './widgets/master-widget/index';
 import { IFBLWidget } from './widgets/template-widget/index';
 import { InfoWidget } from './widgets/info-widget/index';
@@ -243,7 +243,7 @@ async function activateFBL(
   masterWidget = new MasterWidget(fblWidgetTrackers);
   masterWidget.id = 'FBL-Master';
   masterWidget.title.caption = 'FBL Widgets and Running Sessions';
-  masterWidget.title.icon = fblIcon;
+  masterWidget.title.icon = masterIcon;
   // add to last
   if (restorer) {
     restorer.add(masterWidget, 'FBL-Master');
@@ -255,7 +255,7 @@ async function activateFBL(
   infoWidget = new InfoWidget();
   infoWidget.id = 'FBL-Info';
   infoWidget.title.caption = 'Information about neurons and synapses';
-  infoWidget.title.icon = listingsInfoIcon;
+  infoWidget.title.icon = neuInfoIcon;
   // add to last
   if (restorer) {
     restorer.add(infoWidget, 'FBL-Info');

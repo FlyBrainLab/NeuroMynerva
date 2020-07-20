@@ -1,5 +1,11 @@
 import { LabIcon } from '@jupyterlab/ui-components';
 import ffboLogoStr from '../style/icons/ffbo_logo.svg';
+import fblSettingIconStr from '../style/icons/fbl_setting_icon.svg';
+import infoIconStr from '../style/icons/neuinfo_icon.svg';
+import neu3DIconStr from '../style/icons/neu3d_icon.svg';
+import neuGFXIconStr from '../style/icons/neugfx_icon.svg';
+import masterIconStr from '../style/icons/master_icon.svg';
+
 import chartAreaStr from '../style/icons/chart-area.svg';
 import codeStr from '../style/icons/code.svg';
 import listAltStr from '../style/icons/list-alt.svg';
@@ -19,79 +25,96 @@ import mapUpinStr from '../style/icons/map-unpin.svg';
 
 // svgstr is the raw contents of an icon's svg file
 export const fblIcon = new LabIcon({
-    name: 'fbl:fbl',
-    svgstr: ffboLogoStr // TODO: change to use fbl icon
+  name: 'fbl:fbl',
+  svgstr: ffboLogoStr // TODO: change to use fbl icon
 });
 export const neu3DIcon = new LabIcon({
-    name: 'fbl:neu3d',  
-    svgstr: ffboLogoStr // TODO: change to use neu3d icon
+  name: 'fbl:neu3d',
+  svgstr: neu3DIconStr
 });
 export const neuGFXIcon = new LabIcon({
-    name: 'fbl:neugfx',
-    svgstr: ffboLogoStr // TODO: change to use gfx icon
+  name: 'fbl:neugfx',
+  svgstr: neuGFXIconStr
 });
+export const neuInfoIcon = new LabIcon({
+  name: 'fbl:neuinfo',
+  svgstr: infoIconStr
+});
+export const masterIcon = new LabIcon({
+  name: 'fbl:master',
+  svgstr: masterIconStr
+});
+// export const workspaceIcon = new LabIcon({
+//   name: 'fbl:workspace',
+//   svgstr: workspaceIconStr
+// });
 
+export const fblSettingIcon = new LabIcon({
+    name: 'fbl:setting',
+    svgstr: fblSettingIconStr
+  });
+  
 export const chartAreaIcon = new LabIcon({
-    name: 'fbl:chart-area',
-    svgstr: chartAreaStr
+  name: 'fbl:chart-area',
+  svgstr: chartAreaStr
 });
 export const codeIcon = new LabIcon({
-    name: 'fbl:code',
-    svgstr: codeStr
+  name: 'fbl:code',
+  svgstr: codeStr
 });
 export const listAltIcon = new LabIcon({
-    name: 'fbl:list-all',
-    svgstr: listAltStr
+  name: 'fbl:list-all',
+  svgstr: listAltStr
 });
 export const playCircleIcon = new LabIcon({
-    name: 'fbl:play-circle',
-    svgstr: playCircleStr
+  name: 'fbl:play-circle',
+  svgstr: playCircleStr
 });
 export const saveIcon = new LabIcon({
-    name: 'fbl:save',
-    svgstr: saveStr
+  name: 'fbl:save',
+  svgstr: saveStr
 });
 export const shareAltSquareIcon = new LabIcon({
-    name: 'fbl:share-alt-square',
-    svgstr: shareAltSquareStr
+  name: 'fbl:share-alt-square',
+  svgstr: shareAltSquareStr
 });
 export const shareAltIcon = new LabIcon({
-    name: 'fbl:share-alt',
-    svgstr: shareAltStr
+  name: 'fbl:share-alt',
+  svgstr: shareAltStr
 });
 export const zoomToFitIcon = new LabIcon({
-    name: 'fbl:zoom-to-fit',
-    svgstr: zoomToFitStr
+  name: 'fbl:zoom-to-fit',
+  svgstr: zoomToFitStr
 });
 export const trashIcon = new LabIcon({
-    name: 'fbl:trash',
-    svgstr: trashStr
+  name: 'fbl:trash',
+  svgstr: trashStr
 });
 export const eyeIcon = new LabIcon({
-    name: 'fbl:eye',
-    svgstr: eyeStr
+  name: 'fbl:eye',
+  svgstr: eyeStr
 });
 export const eyeSlashIcon = new LabIcon({
-    name: 'fbl:eye-slash',
-    svgstr: eyeSlashStr
+  name: 'fbl:eye-slash',
+  svgstr: eyeSlashStr
 });
 
 export const uploadIcon = new LabIcon({
-    name: 'fbl:upload',
-    svgstr: uploadStr
+  name: 'fbl:upload',
+  svgstr: uploadStr
 });
 
 export const syncIcon = new LabIcon({
-    name: 'fbl:sync',
-    svgstr: syncStr
+  name: 'fbl:sync',
+  svgstr: syncStr
 });
 
 export const cameraIcon = new LabIcon({
-    name: 'fbl:camera',
-    svgstr: cameraStr
+  name: 'fbl:camera',
+  svgstr: cameraStr
 });
 
 export const mapUpinIcon = new LabIcon({
-    name: 'fbl:map-unpin',
-    svgstr: mapUpinStr
+  name: 'fbl:map-unpin',
+  svgstr: mapUpinStr
 });
