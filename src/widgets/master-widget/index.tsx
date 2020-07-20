@@ -177,11 +177,11 @@ namespace FBLWidgetReact {
   function Item(props: { panel: FBLPanel }) {
     const {panel} = props;
     const widget = panel.content;
-    const icon: LabIcon = fblIcon;
+    let icon: LabIcon = fblIcon;
     
-    // if (widget.icon?.react){
-    //   icon = widget.icon;
-    // }
+    if (widget.icon?.react){
+      icon = widget.icon;
+    }
 
     return (
       <li className={ITEM_CLASS}>
