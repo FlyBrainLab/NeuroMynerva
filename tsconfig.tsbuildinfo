@@ -1550,7 +1550,7 @@
         "signature": "7de29879856ec3de92a55fa573aad0417c0d82bb5610ebcadb2e9659454dd75a"
       },
       "./src/widgets/master-widget/index.tsx": {
-        "version": "e3640d0690e8eafc94072dd8bf367b7d740e8f0a2d25022ffa1bb2814b394d0b",
+        "version": "dcf4342ca4fbb5124db4198a46eef5ce34e48e3f04165b90656645e0fcb1b3cc",
         "signature": "fd711f8624f49893f30c31c8adf9e025d61e73b3447b6cf18cdc4b1bcf57981f"
       },
       "./src/widgets/template-widget/client.tsx": {
@@ -1592,6 +1592,7 @@
         "./types",
         "./node_modules/@types"
       ],
+      "watch": true,
       "configFilePath": "./tsconfig.json"
     },
     "referencedMap": {
@@ -5301,6 +5302,7 @@
       "./node_modules/@jupyterlab/apputils/lib/windowresolver.d.ts",
       "./node_modules/@jupyterlab/apputils/lib/index.d.ts",
       "./src/widgets/info-widget/widget.tsx",
+      "./src/icons.ts",
       "./node_modules/@jupyterlab/application/lib/tokens.d.ts",
       "./node_modules/@jupyterlab/application/lib/connectionlost.d.ts",
       "./node_modules/@jupyterlab/rendermime-interfaces/lib/index.d.ts",
@@ -5336,6 +5338,8 @@
       "./node_modules/@jupyterlab/application/lib/router.d.ts",
       "./node_modules/@jupyterlab/application/lib/index.d.ts",
       "./src/widgets/template-widget/model.ts",
+      "./src/widgets/template-widget/session_dialog.tsx",
+      "./src/widgets/template-widget/widget.tsx",
       "./src/widgets/template-widget/index.ts",
       "./node_modules/@jupyterlab/launcher/lib/index.d.ts",
       "./src/widgets/info-widget/index.ts",
@@ -5346,24 +5350,21 @@
       "./node_modules/@types/sizzle/index.d.ts",
       "./node_modules/@types/jquery/index.d.ts",
       "./src/widgets/neugfx-widget/model.ts",
+      "./src/widgets/neugfx-widget/widget.ts",
+      "./src/widgets/neugfx-widget/index.ts",
       "./node_modules/neu3d/typings/index.d.ts",
       "./src/widgets/neu3d-widget/model.ts",
       "./src/widgets/neu3d-widget/adult_mesh.ts",
       "./src/widgets/neu3d-widget/larva_mesh.ts",
       "./src/widgets/neu3d-widget/hemibrain_mesh.ts",
+      "./src/widgets/neu3d-widget/widget.ts",
       "./src/widgets/neu3d-widget/index.ts",
+      "./src/extension.ts",
+      "./src/index.ts",
       "./src/widgets/template-widget/client.tsx",
       "./src/svg.d.ts",
       "./types/tabulator-tables/index.d.ts",
-      "./src/icons.ts",
-      "./src/widgets/master-widget/index.tsx",
-      "./src/index.ts",
-      "./src/extension.ts",
-      "./src/widgets/neu3d-widget/widget.ts",
-      "./src/widgets/template-widget/widget.tsx",
-      "./src/widgets/template-widget/session_dialog.tsx",
-      "./src/widgets/neugfx-widget/widget.ts",
-      "./src/widgets/neugfx-widget/index.ts"
+      "./src/widgets/master-widget/index.tsx"
     ]
   },
   "version": "3.7.5"
