@@ -72,7 +72,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this._hemibrainMesh = HemibrainMesh;
 
     this.addClass(Neu3D_CLASS_JLab);
-    
     this._neu3dContainer = document.createElement('div');
     this._neu3dContainer.style.height = 'calc(100% - 40px)';
     this._neu3dContainer.style.width = '100%';
@@ -690,7 +689,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
           window.active_neu3d_widget = this;
           this.neu3d.resetView();
-          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:6651/ws", ssl = None, default_key = False')}).done;
+          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', custom_config = "larva_config.ini"')}).done;
           break;
         case 'adult Drosophila melanogaster (FlyCircuit)':
           for (let mesh of Object.keys(this.neu3d.meshDict)){
@@ -704,7 +703,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
           window.active_neu3d_widget = this;
           this.neu3d.resetView();
-          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode('')}).done;
+          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', custom_config = "flycircuit_config.ini"')}).done;
           break;
         case 'adult Drosophila melanogaster (Hemibrain)':
           for (let mesh of Object.keys(this.neu3d.meshDict)){
@@ -719,7 +718,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
           window.active_neu3d_widget = this;
           this.neu3d.resetView();
-          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', url=u"ws://amacrine.ee.columbia.edu:20206/ws", ssl = None, default_key = False')}).done;
+          this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', custom_config = "hemibrain_config.ini"')}).done;
           break;
         default:
           for (let mesh of Object.keys(this.neu3d.meshDict)){
