@@ -74,17 +74,17 @@ class SessionDialog extends Widget {
             let sessionDesc = ''
             if (widget.sessionContext.session) {
                 sessionDesc = `
-                <tr><td>Kernel Session</td><td> ${widget.sessionContext.name} </td></tr>
-                <tr><td>Kernel Path</td><td> ${PathExt.dirname(widget.sessionContext.path)}</td></tr>
-                <tr><td>Kernel Name</td><td> ${widget.sessionContext.kernelDisplayName}</td></tr>
-                <tr><td>Comm Target</td><td> ${widget._commTarget}</td></tr>
-                <tr><td>Comm Id</td><td> ${widget.comm.commId}</td></tr>
+                <tr><td><b>Kernel Session</b></td><td> ${widget.sessionContext.name} </td></tr>
+                <tr><td><b>Kernel Path</b></td><td> ${PathExt.dirname(widget.sessionContext.path)}</td></tr>
+                <tr><td><b>Kernel Name</b></td><td> ${widget.sessionContext.kernelDisplayName}</td></tr>
+                <tr><td><b>Comm Target</b></td><td> ${widget._commTarget}</td></tr>
+                <tr><td><b>Comm Id</b></td><td> ${widget.comm.commId}</td></tr>
                 `
             }
             text = `
             <div class="lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
             <table>
-                <tr><td>Species</td><td>${widget.species}</td></tr>
+                <tr><td><b>Species</b></td><td>${widget.species}</td></tr>
                 ${sessionDesc}
             </table>
             </div>
