@@ -1,10 +1,8 @@
-import { Session, Kernel } from '@jupyterlab/services';
-
 import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
-import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
+import { ToolbarButton, showDialog, Dialog } from '@jupyterlab/apputils';
 import { LabIcon } from '@jupyterlab/ui-components';
 
 import { Neu3DModel, INeu3DModel } from './model';
@@ -98,10 +96,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     searchWrapper.appendChild(searchInput);
     searchWrapper.appendChild(searchButton);
     // initialized with no kernel
-    if (this.sessionContext.session  === null) {
-      searchInput.style.display ='none';
-      searchButton.style.display ='none';
-    }
+    // if (this.sessionContext.session  === null) {
+    //   searchInput.style.display ='none';
+    //   searchButton.style.display ='none';
+    // }
     this._neu3dSearchbar.appendChild(searchWrapper);
 
     window.neu3d_widget = this;
@@ -166,28 +164,28 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     }
   }
 
-  /**
-   * When kernel does not exist, hide search bar
-   * @param contexts
-   * @param args 
-   */
-  async onKernelChanged(
-    context: ISessionContext,
-    args: Session.ISessionConnection.IKernelChangedArgs
-  ){
-    const newKernel: Kernel.IKernelConnection | null = args.newValue;
-    const inputWrapperDiv = this._neu3dSearchbar.children[0] as HTMLDivElement;
-    if (newKernel === null ){  
-      for (const el of inputWrapperDiv.children) {
-        (el as HTMLElement).style.display = "none";
-      }
-    } else {
-      for (const el of inputWrapperDiv.children) {
-        (el as HTMLElement).style.display = "inline-block";
-      }
-    }
-    super.onKernelChanged(context, args);
-  }
+  // /**
+  //  * When kernel does not exist, hide search bar
+  //  * @param contexts
+  //  * @param args 
+  //  */
+  // async onKernelChanged(
+  //   context: ISessionContext,
+  //   args: Session.ISessionConnection.IKernelChangedArgs
+  // ){
+  //   const newKernel: Kernel.IKernelConnection | null = args.newValue;
+  //   const inputWrapperDiv = this._neu3dSearchbar.children[0] as HTMLDivElement;
+  //   if (newKernel === null ){  
+  //     for (const el of inputWrapperDiv.children) {
+  //       (el as HTMLElement).style.display = "none";
+  //     }
+  //   } else {
+  //     for (const el of inputWrapperDiv.children) {
+  //       (el as HTMLElement).style.display = "inline-block";
+  //     }
+  //   }
+  //   super.onKernelChanged(context, args);
+  // }
 
 
   initFBLCode(): string {
@@ -781,11 +779,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";
             break;
           case 'No species':
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database. Select species...';
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
             // no-op
             break;
           default:
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database. Select species...';
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
             console.error(`[Neu3D-Widget] species ${newSpecies} not recognized.`);
             break;
         }
