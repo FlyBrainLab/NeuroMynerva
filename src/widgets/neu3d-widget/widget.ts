@@ -4,6 +4,7 @@ import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
+import { INotification } from "jupyterlab_toastify";
 
 import { Neu3DModel, INeu3DModel } from './model';
 import { AdultMesh } from './adult_mesh';
@@ -297,12 +298,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     if (thisMsg.widget == 'NLP') {
       switch (thisMsg.messageType) {
         case "Message": {
-          /*(izi as any).success({
-            id: "success",
-            message: (thisMsg.data).info.success,
-            transitionIn: 'bounceInLeft',
-            position: 'bottomRight',
-          });*/
+          INotification.success(thisMsg.data.info.success);
           console.log('[NEU3D] Message received.', thisMsg.data);
           break;
         }
@@ -354,15 +350,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         inWorkspace: this.isInWorkspace,
         neu3d: this
       });
-
-      // this.workspaceChanged.connect(()=>{
-      //   console.log('workspace changed', thisMsg);
-      //   this.info?.dataChanged.emit({
-      //     data: thisMsg.data.data.data,
-      //     inWorkspace: this.isInWorkspace,
-      //     neu3d: this
-      //   });
-      // }, this);
     }
   }
 
