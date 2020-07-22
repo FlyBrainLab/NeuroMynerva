@@ -248,7 +248,7 @@ async function activateFBL(
   if (restorer) {
     restorer.add(masterWidget, 'FBL-Master');
   }
-  app.shell.add(masterWidget, 'left', {rank: 1000});
+  app.shell.add(masterWidget, 'left', {rank: 1900});
   window.master = masterWidget;
   
   // add info panel
