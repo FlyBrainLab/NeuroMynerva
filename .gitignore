@@ -2,3 +2,5 @@
 packages/*/build/bundle.js
 node_modules
 lib/
+tsconfig.tsbuildinfo
+*.ipynb

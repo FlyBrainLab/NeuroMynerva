@@ -359,7 +359,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.comm?.dispose();
     }
     this.model?.dispose();
-    this.sessionContext?.dispose();
     Signal.disconnectAll(this._modelChanged);
     super.dispose();
     this._isDisposed = true;
