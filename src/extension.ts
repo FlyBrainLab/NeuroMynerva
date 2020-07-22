@@ -191,48 +191,48 @@ async function activateFBL(
     "NeuGFX": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'})
   })
   // Handle state restoration.
-  restorer.restore(fblWidgetTrackers.trackers.Neu3D, {
-    command: CommandIDs.Neu3DOpen,
-    args: widget => {
-      const { path, name } = widget.content.sessionContext;
-      return {
-        model: {
-          data: widget.content.model?.data,
-          metadata: widget.content.model?.metadata,
-          states: widget.content.model?.states
-        },
-        clientId: widget.content.clientId,
-        id: widget.content.id,
-        species: widget.content.species,
-        path: path,
-        name: name
-      };
-    },
-    name: widget => widget.content.sessionContext.name,
-    when: app.serviceManager.ready
-  });
+  // restorer.restore(fblWidgetTrackers.trackers.Neu3D, {
+  //   command: CommandIDs.Neu3DOpen,
+  //   args: widget => {
+  //     const { path, name } = widget.content.sessionContext;
+  //     return {
+  //       model: {
+  //         data: widget.content.model?.data,
+  //         metadata: widget.content.model?.metadata,
+  //         states: widget.content.model?.states
+  //       },
+  //       clientId: widget.content.clientId,
+  //       id: widget.content.id,
+  //       species: widget.content.species,
+  //       path: path,
+  //       name: name
+  //     };
+  //   },
+  //   name: widget => widget.content.sessionContext.name,
+  //   when: app.serviceManager.ready
+  // });
 
 
-  restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
-    command: CommandIDs.NeuGFXOpen,
-    args: widget => {
-      const { path, name } = widget.content.sessionContext;
-      return {
-        model: {
-          data: widget.content.model?.data,
-          metadata: widget.content.model?.metadata,
-          states: widget.content.model?.states
-        },
-        clientId: widget.content.clientId,
-        id: widget.content.id,
-        species: widget.content.species,
-        path: path,
-        name: name
-      };
-    },
-    name: widget => widget.content.sessionContext.name,
-    when: app.serviceManager.ready
-  });
+  // restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
+  //   command: CommandIDs.NeuGFXOpen,
+  //   args: widget => {
+  //     const { path, name } = widget.content.sessionContext;
+  //     return {
+  //       model: {
+  //         data: widget.content.model?.data,
+  //         metadata: widget.content.model?.metadata,
+  //         states: widget.content.model?.states
+  //       },
+  //       clientId: widget.content.clientId,
+  //       id: widget.content.id,
+  //       species: widget.content.species,
+  //       path: path,
+  //       name: name
+  //     };
+  //   },
+  //   name: widget => widget.content.sessionContext.name,
+  //   when: app.serviceManager.ready
+  // });
 
   window.app = app;
   window.fbltrackers = fblWidgetTrackers;
@@ -623,12 +623,12 @@ export namespace FBL {
     if (!tracker.has(panel)){
       await tracker.add(panel);
     }
-    widget.sessionContext.propertyChanged.connect(()=>{
-      void tracker.save(panel);
-    });
-    widget.modelChanged.connect(()=>{
-      void tracker.save(panel);
-    });
+    // widget.sessionContext.propertyChanged.connect(()=>{
+    //   void tracker.save(panel);
+    // });
+    // widget.modelChanged.connect(()=>{
+    //   void tracker.save(panel);
+    // });
     // Attach the widget to the main work area if it's not there
     app.shell.add(panel, 'main', add_widget_options);
     widget.update();

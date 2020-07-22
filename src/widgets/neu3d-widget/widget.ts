@@ -3,7 +3,7 @@ import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog } from '@jupyterlab/apputils';
-import { LabIcon } from '@jupyterlab/ui-components';
+import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 
 import { Neu3DModel, INeu3DModel } from './model';
 import { AdultMesh } from './adult_mesh';
@@ -834,6 +834,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       'removeUnpinned', 
       Private.createButton(Icons.trashIcon, "Remove Unpinned Neurons", 'jp-Neu3D-Btn jp-SearBar-remove-unpinned', 
       ()=> {this.neu3d.removeUnpinned();}));
+    this.toolbar.addItem(
+      'toggleControlPanel', 
+      Private.createButton(settingsIcon, "Toggle Control Panel", 'jp-Neu3D-Btn jp-SearBar-showAll', 
+      () => { 
+        this.neu3d.controlPanel.domElement.style.display === "" ? this.neu3d.controlPanel.hide() : this.neu3d.controlPanel.show();
+      }));
+
     super.populateToolBar();
   }
 
