@@ -441,29 +441,18 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
-   * Code for initializing a client connected to the current widget
-   */
-  initClientCode(): string {
+  * Code for initializing a client connected to the current widget
+  * @param clientargs additional argument for client
+  */
+  initClientCode(clientargs?: string): string {
     return `
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
-    if '${this.clientId}' not in fbl.client_manager.clients:
-        _comm = fbl.MetaComm('${this.clientId}', fbl)
-        _client = fbl.Client(FFBOLabcomm = _comm)
-        fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
-    `;
-  }
-
-  initAnyClientCode(clientargs?: any): string {
-    return `
-    if 'fbl' not in globals():
-        import flybrainlab as fbl
-        fbl.init()
-    if '${this.clientId}' not in fbl.client_manager.clients or True: # Fix the situations in which a client is to be generated
-        _comm = fbl.MetaComm('${this.clientId}', fbl)
-        _client = fbl.Client(FFBOLabcomm = _comm ${clientargs})
-        fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
+    # if '${this.clientId}' not in fbl.client_manager.clients:
+    _comm = fbl.MetaComm('${this.clientId}', fbl)
+    _client = fbl.Client(FFBOLabcomm = _comm ${clientargs || ''})
+    fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
     `;
   }
 
@@ -544,6 +533,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this.toolbar.addItem('Species Changer', createSpeciesButton(this));
     this.toolbar.addItem('Session Dialog', createSessionDialogButton(this));
     this.toolbar.addItem('restart', Toolbar.createRestartButton(this.sessionContext));
+    this.toolbar.addItem('stop', Toolbar.createInterruptButton(this.sessionContext));
     this.toolbar.addItem('kernelName', Toolbar.createKernelNameItem(this.sessionContext));
     this.toolbar.addItem('kernelStatus', Toolbar.createKernelStatusItem(this.sessionContext));
   }
