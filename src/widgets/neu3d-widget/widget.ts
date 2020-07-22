@@ -1,9 +1,10 @@
+import { Session, Kernel } from '@jupyterlab/services';
 
 import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
-import { ToolbarButton, showDialog, Dialog } from '@jupyterlab/apputils';
+import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
 import { LabIcon } from '@jupyterlab/ui-components';
 
 import { Neu3DModel, INeu3DModel } from './model';
@@ -96,7 +97,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     searchButton.appendChild(searchButtonIcon);
     searchWrapper.appendChild(searchInput);
     searchWrapper.appendChild(searchButton);
+    // initialized with no kernel
+    if (this.sessionContext.session  === null) {
+      searchInput.style.display ='none';
+      searchButton.style.display ='none';
+    }
     this._neu3dSearchbar.appendChild(searchWrapper);
+
     window.neu3d_widget = this;
     var _this = this;
     searchButton.onclick = function () {
@@ -158,6 +165,30 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       })
     }
   }
+
+  /**
+   * When kernel does not exist, hide search bar
+   * @param contexts
+   * @param args 
+   */
+  async onKernelChanged(
+    context: ISessionContext,
+    args: Session.ISessionConnection.IKernelChangedArgs
+  ){
+    const newKernel: Kernel.IKernelConnection | null = args.newValue;
+    const inputWrapperDiv = this._neu3dSearchbar.children[0] as HTMLDivElement;
+    if (newKernel === null ){  
+      for (const el of inputWrapperDiv.children) {
+        (el as HTMLElement).style.display = "none";
+      }
+    } else {
+      for (const el of inputWrapperDiv.children) {
+        (el as HTMLElement).style.display = "inline-block";
+      }
+    }
+    super.onKernelChanged(context, args);
+  }
+
 
   initFBLCode(): string {
     return super.initFBLCode();
@@ -724,7 +755,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
-            this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', custom_config = "larva_config.ini"')}).done;
+            this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";
             break;
           case 'adult Drosophila melanogaster (FlyCircuit)':
             this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
@@ -733,7 +765,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
-            this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', custom_config = "flycircuit_config.ini"')}).done;
+            this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show neurons in ellipsoid body)";
+
             break;
           case 'adult Drosophila melanogaster (Hemibrain)':
             this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
@@ -743,12 +777,15 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
-            this.sessionContext.session.kernel.requestExecute({code: super.initAnyClientCode(', custom_config = "hemibrain_config.ini"')}).done;
+            this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";
             break;
-          case 'No Species':
+          case 'No species':
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database. Select species...';
             // no-op
             break;
           default:
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database. Select species...';
             console.error(`[Neu3D-Widget] species ${newSpecies} not recognized.`);
             break;
         }
