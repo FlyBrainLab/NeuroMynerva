@@ -187,6 +187,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   //   super.onKernelChanged(context, args);
   // }
 
+  dispose() {
+    this.neu3d.controlPanel.destroy();
+    this.neu3d.reset(true);
+    this.neu3d = null;
+    delete this.neu3d;
+    super.dispose();
+  }
 
   initFBLCode(): string {
     return super.initFBLCode();
