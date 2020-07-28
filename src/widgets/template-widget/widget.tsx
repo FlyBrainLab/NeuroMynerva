@@ -16,12 +16,23 @@ import { fblIcon } from '../../icons';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { FBLWidgetModel, IFBLWidgetModel } from './model';
 import { 
-  createSpeciesButton, 
+  createServerButton, 
   createSessionDialogButton
 } from './session_dialog';
+import { 
+  FBL
+} from '../../extension';
+
 import '../../../style/widgets/template-widget/template.css';
+import { InfoWidget } from '../info-widget';
 
 export interface IFBLWidget extends Widget {
+
+  /**
+   * All available server settings
+   */
+  serverSettings: FBL.FBLServerSettings;
+
   /**
    * The sessionContext keeps track of the current running session
    * associated with the widget.
@@ -29,10 +40,10 @@ export interface IFBLWidget extends Widget {
   sessionContext: ISessionContext;
 
   /**
-   * A string indicating whether it's adult or larva.
+   * A string indicating the connected server 
    * Has special setter that the neu3d visualization setting and rendered meshes
    */
-  species: string;
+  server: string;
 
   /**
    * Dispose current widget
@@ -50,9 +61,9 @@ export interface IFBLWidget extends Widget {
   name: string
 
   /**
-   * Signal that emits new species name when changed
+   * Signal that emits new server name when changed
    */
-  speciesChanged: ISignal<IFBLWidget, string>;
+  serverChanged: ISignal<IFBLWidget, string>;
 
   /**
    * Signal that emits model change
@@ -62,7 +73,7 @@ export interface IFBLWidget extends Widget {
   /**
    * Icon associated with the widget
    */
-  icon?: LabIcon;
+  icon: LabIcon;
 
   /**
    * Toolbar to be added to the MainAreaWidget
@@ -70,10 +81,21 @@ export interface IFBLWidget extends Widget {
    * TODO: This is currently defined here due to an issue with using 
    *   MainAreaWidget class directly
    */
-  toolbar?: Toolbar<Widget>;
+  toolbar: Toolbar<Widget>;
 
 
-  clientId?: string;
+  /**
+   * Id of FBLClient Id
+   */
+  clientId: string;
+
+
+  /**
+   * Reference to Info Widget
+   * 
+   * Note: currently only required by Neu3D-Widget.
+   */
+  info?: InfoWidget
 }
 
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
@@ -89,13 +111,15 @@ export class FBLWidget extends Widget implements IFBLWidget {
       basePath,
       name,
       model,
-      species,
+      server,
       sessionContext,
       icon,
-      clientId
+      clientId,
+      serverSettings
     } = options;
 
-    
+    this.serverSettings = serverSettings ?? {};
+
     // keep track of number of instances
     const count = Private.count++;
 
@@ -168,8 +192,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
-      // set species after session is avaible, in case the setter needs the session
-      this.species = species ?? 'No Species';
+      // set server after session is avaible, in case the setter needs the session
+      this.server = server ?? 'No Server';
       Private.updateTitle(this, this._connected);
     });
 
@@ -420,11 +444,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return this._modelChanged;
   }
 
-  /** 
-   * Return A signal that indicates species change
+  /**
+   * Return A signal that indicates server change
    */
-  get speciesChanged(): ISignal<this, string> {
-    return this._speciesChanged;
+  get serverChanged(): ISignal<this, string> {
+    return this._serverChanged;
   }
 
   /** Code for initializing fbl in the connected kernel
@@ -443,17 +467,79 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * Code for initializing a client connected to the current widget
   * @param clientargs additional argument for client
   */
-  initClientCode(clientargs?: string): string {
-    return `
+  initClientCode(server?: string): string {
+    let currentServer = this.serverSettings[this.server];
+    if (server !== this.server && server in this.serverSettings){
+      currentServer = this.serverSettings[server];
+    }
+
+    let args = '';
+    if (currentServer?.USER?.user) {
+      args += `user='${currentServer.USER.user}',`;
+    }
+    if (currentServer?.USER?.secret) {
+      args += `secret='${currentServer.USER.secret}',`;
+    }
+    if (currentServer?.AUTH?.ssl === true) {
+      args += 'ssl=True,';
+    }
+    if (currentServer?.AUTH?.ca_cert_file) {
+      args += `ca_cert_file="${currentServer.AUTH.ca_cert_file}",`;
+    }
+    if (currentServer?.AUTH?.intermediate_cer_file) {
+      args += `intermediate_cer_file="${currentServer.AUTH.intermediate_cer_file}",`;
+    }
+    if (currentServer?.DEBUG?.debug === false) {
+      args += 'debug=False,';
+    }
+    if (currentServer?.AUTH?.authentication === false) {
+      args += 'authentication=False';
+    }
+
+    let websocket = currentServer?.AUTH?.ssl === true ? 'wss' : 'ws';
+    if (currentServer?.SERVER?.ip) {
+      args += `url=u"${websocket}://${currentServer.SERVER.ip}/ws",`;
+    }
+
+    if (currentServer?.SERVER?.realm) {
+      args += `realm=u"${currentServer.SERVER.realm}",`;
+    }
+
+    let code = `
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
     # if '${this.clientId}' not in fbl.client_manager.clients:
     _comm = fbl.MetaComm('${this.clientId}', fbl)
-    _client = fbl.Client(FFBOLabcomm = _comm ${clientargs || ''})
+    _client = fbl.Client(FFBOLabcomm=_comm, ${args})
     fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
-    `;
+    `
+    return code;
+    // console.warn('[FBL-Widgets] initClientCode will be replaced by initClient after 0.2.0 beta release');
+    // return `
+    // if 'fbl' not in globals():
+    //     import flybrainlab as fbl
+    //     fbl.init()
+    // # if '${this.clientId}' not in fbl.client_manager.clients:
+    // _comm = fbl.MetaComm('${this.clientId}', fbl)
+    // _client = fbl.Client(FFBOLabcomm = _comm ${clientargs || ''})
+    // fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
+    // `;
   }
+
+  /**
+   * Initialize Client Based on Current Server Setting
+   * @param server 
+   */
+  initClient(server?: string): void{
+    let code = this.initClientCode(server);
+    try {
+      this.sessionContext.session.kernel.requestExecute({ code: code });
+    } catch(reason) {
+      console.warn(`[FBL-Widget] initClient failed, ${reason}`);
+    }
+  }
+
 
   /**
   * Initialize FBLClient on associated kernel
@@ -529,7 +615,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   populateToolBar(): void {
     this.toolbar.addItem('spacer', Toolbar.createSpacerItem());
-    this.toolbar.addItem('Species Changer', createSpeciesButton(this));
+    this.toolbar.addItem('Server Changer', createServerButton(this));
     this.toolbar.addItem('Session Dialog', createSessionDialogButton(this));
     this.toolbar.addItem('restart', Toolbar.createRestartButton(this.sessionContext));
     this.toolbar.addItem('stop', Toolbar.createInterruptButton(this.sessionContext));
@@ -538,40 +624,49 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
   
   /**
-   * Set species
-   * @param newSpecies new species to be added
-   * triggers a species changed callback if species has changed
+   * Set server
+   * @param newServer new Server to connect to
+   * triggers a server changed callback if server has changed
    */
-  set species(newSpecies: string) {
-    if (newSpecies === this._species) {
+  set server(newServer: string) {
+    if (newServer === this._server) {
       return;
     }
-    this._speciesChanged.emit(newSpecies);
-    this._species = newSpecies;
+    if (newServer === 'No Server'){
+      this._serverChanged.emit(newServer);
+      this._server = newServer;
+      return;
+    }
+    if (!(newServer in this.serverSettings)){
+      return;
+    }
+
+    this._serverChanged.emit(newServer);
+    this._server = newServer;
   }
 
   /** 
-   * Returns species
-   * Note: setter/getter for species need to be redefined in child class
+   * Returns server
+   * Note: setter/getter for server need to be redefined in child class
    * See reference: https://github.com/microsoft/TypeScript/issues/338
   */
-  get species(): string {
-    return this._species
+  get server(): string {
+    return this._server
   }
-
 
   /**
   * The Elements associated with the widget.
   */
+  serverSettings: FBL.FBLServerSettings = {};
   protected _connected: Date;
   protected _isDisposed = false;
   protected _modelChanged = new Signal<this, object>(this);
-  protected _speciesChanged = new Signal<this, string>(this);
+  protected _serverChanged = new Signal<this, string>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   comm: Kernel.IComm; // the actual comm object
   readonly name: string;
-  protected _species: any;
+  protected _server: any;
   clientId: string;
   innerContainer: HTMLDivElement;
   sessionContext: ISessionContext;
@@ -594,9 +689,9 @@ export namespace FBLWidget {
     app: JupyterFrontEnd;
 
     /**
-     * Species
+     * Server
      */
-    species?: string;
+    server?: string;
 
     /**
      * The path of an existing widget.
@@ -642,9 +737,19 @@ export namespace FBLWidget {
 
 
     /** 
-     * Id
+     * Client Id
     */
     clientId?: string
+
+    /**
+     * Info panel widget
+     */
+    info?: any;
+
+    /**
+     * All available server settings
+     */
+    serverSettings?: FBL.FBLServerSettings;
   }
 
 }
@@ -686,8 +791,6 @@ namespace Private {
       widget.title.caption = 'No Kernel';
     }
   }
-
-  
 }
 
 namespace ANSI {

@@ -1,4 +1,3 @@
-
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin,
@@ -9,9 +8,12 @@ import {
   DocumentRegistry
 } from '@jupyterlab/docregistry';
 
+import {
+  ISettingRegistry
+} from '@jupyterlab/settingregistry';
 
-import { 
-  ILauncher 
+import {
+  ILauncher
 } from '@jupyterlab/launcher';
 
 import {
@@ -20,11 +22,10 @@ import {
 } from '@lumino/coreutils';
 
 import {
-  ICommandPalette, 
-  MainAreaWidget, 
-  WidgetTracker, 
+  ICommandPalette,
+  MainAreaWidget,
+  WidgetTracker,
   IWidgetTracker,
-  ISessionContext,
   showDialog,
   Dialog
 } from '@jupyterlab/apputils';
@@ -37,7 +38,7 @@ import{
 import {
   LabIcon
 } from '@jupyterlab/ui-components'
-import { 
+import {
   Widget
  } from '@lumino/widgets';
 
@@ -48,6 +49,7 @@ import { IFBLWidget } from './widgets/template-widget/index';
 import { InfoWidget } from './widgets/info-widget/index';
 import { NeuGFXWidget } from './widgets/neugfx-widget/index';
 import { Neu3DWidget } from './widgets/neu3d-widget/index';
+import { FBLWidget } from './widgets/template-widget/index';
 import '../style/index.css';
 
 
@@ -106,7 +108,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
     }
   }
 
-  /** 
+  /**
    * Return alternate view of the trackers, keyed by session
    */
   get sessionsDict(): {[sessionPath: string]: FBLPanel[] } {
@@ -127,7 +129,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
     return sessionsDict;
   }
 
-  /** 
+  /**
    * Return a array of unique sessions
    */
   get sessions(): Session.ISessionConnection[] {
@@ -148,7 +150,6 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
   trackers: {[name: string]: FBLTracker};
 }
 
-
 /**
  * The command IDs used by the console plugin.
  */
@@ -162,77 +163,121 @@ namespace CommandIDs {
   export const CreateWorkspace = 'fbl-workspace:create';
 }
 
-
-
-
 /**
  * Initialization data for the neu3d-extension extension.
  */
 const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
-  id: '@flybrainlab/fbl-extension',
+  id: '@neuro-mynerva/fbl-extension:plugin',
   autoStart: true,
-  requires: [ICommandPalette, ILauncher, ILayoutRestorer],
+  requires: [ICommandPalette, ILauncher, ILayoutRestorer, ISettingRegistry],
   provides: IFBLWidgetTrackers,
   activate: activateFBL
 };
+
+export default extension;
 
 /**
  * Activate the FBL widget extension.
  */
 async function activateFBL(
-  app: JupyterFrontEnd, 
+  app: JupyterFrontEnd,
   palette: ICommandPalette,
   launcher: ILauncher,
-  restorer: ILayoutRestorer
+  restorer: ILayoutRestorer,
+  settings: ISettingRegistry
 ): Promise<IFBLWidgetTrackers> {
   console.log("FBL Extension Activated");
   const fblWidgetTrackers = new FBLWidgetTrackers({
     "Neu3D": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'}),
     "NeuGFX": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'})
   })
+
+  const { commands } = app;
+
+  // all available server settings
+  let fblServerSettings: FBL.FBLServerSettings = {};
+  
+  // Wait for the application to be restored and
+  // for the settings for this plugin to be loaded
+  Promise.all([app.restored, settings.load(extension.id)])
+    .then(([, setting]) => {
+      // Read the settings
+      fblServerSettings = FBL.loadFBLServerSetting(setting);
+      fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
+          w.content.serverSettings = fblServerSettings;
+      });
+      fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
+        w.content.serverSettings = fblServerSettings;
+      })
+      // Listen for your plugin setting changes using Signal
+      setting.changed.connect((setting)=>{
+        fblServerSettings = FBL.loadFBLServerSetting(setting);
+        fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
+          w.content.serverSettings = fblServerSettings;
+        });
+        fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
+          w.content.serverSettings = fblServerSettings;
+        });
+      }, extension);
+    })
+    .catch(reason => {
+      console.error(
+        `Something went wrong when reading the FBLServerSettings.\n${reason}`
+      );
+    });
+
+  // Ensure that the widgets' are aware of all server settings when added
+  fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
+    w.content.serverSettings = fblServerSettings;
+  }, extension);
+  fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
+    w.content.serverSettings = fblServerSettings;
+  }, extension);
+
   // Handle state restoration.
-  // restorer.restore(fblWidgetTrackers.trackers.Neu3D, {
-  //   command: CommandIDs.Neu3DOpen,
-  //   args: widget => {
-  //     const { path, name } = widget.content.sessionContext;
-  //     return {
-  //       model: {
-  //         data: widget.content.model?.data,
-  //         metadata: widget.content.model?.metadata,
-  //         states: widget.content.model?.states
-  //       },
-  //       clientId: widget.content.clientId,
-  //       id: widget.content.id,
-  //       species: widget.content.species,
-  //       path: path,
-  //       name: name
-  //     };
-  //   },
-  //   name: widget => widget.content.sessionContext.name,
-  //   when: app.serviceManager.ready
-  // });
+  restorer.restore(fblWidgetTrackers.trackers.Neu3D, {
+    command: CommandIDs.Neu3DOpen,
+    args: widget => {
+      const { path, name } = widget.content.sessionContext;
+      return {
+        model: {
+          data: widget.content.model?.data,
+          metadata: widget.content.model?.metadata,
+          states: widget.content.model?.states
+        },
+        serverSettings: widget.content.serverSettings as unknown as ReadonlyPartialJSONObject,
+        server: widget.content.server,
+        clientId: widget.content.clientId,
+        id: widget.content.id,
+        path: path,
+        name: name
+      };
+    },
+    name: widget => widget.content.sessionContext.name,
+    when: app.serviceManager.ready
+  });
 
-
-  // restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
-  //   command: CommandIDs.NeuGFXOpen,
-  //   args: widget => {
-  //     const { path, name } = widget.content.sessionContext;
-  //     return {
-  //       model: {
-  //         data: widget.content.model?.data,
-  //         metadata: widget.content.model?.metadata,
-  //         states: widget.content.model?.states
-  //       },
-  //       clientId: widget.content.clientId,
-  //       id: widget.content.id,
-  //       species: widget.content.species,
-  //       path: path,
-  //       name: name
-  //     };
-  //   },
-  //   name: widget => widget.content.sessionContext.name,
-  //   when: app.serviceManager.ready
-  // });
+  restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
+    command: CommandIDs.NeuGFXOpen,
+    args: widget => {
+      const { path, name } = widget.content.sessionContext;
+      return {
+        model: {
+          data: widget.content.model?.data,
+          metadata: widget.content.model?.metadata,
+          states: widget.content.model?.states
+        },
+        serverSettings: widget.content.serverSettings as unknown as ReadonlyPartialJSONObject,
+        clientId: widget.content.clientId,
+        id: widget.content.id,
+        server: widget.content.server,
+        path: path,
+        name: name
+      };
+    },
+    name: widget => widget.content.sessionContext.name,
+    when: app.serviceManager.ready
+  });
 
   window.app = app;
   window.fbltrackers = fblWidgetTrackers;
@@ -250,7 +295,7 @@ async function activateFBL(
   }
   app.shell.add(masterWidget, 'left', {rank: 1900});
   window.master = masterWidget;
-  
+
   // add info panel
   infoWidget = new InfoWidget();
   infoWidget.id = 'FBL-Info';
@@ -284,7 +329,7 @@ async function activateFBL(
     return widget;
   }
 
-  app.commands.addCommand(CommandIDs.Neu3DCreate, {
+  commands.addCommand(CommandIDs.Neu3DCreate, {
     label: 'Create Neu3D Instance',
     icon: NEU3DICON,
     execute: async (args) => {
@@ -292,14 +337,16 @@ async function activateFBL(
         app:app,
         Module:Neu3DWidget,
         icon:NEU3DICON,
-        moduleArgs:args,
-        tracker:fblWidgetTrackers.trackers.Neu3D,
-        info:infoWidget,
-        species: args.species as string ?? 'No species'
+        moduleArgs:{
+          server: args.server as string ?? 'No Server',
+          info:infoWidget, 
+          ...args
+        },
+        tracker:fblWidgetTrackers.trackers.Neu3D
       });
     }
   });
-  app.commands.addCommand(CommandIDs.Neu3DOpen, {
+  commands.addCommand(CommandIDs.Neu3DOpen, {
     label: 'Open Neu3D Instance',
     icon: NEU3DICON,
     execute: async (args) => {
@@ -307,15 +354,17 @@ async function activateFBL(
         app:app,
         Module:Neu3DWidget,
         icon:NEU3DICON,
-        moduleArgs:args,
-        tracker:fblWidgetTrackers.trackers.Neu3D,
-        info:infoWidget,
-        species: args.species as string ?? 'No species'
+        moduleArgs: {
+          server: args.server as string ?? 'No Server',
+          info:infoWidget, 
+          ...args
+        },
+        tracker:fblWidgetTrackers.trackers.Neu3D
       });
     }
-  });  
+  });
 
-  app.commands.addCommand(CommandIDs.NeuGFXCreate, {
+  commands.addCommand(CommandIDs.NeuGFXCreate, {
     label: 'Create NeuGFX Instance',
     icon: NEUGFXICON,
     execute: async (args) => {
@@ -324,14 +373,16 @@ async function activateFBL(
           app:app,
           Module:NeuGFXWidget,
           icon:NEUGFXICON,
-          moduleArgs:args,
-          tracker:fblWidgetTrackers.trackers.NeuGFX,
-          species: args.species as string ?? 'No species'
+          moduleArgs:{
+            server: args.server as string ?? 'No Server',
+            ...args
+          },
+          tracker:fblWidgetTrackers.trackers.NeuGFX
         });
     }
   });
 
-  app.commands.addCommand(CommandIDs.Neu3DCreateConsole, {
+  commands.addCommand(CommandIDs.Neu3DCreateConsole, {
     label: 'Create Console for Neu3D Widget',
     icon: NEU3DICON,
     execute: args => {
@@ -346,7 +397,7 @@ async function activateFBL(
   });
 
 
-  app.commands.addCommand(CommandIDs.NeuGFXCreateConsole, {
+  commands.addCommand(CommandIDs.NeuGFXCreateConsole, {
     label: 'Create Console for NeuGFX Widget',
     icon: NEUGFXICON,
     execute: args => {
@@ -362,26 +413,26 @@ async function activateFBL(
 
 
   // workspace
-  app.commands.addCommand(CommandIDs.CreateWorkspace, {
+  commands.addCommand(CommandIDs.CreateWorkspace, {
     label: 'Create FBL Workspace',
     icon: fblIcon,
     execute: async (args) => {
-      let species: string = 'No species';
+      let server: string = 'No Server';
       let abort: boolean = false;
       await showDialog({
-        title: 'Change Species',
-        body: new FBL.SpeciesSelector(),
+        title: 'Change Server',
+        body: new FBL.ServerSelector(fblServerSettings),
         buttons: [
           Dialog.cancelButton(),
-          Dialog.warnButton({label: 'No Species'}),
+          Dialog.warnButton({label: 'No Server'}),
           Dialog.okButton({label: 'Select'})
         ]
       }).then(result =>{
         if (result.button.accept){
           if (result.button.displayType === 'warn'){
-            species = 'No Species';
+            server = 'No Server';
           } else {
-            species = result.value;
+            server = result.value;
           }
         } else{
           abort = true;
@@ -392,7 +443,7 @@ async function activateFBL(
         return;
       }
 
-      let notebook_panel = await app.commands.execute(
+      let notebook_panel = await commands.execute(
         'notebook:create-new',
         { kernelName: 'python3' }
       )
@@ -403,24 +454,29 @@ async function activateFBL(
           app: app,
           Module:Neu3DWidget,
           icon:NEU3DICON,
-          moduleArgs: args,
+          moduleArgs: {
+            info: infoWidget, 
+            server: server, 
+            sessionContext: notebook_panel.sessionContext, 
+            ...args
+          },
           tracker: fblWidgetTrackers.trackers.Neu3D,
-          species: species,
-          info: infoWidget,
-          sessionContext: notebook_panel.sessionContext,
           add_widget_options:{ref: notebook_panel.id, mode: 'split-left'}
         });
-      
+
       // 2. create neugfx with the same client id
       await FBL.createFBLWidget(
         {
           app: app,
           Module:NeuGFXWidget,
           icon:NEUGFXICON,
-          moduleArgs: {clientId: neu3d_panel.content.clientId, ...args},
+          moduleArgs: {
+            clientId: neu3d_panel.content.clientId,
+            server: server, 
+            sessionContext: notebook_panel.sessionContext, 
+            ...args
+          },
           tracker: fblWidgetTrackers.trackers.NeuGFX,
-          species: species,
-          sessionContext: notebook_panel.sessionContext,
           add_widget_options:{ref: neu3d_panel.id, mode: 'split-bottom'}
         });
     }
@@ -445,13 +501,13 @@ async function activateFBL(
     });
 
   }
-  
 
-  /** 
+
+  /**
    * Add the create-console to context Menu
    * The browser will look class `selecttor` to see if the command should be enabled
    * These classnames should be the classnames of the individual FBL Widgets
-   */ 
+   */
   app.contextMenu.addItem({
     command: CommandIDs.Neu3DCreateConsole,
     selector: NEU3D_CLASS_NAME,
@@ -462,7 +518,7 @@ async function activateFBL(
     selector: NEUGFX_CLASS_NAME,
     rank: Infinity
   });
-  
+
   // Add the command to the palette.
   [
     CommandIDs.Neu3DCreate,
@@ -479,31 +535,68 @@ async function activateFBL(
 }
 
 export namespace FBL {
+  export function arrToDict(serverSettings: IFBLServerSetting[]): FBLServerSettings {
+    let settings: FBLServerSettings = {};
+    for (let server of serverSettings) {
+      settings[server.name] = server;
+    }
+    return settings;
+  }
+
+  export type FBLServerSettings = {[name: string]: IFBLServerSetting};
+  export interface IFBLServerSetting {
+    name: string;
+    AUTH: {
+      ssl: boolean,
+      authentication: boolean,
+      cert?: string,
+      key?: string,
+      'chain-cert'?: string,
+      ca_cert_file?: string,
+      intermediate_cer_file?: string
+    };
+    USER: {
+      user: string,
+      secret: string,
+    };
+    SERVER: {
+      ip: string,
+      realm: string,
+      // dataset: string[]
+    };
+    DEBUG: {
+      debug: boolean
+    };
+  }
+  /**
+   * Load and Parse All available FBL Settings
+   *
+   * @param setting Extension settings
+   */
+  export function loadFBLServerSetting(setting: ISettingRegistry.ISettings): FBLServerSettings {
+    return FBL.arrToDict((setting.get('fbl-servers').composite as any) as IFBLServerSetting[]);
+  }
 
   /**
-   * A widget that provides a species selection.
+   * A widget that provides a server selection.
    */
-  export class SpeciesSelector extends Widget {
+  export class ServerSelector extends Widget {
     /**
      * Create a new kernel selector widget.
      */
-    constructor() {
-      const species_list = [
-        'adult Drosophila melanogaster (FlyCircuit)',
-        'adult Drosophila melanogaster (Hemibrain)',
-        'larval Drosophila melanogaster'
-      ];
-
+    constructor(serverDict: FBLServerSettings) {
       const body = document.createElement('div');
       const text = document.createElement('label');
-      text.textContent = `Select species for FBL Workspace`;
+      text.textContent = `Select server for FBL Workspace`;
       body.appendChild(text);
 
       const selector = document.createElement('select');
-      for (const species of species_list){
+      let all_servers = Object.keys(serverDict);
+      all_servers.push('No Server');
+      for (const name of all_servers){
         const option = document.createElement('option');
-        option.text = species;
-        option.value = species;
+        option.text = name;
+        option.value = name;
         selector.appendChild(option);
       }
       body.appendChild(selector);
@@ -522,7 +615,7 @@ export namespace FBL {
 
   /**
    * Check if a given widget has a running session
-   * @param args 
+   * @param args
    */
   export function hasRunningSession(widget: MainAreaWidget<IFBLWidget>): boolean {
     if (!widget){
@@ -551,7 +644,7 @@ export namespace FBL {
     let targetCandidates = new Array<any>();
     // interrogate kernel as Kernel class
     let msg = await kernel.requestCommInfo({});
-    if (!kernel.handleComms){ 
+    if (!kernel.handleComms){
       // force kernel to handleComms
       kernel.handleComms = true;
     }
@@ -564,7 +657,7 @@ export namespace FBL {
     } else{
       return Promise.resolve(null);
     }
-    
+
     if (targetCandidates.length == 0) {
       return Promise.resolve(null);
     }
@@ -575,23 +668,20 @@ export namespace FBL {
   }
 
   export async function createFBLWidget(options: {
-    app: JupyterFrontEnd, 
+    app: JupyterFrontEnd,
     Module: any,
     icon: LabIcon,
-    moduleArgs: any, 
+    moduleArgs: Partial<FBLWidget.IOptions>,
     tracker: WidgetTracker<MainAreaWidget<IFBLWidget>>,
-    species?: string, // species for workspace
-    info?: Widget, // info panel for neu3d
-    sessionContext?: ISessionContext,
     add_widget_options?: DocumentRegistry.IOpenOptions
   }) : Promise<MainAreaWidget<IFBLWidget>> {
     let widget: IFBLWidget;
     const {
-      app, Module, icon, moduleArgs, tracker, species, info, add_widget_options
+      app, Module, icon, moduleArgs, tracker, add_widget_options
     } = options;
 
 
-    let sessionContext = options.sessionContext || tracker.currentWidget?.content?.sessionContext;
+    let sessionContext = moduleArgs.sessionContext ?? tracker.currentWidget?.content?.sessionContext;
 
     if (sessionContext === undefined){
       moduleArgs['kernelPreference'] = {
@@ -600,35 +690,23 @@ export namespace FBL {
         name: 'No Kernel'
       }
     }
+    widget = new Module({
+      app: app,
+      icon: icon,
+      sessionContext: sessionContext,
+      ...moduleArgs,
+    });
 
-    if (info) {
-      widget = new Module({
-        app: app, 
-        icon: icon,
-        info: info,
-        sessionContext: sessionContext,
-        species: species,
-        ...moduleArgs,
-      });
-    } else{
-      widget = new Module({
-        app: app, 
-        icon: icon,
-        sessionContext: sessionContext,
-        species: species,
-        ...moduleArgs,
-      });
-    }
     let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
     if (!tracker.has(panel)){
       await tracker.add(panel);
     }
-    // widget.sessionContext.propertyChanged.connect(()=>{
-    //   void tracker.save(panel);
-    // });
-    // widget.modelChanged.connect(()=>{
-    //   void tracker.save(panel);
-    // });
+    widget.sessionContext.propertyChanged.connect(()=>{
+      void tracker.save(panel);
+    });
+    widget.modelChanged.connect(()=>{
+      void tracker.save(panel);
+    });
     // Attach the widget to the main work area if it's not there
     app.shell.add(panel, 'main', add_widget_options);
     widget.update();
@@ -643,7 +721,7 @@ export namespace FBL {
     panel:MainAreaWidget<IFBLWidget>,
   args: any) {
     app.commands.execute(
-      'console:create', 
+      'console:create',
       {
         path: panel.content.sessionContext.path,
         ref: panel.id,
@@ -654,5 +732,3 @@ export namespace FBL {
 
   export const testAttr: string = 'test';
 }
-
-export default extension;

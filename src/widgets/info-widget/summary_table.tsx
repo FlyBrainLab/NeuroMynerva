@@ -161,16 +161,7 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
   } else {
     return (
       <>
-      <div 
-        className={"table-grid lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
-        data-mime-type={"text/markdown"}
-        >
-        <table className={"summary-table"}>
-          <tbody>
-            <div className={"summary-table table-grid"}>No summary information available</div>
-          </tbody>
-        </table>
-      </div>
+        No summary information available
       </>
     );
   }

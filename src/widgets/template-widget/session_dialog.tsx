@@ -18,32 +18,26 @@ import {
     fblSettingIcon
 } from '../../icons';
 
-const TOOLBAR_SPECIES_CLASS = 'jp-FBL-Species';
+const TOOLBAR_SERVER_CLASS = 'jp-FBL-Server';
 
 /**
-* A widget that provides a species selection.
+* A widget that provides a Server selection.
 */
-class SpeciesSelector extends Widget {
+export class ServerSelector extends Widget {
     /**
     * Create a new kernel selector widget.
     */
     constructor(widget: IFBLWidget) {
-        const species_list = [
-            'adult Drosophila melanogaster (FlyCircuit)',
-            'adult Drosophila melanogaster (Hemibrain)',
-            'larval Drosophila melanogaster',
-            'No Species'
-        ];
         const body = document.createElement('div');
         const text = document.createElement('label');
-        text.textContent = `Select species for: "${widget.id}"`;
+        text.textContent = `Select Server for: "${widget.id}"`;
         body.appendChild(text);
         
         const selector = document.createElement('select');
-        for (const species of species_list){
+        for (const server of Object.keys(widget.serverSettings)){
             const option = document.createElement('option');
-            option.text = species;
-            option.value = species;
+            option.text = server;
+            option.value = server;
             selector.appendChild(option);
         }
         body.appendChild(selector);
@@ -60,7 +54,7 @@ class SpeciesSelector extends Widget {
 }
 
 /**
-* A widget that provides a species selection.
+* A widget show all information regarding a given FBL session
 */
 class SessionDialog extends Widget {
     /**
@@ -84,7 +78,7 @@ class SessionDialog extends Widget {
             text = `
             <div class="lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
             <table>
-                <tr><td><b>Species</b></td><td>${widget.species}</td></tr>
+                <tr><td><b>Server</b></td><td>${widget.server}</td></tr>
                 ${sessionDesc}
             </table>
             </div>
@@ -103,46 +97,46 @@ class SessionDialog extends Widget {
 
 
 /**
-* React component for a species name button.
-* This wraps the ToolbarButtonComponent and watches the species 
+* React component for a server name button.
+* This wraps the ToolbarButtonComponent and watches the server 
 * keyword
 */
-function SpeciesComponent(
+function ServerComponent(
     props: { widget: IFBLWidget }
 ) {
     const { widget } = props;
     const callback = () => showDialog({
-        title: 'Change Species',
-        body: new SpeciesSelector(widget),
+        title: 'Change Server',
+        body: new ServerSelector(widget),
         buttons: [
             Dialog.cancelButton(),
             Dialog.warnButton({label: 'Change'})
         ]
     }).then(result =>{
         if (result.button.accept){
-            widget.species = result.value;
+            widget.server = result.value;
         }
     });
     
-    const signal = widget.speciesChanged;
-    const species = widget.species;
+    const signal = widget.serverChanged;
+    const server = widget.server;
     return (
-        <UseSignal signal={signal} initialArgs={species}>
-        {(_, species) => (
-            <ToolbarButtonComponent
-            className={TOOLBAR_SPECIES_CLASS}
+      <UseSignal signal={signal} initialArgs={server}>
+        {(_, server) => (
+          <ToolbarButtonComponent
+            className={TOOLBAR_SERVER_CLASS}
             onClick={callback}
-            label={species}
-            tooltip={'Change Species'}
-            />
+            label={server}
+            tooltip={"Change Server"}
+          />
         )}
-        </UseSignal>
+      </UseSignal>
     );
 }
 
 /**
 * React component for session overview dialog
-* This wraps the ToolbarButtonComponent and watches the species 
+* This wraps the ToolbarButtonComponent and watches the server 
 * keyword
 */
 export function SessionDialogComponent(
@@ -159,7 +153,7 @@ export function SessionDialogComponent(
     
     return (
         <ToolbarButtonComponent
-            className={TOOLBAR_SPECIES_CLASS}
+            className={TOOLBAR_SERVER_CLASS}
             onClick={callback}
             icon={ fblSettingIcon }
             tooltip={'View Session Details'}
@@ -167,13 +161,13 @@ export function SessionDialogComponent(
     );
 }
             
-export function createSpeciesButton(
+export function createServerButton(
     widget: FBLWidget
 ): Widget {
     const el = ReactWidget.create(
-        <SpeciesComponent widget={widget}/>
+        <ServerComponent widget={widget}/>
         );
-    el.addClass(TOOLBAR_SPECIES_CLASS);
+    el.addClass(TOOLBAR_SERVER_CLASS);
     return el;
 }
 
@@ -184,6 +178,6 @@ export function createSessionDialogButton(
     const el = ReactWidget.create(
         <SessionDialogComponent widget={widget}/>
         );
-    el.addClass(TOOLBAR_SPECIES_CLASS);
+    el.addClass(TOOLBAR_SERVER_CLASS);
     return el;
 }

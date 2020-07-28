@@ -157,16 +157,24 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     return;
   }
 
-  get species(): string{
-    return this._species;
+  get server(): string{
+    return this._server;
   }
   
-  set species(new_species: string) {
-    if (new_species === this._species) {
+  set server(newServer: string) {
+    if (newServer === this._server) {
       return;
     }
-    this._species = new_species;
-    this._speciesChanged.emit(this._species);
+    if (newServer === "No Server") {
+      this._serverChanged.emit(newServer);
+      this._server = newServer;
+      return;
+    }
+    if (!(newServer in this.serverSettings)){
+      return;
+    }
+    this._serverChanged.emit(newServer);
+    this._server = newServer;
   }
 
   /**

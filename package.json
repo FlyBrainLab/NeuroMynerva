@@ -1,6 +1,6 @@
 {
-  "name": "@flybrainlab/fbl-extension",
-  "version": "0.1.0",
+  "name": "@neuro-mynerva/fbl-extension",
+  "version": "0.2.0",
   "description": "FBL Extension.",
   "keywords": [
     "jupyter",
@@ -9,10 +9,15 @@
   ],
   "license": "BSD-3-Clause",
   "author": "FlyBrainLab Dev Team",
+  "homepage": "https://github.com/FlyBrainLab/NeuroMynerva/",
+  "bugs": {
+    "url": "https://github.com/FlyBrainLab/NeuroMynerva/issues"
+  },
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
     "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
-    "style/widgets/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+    "style/widgets/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "schema/**/*.json"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -30,6 +35,7 @@
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@jupyterlab/application": "^2.0.0",
     "@jupyterlab/launcher": "^2.1.1",
+    "@jupyterlab/mainmenu": "^2.2.0",
     "@jupyterlab/ui-components": "^2.1.1",
     "@types/jquery": "^3.3.38",
     "@types/recharts": "^1.8.14",
@@ -56,6 +62,7 @@
     "style/*.css"
   ],
   "jupyterlab": {
-    "extension": true
+    "extension": true,
+    "schemaDir": "schema"
   }
 }

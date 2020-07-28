@@ -59,7 +59,7 @@ declare global {
 * An Neu3D Widget
 */
 export class Neu3DWidget extends FBLWidget implements IFBLWidget {
-  constructor(options: Neu3D.IOptions) {
+  constructor(options: FBLWidget.IOptions) {
     super({
       name:options.name || `Neu3D-${Private.count++}`,
       icon: Icons.neu3DIcon,
@@ -189,9 +189,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   // }
 
   dispose() {
-    this.neu3d.controlPanel.destroy();
-    this.neu3d.reset(true);
-    this.neu3d = null;
+    this.neu3d.dispose();
     delete this.neu3d;
     super.dispose();
   }
@@ -655,10 +653,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   onAfterShow(msg: Message){
     this.neu3d?.onWindowResize();
     if (!objEmpty(this.model.metadata)) {
-      this.neu3d.import_settings(this.model.metadata);
+      this.neu3d?.import_settings(this.model.metadata);
     }
     if (!objEmpty(this.model.states)) {
-      this.neu3d.import_state(this.model.states);
+      this.neu3d?.import_state(this.model.states);
     }
     super.onAfterShow(msg);
   }
@@ -673,10 +671,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
   
   /** 
-   * Returns species
+   * Returns server
    */
-  get species(): string {
-    return this._species
+  get server(): string {
+    return this._server
   }
 
   get neu3DReady(): Promise<void> {
@@ -684,23 +682,26 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
 
   /**
-   * Set species
-   * @param newSpecies new species to be added
-   *    - If sepcies is `adult` or `larva`, this will display mesh and change metadata settings
+   * Set server
+   * @param newServer new server to be added
    */
-  set species(newSpecies: string) {
-
-    // const permitted_species = [
-    //   'larval Drosophila melanogaster',
-    //   'adult Drosophila melanogaster (FlyCircuit)',
-    //   'adult Drosophila melanogaster (Hemibrain)',
-    //   'No Species'
-    // ]
-    if (newSpecies === this._species){// || !permitted_species.includes(newSpecies)) {
+  set server(newServer: string) {
+    if (newServer === this._server) {
       return;
     }
-    this._species = newSpecies;
-    this._speciesChanged.emit(newSpecies);
+
+    if (newServer === 'No Server'){
+      (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
+      this._serverChanged.emit(newServer);
+      this._server = newServer;
+      return;
+    }
+    if (!(newServer in this.serverSettings)){
+      return;
+    }
+  
+    this._serverChanged.emit(newServer);
+    this._server = newServer;
 
     let removeNeurons = false;
     this.neu3DReady.then(()=>{
@@ -710,7 +711,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           title: 'Remove Neurons/Synapses?',
           body: `
             Current Neu3D contains neurons/synapses, do you want to 
-            keep the neurons or remove them after changing species?
+            keep the neurons or remove them after changing server?
           `,
           buttons: [
               Dialog.cancelButton({ label: 'Keep' }),
@@ -738,8 +739,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             }
           }
         }
-        switch (this._species) {
-          case 'larval Drosophila melanogaster':
+        switch (this._server) {
+          case 'larva(l1em)':
             this.neu3d._metadata.resetPosition =  {x: 42.057169835814626, y: 18.465885594337543, z: -509.65272951348953};
             this.neu3d._metadata.upVector = {x: 0.0022681554337180836, y: -0.9592325957384876, z: 0.2826087096034669};
             this.neu3d._metadata.cameraTarget = {x: 42.11358557008077, y: 74.90946190543991, z: 58.654427921234685};
@@ -747,21 +748,23 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
-            this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
+            // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
+            this.initClient();
             (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";
             break;
-          case 'adult Drosophila melanogaster (FlyCircuit)':
+          case 'adult(flycircuit)':
             this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
             this.neu3d._metadata.upVector = {x: 0., y: 1., z: 0.};
             this.neu3d.updateControls();
             this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
-            this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
+            // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
+            this.initClient();
             (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show neurons in ellipsoid body)";
 
             break;
-          case 'adult Drosophila melanogaster (Hemibrain)':
+          case 'adult(hemibrain)':
             this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
             this.neu3d._metadata.upVector = {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184};
             this.neu3d._metadata.cameraTarget = {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273};
@@ -769,16 +772,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
-            this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
+            // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
+            this.initClient();
             (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";
-            break;
-          case 'No species':
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
-            // no-op
             break;
           default:
             (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
-            console.error(`[Neu3D-Widget] species ${newSpecies} not recognized.`);
+            console.error(`[Neu3D-Widget] Server ${newServer} not recognized.`);
             break;
         }
 
@@ -867,11 +867,5 @@ namespace Private {
       tooltip: tooltip
     } as any);
     return btn;
-  }
-}
-
-namespace Neu3D {
-  export interface IOptions extends FBLWidget.IOptions {
-    info?: any; // info panel widget
   }
 }

@@ -128,7 +128,7 @@ function PrePost(props: { cx: number; cy: number; pre: boolean; num: number }) {
         textAnchor="middle"
         dominantBaseline="central"
       >
-        <tspan alignmentBaseline="baseline" text-anchor="middle" fontSize="15">
+        <tspan alignmentBaseline="baseline" textAnchor="middle" fontSize="15">
           {props.pre ? <>Pre: {props.num}</> : <>Post: {props.num}</>}
         </tspan>
       </text>
