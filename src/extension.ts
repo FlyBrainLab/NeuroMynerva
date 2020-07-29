@@ -340,6 +340,7 @@ async function activateFBL(
         moduleArgs:{
           server: args.server as string ?? 'No Server',
           info:infoWidget, 
+          _count: fblWidgetTrackers.trackers.Neu3D.size, 
           ...args
         },
         tracker:fblWidgetTrackers.trackers.Neu3D
@@ -356,7 +357,8 @@ async function activateFBL(
         icon:NEU3DICON,
         moduleArgs: {
           server: args.server as string ?? 'No Server',
-          info:infoWidget, 
+          info:infoWidget,
+          _count: fblWidgetTrackers.trackers.Neu3D.size,
           ...args
         },
         tracker:fblWidgetTrackers.trackers.Neu3D
@@ -375,6 +377,7 @@ async function activateFBL(
           icon:NEUGFXICON,
           moduleArgs:{
             server: args.server as string ?? 'No Server',
+            _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
           tracker:fblWidgetTrackers.trackers.NeuGFX

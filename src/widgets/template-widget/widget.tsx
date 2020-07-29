@@ -115,12 +115,14 @@ export class FBLWidget extends Widget implements IFBLWidget {
       sessionContext,
       icon,
       clientId,
-      serverSettings
+      serverSettings,
+      _count
     } = options;
 
     this.serverSettings = serverSettings ?? {};
 
     // keep track of number of instances
+    Private.count += _count ?? 0;
     const count = Private.count++;
 
     // specify name
@@ -480,9 +482,12 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (currentServer?.USER?.secret) {
       args += `secret='${currentServer.USER.secret}',`;
     }
-    if (currentServer?.AUTH?.ssl === true) {
-      args += 'ssl=True,';
-    }
+
+    // DEBUG: ssl=True won't work for now, force to be False (default)
+    // if (currentServer?.AUTH?.ssl === true) {
+    //   args += 'ssl=True,';
+    // }
+
     if (currentServer?.AUTH?.ca_cert_file) {
       args += `ca_cert_file="${currentServer.AUTH.ca_cert_file}",`;
     }
@@ -750,6 +755,12 @@ export namespace FBLWidget {
      * All available server settings
      */
     serverSettings?: FBL.FBLServerSettings;
+
+    /**
+     * Tracker instance to see how many widgets of the same kind already exist in the 
+     * current workspace
+     */
+    _count?: number
   }
 
 }

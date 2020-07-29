@@ -147,7 +147,7 @@ export function SessionDialogComponent(
         title: widget.name,
         body: new SessionDialog(widget),
         buttons: [
-            Dialog.okButton({label: 'Ok'})
+            Dialog.okButton({label: 'OK'})
         ]
     });
     

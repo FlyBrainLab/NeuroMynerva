@@ -142,7 +142,7 @@
                 {
                     "name": "adult(flycircuit)",
                     "AUTH": {
-                        "ssl": false,
+                        "ssl": true,
                         "authentication": true,
                         "cert": null,
                         "key": null,
@@ -166,7 +166,7 @@
                 {
                     "name": "adult(hemibrain)",
                     "AUTH": {
-                        "ssl": false,
+                        "ssl": true,
                         "authentication": true,
                         "cert": null,
                         "key": null,
