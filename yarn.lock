@@ -30,12 +30,12 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@blueprintjs/core@^3.22.2", "@blueprintjs/core@^3.30.0":
-  version "3.30.0"
-  resolved "https://registry.yarnpkg.com/@blueprintjs/core/-/core-3.30.0.tgz#d847e451741735a7b11216fb3ec1c669f201bb90"
-  integrity sha512-/fBhPmQ1AJ7ATGzA9YBlnxN8KV7PjNeW9KL+IOWiERUNcF9kuiuKJ88hTs7gSSHNtHmCF+jheD+X0MQq4WYVjA==
+"@blueprintjs/core@^3.22.2", "@blueprintjs/core@^3.30.1":
+  version "3.30.1"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/core/-/core-3.30.1.tgz#e9edad79ee474dc5b2c1ac3a54055174482f94e3"
+  integrity sha512-vx4Sfpj3EatYGp7BbL9Y8bFHl9XeQhD86QDbK3E2QH+rPSVod1HvUmGnEvzt0fgbpYWGhfIx/AIEj9D4Ap3rKg==
   dependencies:
-    "@blueprintjs/icons" "^3.19.0"
+    "@blueprintjs/icons" "^3.20.0"
     "@types/dom4" "^2.0.1"
     classnames "^2.2"
     dom4 "^2.1.5"
@@ -47,20 +47,20 @@
     resize-observer-polyfill "^1.5.1"
     tslib "~1.10.0"
 
-"@blueprintjs/icons@^3.19.0":
-  version "3.19.0"
-  resolved "https://registry.yarnpkg.com/@blueprintjs/icons/-/icons-3.19.0.tgz#83ad9fe213705f6656dbec6e9d6bec75d3564455"
-  integrity sha512-pFgEdSDj8q8ESofuXXSfonsiiqQNJ0u54vr8zxQyKggSwgMyASM/h9MdFVED7jXaj5nsda4or+hWM1ilUeES4Q==
+"@blueprintjs/icons@^3.20.0":
+  version "3.20.0"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/icons/-/icons-3.20.0.tgz#8eae6fa490735ed2e20a670851cb6ff9d0d3973f"
+  integrity sha512-bEn7S/aYF8K1p9QJb4KcQ8R9vJLDJ+VtB81w0JlMWIrWTJyM/U3953mp22mK/jr7zJ1pyVIzw6ZRSrG8ht4rgw==
   dependencies:
     classnames "^2.2"
     tslib "~1.10.0"
 
 "@blueprintjs/select@^3.11.2":
-  version "3.13.5"
-  resolved "https://registry.yarnpkg.com/@blueprintjs/select/-/select-3.13.5.tgz#397b1833893a9a80ca111048b3ffa1335dc52649"
-  integrity sha512-GFdLhmD23JvWueLNDBZjE5+Kii1zT/R7vx/Ta5fPv3gdSnUBMyGZMkQAjKWrn7o7xyOE1im5G2A0sdhcfcs3iw==
+  version "3.13.6"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/select/-/select-3.13.6.tgz#9ed41e150011d27e615cb50200fa5c6c767800e3"
+  integrity sha512-qE5pcFNc7occAFJtEWx8SysRylZSWTyOtGNuAF3MjC4iqVnhBcQJjGGTAC2lf42ZD3OL4u14TI0kFEEB4VNnQQ==
   dependencies:
-    "@blueprintjs/core" "^3.30.0"
+    "@blueprintjs/core" "^3.30.1"
     classnames "^2.2"
     tslib "~1.10.0"
 
@@ -359,7 +359,7 @@
     react "~16.9.0"
     typestyle "^2.0.4"
 
-"@jupyterlab/ui-components@^2.0.0", "@jupyterlab/ui-components@^2.1.1", "@jupyterlab/ui-components@^2.2.0":
+"@jupyterlab/ui-components@^2.1.1", "@jupyterlab/ui-components@^2.2.0":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@jupyterlab/ui-components/-/ui-components-2.2.0.tgz#fe4edfc589789b154cbe0302c513dcdf2708a5e8"
   integrity sha512-ggMP82+IRMH9fJmQqYm/F/qmeDLCnyOzG5113LKWEorPiEdvp68ufc8cZLHxd0q4KIeI5grmvqnqwJxAdEEMvA==
@@ -1664,14 +1664,13 @@ json5@^2.1.1, json5@^2.1.2:
     minimist "^1.2.5"
 
 jupyterlab_toastify@^4.1.0:
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/jupyterlab_toastify/-/jupyterlab_toastify-4.1.0.tgz#8ed89c87f6df914848a25b143adaaa3390121bda"
-  integrity sha512-lnoLIrdquiNa17lq8ZAQ+kYn6pwdVeq4V1XVhsD/OS7NsAT5U2C1oYU46JMfZK1rDJqP4ulRRBN9gVOZt3dF2g==
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/jupyterlab_toastify/-/jupyterlab_toastify-4.1.1.tgz#7b5042cf4057ef5ecbda1b7af02c8540d5209a32"
+  integrity sha512-1IRzjE97Brxpku6wlXQyu1JYt5QgWtbzinwjVgbB4HoCpPeneiv9uMO3NUPOsQ1edHRoK9qoAHS7NxVVmop44A==
   dependencies:
     "@fortawesome/fontawesome-svg-core" "^1.2.30"
     "@fortawesome/free-solid-svg-icons" "^5.14.0"
     "@fortawesome/react-fontawesome" "^0.1.11"
-    "@jupyterlab/ui-components" "^2.0.0"
     react-toastify "^6.0.5"
 
 lcid@^1.0.0:

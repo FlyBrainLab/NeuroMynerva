@@ -565,7 +565,7 @@ export namespace FBL {
     SERVER: {
       ip: string,
       realm: string,
-      // dataset: string[]
+      dataset: string[]
     };
     DEBUG: {
       debug: boolean

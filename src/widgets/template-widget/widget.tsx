@@ -500,10 +500,12 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (currentServer?.AUTH?.authentication === false) {
       args += 'authentication=False';
     }
-
     let websocket = currentServer?.AUTH?.ssl === true ? 'wss' : 'ws';
     if (currentServer?.SERVER?.ip) {
       args += `url=u"${websocket}://${currentServer.SERVER.ip}/ws",`;
+    }
+    if (currentServer?.SERVER?.dataset) {
+      args += `dataset="${currentServer.SERVER.dataset[0] as string}",`;
     }
 
     if (currentServer?.SERVER?.realm) {
