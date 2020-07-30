@@ -34,7 +34,7 @@ export class ProcessorSelector extends Widget {
         body.appendChild(text);
         
         const selector = document.createElement('select');
-        for (const processor of Object.keys(widget.ffboProcessor.processors)){
+        for (const processor of Object.keys(widget.ffboProcessors)){
             const option = document.createElement('option');
             option.text = processor;
             option.value = processor;

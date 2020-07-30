@@ -696,7 +696,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this._processor = newProcessor;
       return;
     }
-    if (!(newProcessor in this.ffboProcessor.processors)){
+    if (!(newProcessor in this.ffboProcessors)){
       return;
     }
   

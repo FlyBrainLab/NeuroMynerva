@@ -69,20 +69,20 @@ export class MasterWidget extends ReactWidget {
     console.log('Master Widget Created');
     super();
     this.fbltrackers = fbltrackers;
-    this.ffboProcessor = ffboProcessors;
+    this.ffboProcessors = ffboProcessors;
     this.addClass(MASTER_CLASS_JLab);
     this.render();
   }
 
   protected render() {
-    return (<FBLWidgetReact.FBLWidgetTrackersComponent ffboProcessor={this.ffboProcessor} fbltrackers={this.fbltrackers}/>);
+    return (<FBLWidgetReact.FBLWidgetTrackersComponent ffboProcessors={this.ffboProcessors} fbltrackers={this.fbltrackers}/>);
   }
 
   /**
   * The Elements associated with the widget.
   */
   private fbltrackers: FBLWidgetTrackers;
-  ffboProcessor: FFBOProcessor
+  ffboProcessors: FFBOProcessor
 };
 
 
@@ -92,13 +92,13 @@ export class MasterWidget extends ReactWidget {
 namespace FBLWidgetReact {
   export function FBLWidgetTrackersComponent(props: {
     fbltrackers: FBLWidgetTrackers;
-    ffboProcessor: FFBOProcessor;
+    ffboProcessors: FFBOProcessor;
   }) {
     const trackers_arr = Object.values(props.fbltrackers.trackers);
     const trackers_names = Object.keys(props.fbltrackers.trackers);
     return (
       <>
-        {/* <FFBOProcessorButton ffboprocessor={props.ffboProcessor}></FFBOProcessorButton> */}
+        {/* <FFBOProcessorButton ffboprocessor={props.ffboProcessors}></FFBOProcessorButton> */}
         {trackers_arr.map((tracker, i) => (
           <Section key={i} name={trackers_names[i]} tracker={tracker}/>
         ))}

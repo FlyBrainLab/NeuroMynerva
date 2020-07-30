@@ -233,9 +233,9 @@ class ProcessorDetail extends ReactWidget {
 
 
 export namespace FFBOProcessor {
-    export function arrToDict(ffboProcessor: ISettings[]): IProcessors {
+    export function arrToDict(ffboProcessors: ISettings[]): IProcessors {
         let settings: IProcessors = {};
-        for (let processor of ffboProcessor) {
+        for (let processor of ffboProcessors) {
             settings[processor.name] = processor;
         }
         return settings;

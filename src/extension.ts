@@ -207,7 +207,7 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
-        ffboProcessor: widget.content.ffboProcessor as unknown as ReadonlyPartialJSONObject,
+        ffboProcessors: widget.content.ffboProcessors as unknown as ReadonlyPartialJSONObject,
         processor: widget.content.processor,
         clientId: widget.content.clientId,
         id: widget.content.id,
@@ -229,7 +229,7 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
-        ffboProcessor: widget.content.ffboProcessor as unknown as ReadonlyPartialJSONObject,
+        ffboProcessors: widget.content.ffboProcessors as unknown as ReadonlyPartialJSONObject,
         clientId: widget.content.clientId,
         id: widget.content.id,
         processor: widget.content.processor,
@@ -273,26 +273,26 @@ async function activateFBL(
         app.shell.add(masterWidget, 'left', {rank: 1900});
         window.master = masterWidget;
       } else {
-        masterWidget.ffboProcessor = ffboProcessors;
+        masterWidget.ffboProcessors = ffboProcessors;
       }
 
       fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessor = ffboProcessors;
+          w.content.ffboProcessors = ffboProcessors.processors;
       });
       fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-        w.content.ffboProcessor = ffboProcessors;
+        w.content.ffboProcessors = ffboProcessors.processors;
       })
 
       // Listen for your plugin setting changes using Signal
       setting.changed.connect((setting)=>{
         ffboProcessors.load(setting);
         fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessor = ffboProcessors;
+          w.content.ffboProcessors = ffboProcessors.processors;
         });
         fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessor = ffboProcessors;
+          w.content.ffboProcessors = ffboProcessors.processors;
         });
-        masterWidget.ffboProcessor = ffboProcessors;
+        masterWidget.ffboProcessors = ffboProcessors;
       }, extension);
     })
     .catch(reason => {
@@ -303,10 +303,10 @@ async function activateFBL(
 
   // Ensure that the widgets' are aware of all processor settings when added
   fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessor = ffboProcessors;
+    w.content.ffboProcessors = ffboProcessors?.processors ?? {};
   }, extension);
   fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessor = ffboProcessors;
+    w.content.ffboProcessors = ffboProcessors?.processors ?? {};
   }, extension);
   
 
@@ -552,9 +552,9 @@ async function activateFBL(
 }
 
 export namespace FBL {
-  export function arrToDict(ffboProcessor: IFBLProcessorSetting[]): FBLProcessorSettings {
+  export function arrToDict(ffboProcessors: IFBLProcessorSetting[]): FBLProcessorSettings {
     let settings: FBLProcessorSettings = {};
-    for (let processor of ffboProcessor) {
+    for (let processor of ffboProcessors) {
       settings[processor.name] = processor;
     }
     return settings;

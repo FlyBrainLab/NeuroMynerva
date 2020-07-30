@@ -29,7 +29,7 @@ export interface IFBLWidget extends Widget {
   /**
    * All available processor settings
    */
-  ffboProcessor: FFBOProcessor;
+  ffboProcessors: FFBOProcessor.IProcessors;
 
   /**
    * The sessionContext keeps track of the current running session
@@ -113,10 +113,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
       sessionContext,
       icon,
       clientId,
-      ffboProcessor,
+      ffboProcessors,
       _count
     } = options;
-    this.ffboProcessor = ffboProcessor;
+    this.ffboProcessors = ffboProcessors;
 
     // keep track of number of instances
     Private.count += _count ?? 0;
@@ -467,9 +467,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * @param clientargs additional argument for client
   */
   initClientCode(processor?: string): string {
-    let currentProcessor = this.ffboProcessor.select(this.processor);
-    if (processor !== this.processor && processor in this.ffboProcessor.processors){
-      currentProcessor = this.ffboProcessor.select(processor);
+    let currentProcessor = this.ffboProcessors[this.processor];
+    if (processor !== this.processor && processor in this.ffboProcessors){
+      currentProcessor = this.ffboProcessors[processor];
     }
 
     let args = '';
@@ -647,7 +647,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this._processor = newProcessor;
       return;
     }
-    if (!(newProcessor in this.ffboProcessor.processors)){
+    if (!(newProcessor in this.ffboProcessors)){
       return;
     }
 
@@ -667,7 +667,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
   * The Elements associated with the widget.
   */
-  ffboProcessor: FFBOProcessor;
+  ffboProcessors: FFBOProcessor.IProcessors;
   protected _connected: Date;
   protected _isDisposed = false;
   protected _modelChanged = new Signal<this, object>(this);
@@ -676,7 +676,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   comm: Kernel.IComm; // the actual comm object
   readonly name: string;
-  protected _processor: string = 'No Processor';
+  protected _processor: string;
   clientId: string;
   innerContainer: HTMLDivElement;
   sessionContext: ISessionContext;
@@ -759,7 +759,7 @@ export namespace FBLWidget {
     /**
      * All available processor settings
      */
-    ffboProcessor?: FFBOProcessor;
+    ffboProcessors?: FFBOProcessor.IProcessors;
 
     /**
      * Tracker instance to see how many widgets of the same kind already exist in the 
