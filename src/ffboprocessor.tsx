@@ -1,9 +1,10 @@
 // Manages connectivity to FFBOProcessor and datasets
 import * as React from 'react';
 import * as ini from 'ini';
+import { JSONEditor } from '@json-editor/json-editor';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { SplitPanel, Widget, PanelLayout }from '@lumino/widgets';
-import { Dialog, showDialog, ReactWidget, UseSignal }from '@jupyterlab/apputils';
+import { Widget }from '@lumino/widgets';
+import { Dialog, showDialog }from '@jupyterlab/apputils';
 import { Signal, ISignal } from '@lumino/signaling';
 
 const FFBOPROCESSOR_BUTTON_CLASS = 'jp-fbl-processor-btn';
@@ -24,14 +25,7 @@ export function FFBOProcessorButton(props:{ffboprocessor: FFBOProcessor}) {
             ]
         }).then(result => {
             if (result.button.accept){
-                let currentSettings = ffboprocessor.settings.get('fbl-processor').composite as any as FFBOProcessor.ISettings[];
-                const changedName = Object.keys(result.value)[0];
-                currentSettings.forEach((setting, i) => {
-                    if (setting.name === changedName ){
-                        currentSettings[i] = result.value[changedName];
-                    }
-                });
-                ffboprocessor.settings.set('fbl-processor', currentSettings as any);
+                ffboprocessor.settings.set('fbl-processor', ffboprocessor.getValue()['fbl-processors'] as any);
             }
         })
     }
@@ -40,7 +34,7 @@ export function FFBOProcessorButton(props:{ffboprocessor: FFBOProcessor}) {
             className={`${FFBOPROCESSOR_BUTTON_CLASS} jp-mod-styled`}
             onClick={onClick}
         >
-            View Settings
+            FFBOProcessors Settings
         </button>
     );
 }
@@ -54,23 +48,17 @@ export class FFBOProcessor extends Widget {
         super();
         this.settings = settings; // keep a reference to the settings object
         this.load(settings);
-        const layout = new PanelLayout();
-        const panel = new SplitPanel({
-            orientation: "horizontal",
-            renderer: SplitPanel.defaultRenderer,
-            spacing: 1,
+        let element = document.createElement('div');
+        this.editor = new JSONEditor(element, {
+            schema: this.settings.schema,
+            iconlib: "fontawesome5",
+            object_layout: "grid"
         });
-        const list = this._list = new ProcessorList(this);
-        const details = (this._details = new ProcessorDetail(list));
 
-        layout.addWidget(panel);
-        panel.addWidget(list);
-        panel.addWidget(details);
-
+        this.node.appendChild(element);
         this.settings.changed.connect(() => {
             this.load(this.settings); // will exmit changed signal
         });
-        this.layout = layout;
     }
 
     select(processor: string): FFBOProcessor.ISettings | null {
@@ -95,140 +83,13 @@ export class FFBOProcessor extends Widget {
     }
 
     getValue(){
-        let name = this._list.getValue();
-        let val = this._details.getValue();
-        let res: {[name: string]: FFBOProcessor.ISettings} = {}
-        res[name] = val;
-        return res;
+        return this.editor.getValue();
     }
+
     processors: FFBOProcessor.IProcessors;
+    editor: JSONEditor; // should be JSONEditor
     private _settingsChanged = new Signal<this, FFBOProcessor>(this);
     readonly settings: ISettingRegistry.ISettings
-    private _list: ProcessorList;
-    private _details: ProcessorDetail;
-}
-
-class ProcessorList extends ReactWidget {
-    constructor(
-        processor:FFBOProcessor
-    ) {
-        super();
-        this.processor = processor;
-    }
-
-    protected render() {
-        return (
-            <div>
-                <ProcessorListComponent processor={this.processor}></ProcessorListComponent>
-                <button onClick={()=>{
-                    let val = this.getValue();
-                    if (val !== this._previousValue){
-                        this._previousValue = val;
-                        this._selectedChanged.emit(this.processor.processors[val])
-                    }
-                }}>VIEW SETTINGS</button>
-            </div>
-        );
-    }
-
-    getValue(): string {
-        const selector = this.node.querySelector('select') as HTMLSelectElement;
-        return selector.value as string;
-    }
-
-    get selectedChanged(): ISignal<this, FFBOProcessor.ISettings> {
-        return this._selectedChanged;
-    }
-
-    processor: FFBOProcessor;
-    settings: ISettingRegistry.ISettings;
-    private _previousValue: string = '';
-    private _selectedChanged = new Signal<this, FFBOProcessor.ISettings>(this);
-}
-
-function ProcessorListComponent(props:{
-    processor: FFBOProcessor
-}){
-    return (
-        <UseSignal signal={props.processor.settingsChanged} initialArgs={props.processor}>
-            {(sender:FFBOProcessor, p:FFBOProcessor)=>{
-                let processors = FFBOProcessor.arrToDict(p.settings.get('fbl-processors').composite as any);
-                let options: any[] = [];
-                Object.keys(processors).forEach((name, i)=>{
-                    options.push(
-                        <option key={i} value={name}></option>
-                    );
-                })
-                return (
-                    <div>
-                        <label>Select Processor for FlyBrainLab Workspace</label>
-                        <select>
-                            {options}
-                        </select>
-                    </div>
-                )
-            }}
-        </UseSignal>
-    )
-}
-
-/**
- * Form Editor for Individial Processor Settings
- */
-class ProcessorDetail extends ReactWidget {
-    constructor(list: ProcessorList) {
-        const body = document.createElement("div");
-        super({ node: body });
-        this.list = list;
-    }
-
-    protected render() {
-        return (
-            <UseSignal signal={this.list.selectedChanged}>
-                {(sender:any, processor:FFBOProcessor.ISettings)=>{
-                    this.processor = processor;
-                    return (
-                        <>
-                          <div>
-                              <div>
-                                  <div>SERVER</div>
-                                  <div>ip</div><div>{processor.SERVER.ip}</div>
-                                  <div>realm</div><div>{processor.SERVER.realm}</div>
-                                  <div>dataset</div><div>{processor.SERVER.dataset}</div>
-                              </div>
-                              <div>
-                                  <div>USER</div>
-                                  <div>user</div><div>{processor.USER.user}</div>
-                                  <div>secret</div><div>{processor.USER.secret}</div>
-                              </div>
-                              <div>
-                                  <div>AUTH</div>
-                                  <div>ssl</div><div>{processor.AUTH.ssl}</div>
-                                  <div>authentication</div><div>{processor.AUTH.authentication}</div>
-                                  <div>cert</div><div>{processor.AUTH.cert}</div>
-                                  <div>key</div><div>{processor.AUTH.key}</div>
-                                  <div>chain-cert</div><div>{processor.AUTH['chain-cert']}</div>
-                                  <div>ca_cert_file</div><div>{processor.AUTH.ca_cert_file}</div>
-                                  <div>intermediate_cer_file</div><div>{processor.AUTH.intermediate_cer_file}</div>
-                              </div>
-                              <div>
-                                  <div>DEBUG</div>
-                                  <div>debug</div><div>{processor.DEBUG.debug}</div>
-                              </div>
-                              </div>
-                        </>
-                      );
-                }}
-            </UseSignal>
-        )
-    }
-
-    getValue(): FFBOProcessor.ISettings {
-        return this.processor; // DEBUG
-    }
-
-    processor: FFBOProcessor.ISettings;
-    readonly list: ProcessorList;
 }
 
 

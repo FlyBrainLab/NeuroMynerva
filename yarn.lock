@@ -100,6 +100,11 @@
   dependencies:
     prop-types "^15.7.2"
 
+"@json-editor/json-editor@^2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-2.3.0.tgz#6c44c13cfa2f22b99123703b321c29e7ae16e74e"
+  integrity sha512-z+192e48xT74ZAvmd2VbEK11cal/EVRQ5y5C55y3IK9CTpiNIFSPaOe0u8Is1mt1vFOBVpkaCKP6GEdW82yKew==
+
 "@jupyterlab/application@^2.0.0":
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/@jupyterlab/application/-/application-2.2.1.tgz#57914b6faa0b314dc7504da0614c77e213e2d51f"

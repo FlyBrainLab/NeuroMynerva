@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",
+    "@json-editor/json-editor": "^2.3.0",
     "@jupyterlab/application": "^2.0.0",
     "@jupyterlab/launcher": "^2.1.1",
     "@jupyterlab/mainmenu": "^2.2.0",

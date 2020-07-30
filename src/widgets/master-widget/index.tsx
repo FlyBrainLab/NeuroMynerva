@@ -16,7 +16,7 @@ import {
 import { fblIcon } from '../../icons';
 import { IFBLWidget } from '../template-widget/index';
 import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '../../index';
-import { FFBOProcessor } from '../../ffboprocessor';
+import { FFBOProcessor, FFBOProcessorButton } from '../../ffboprocessor';
 import '../../../style/widgets/master-widget/master.css';
 
 
@@ -98,7 +98,7 @@ namespace FBLWidgetReact {
     const trackers_names = Object.keys(props.fbltrackers.trackers);
     return (
       <>
-        {/* <FFBOProcessorButton ffboprocessor={props.ffboProcessors}></FFBOProcessorButton> */}
+        <FFBOProcessorButton ffboprocessor={props.ffboProcessors}></FFBOProcessorButton>
         {trackers_arr.map((tracker, i) => (
           <Section key={i} name={trackers_names[i]} tracker={tracker}/>
         ))}

@@ -1,6 +1,6 @@
 {
     "title": "FlyBrainLab",
-    "description": "FlyBrainLab CrossBar Connection Settings",
+    "description": "FlyBrainLab FFBOProcessors Settings",
     "type": "object",
     "definitions": {
         "AUTH": {
@@ -31,7 +31,8 @@
             "additionalProperties": false,
             "type": "object"
         },
-        "user-info": {
+        "USER": {
+            "description": "User Connectivity Settings. Equalt to the GUEST setting in the .ini used for ffbo.processor",
             "properties": {
                 "user": {
                     "type": "string"
@@ -42,12 +43,6 @@
             },
             "additionalProperties": false,
             "type": "object"
-        },
-        "USER": {
-            "description": "User Connectivity Settings. Equalt to the GUEST setting in the .ini used for ffbo.processor",
-            "allOf": [
-                {"#ref": "#/definitinos/user-info"}
-            ]
         },
         "SERVER": {
             "properties": {
@@ -79,7 +74,7 @@
             "type": "object"
         },
         "fbl-config": {
-            "description": "One instance of FlyBrainLab connection settings",
+            "description": "One instance of FFBOProcessor settings",
             "properties": {
                 "name": { 
                     "description": "Name of the dataset",
@@ -111,9 +106,10 @@
     },
     "properties": {
         "fbl-processors":{
-            "title": "FlyBrainLab Backend Servers",
-            "description": "Enumerates all available FBLBackend Servers",
+            "title": "FFBOProcessors",
+            "description": "Enumerates all available FFBOProcessors",
             "$ref": "#/definitions/fbl-settings",
+            "format": "tabs-top",
             "default":[
                 {
                     "name": "larva(l1em)",
