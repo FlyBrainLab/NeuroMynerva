@@ -671,10 +671,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
   
   /** 
-   * Returns server
+   * Returns processor
    */
-  get server(): string {
-    return this._server
+  get processor(): string {
+    return this._processor
   }
 
   get neu3DReady(): Promise<void> {
@@ -682,26 +682,26 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
 
   /**
-   * Set server
-   * @param newServer new server to be added
+   * Set processor
+   * @param newProcessor new processor to be added
    */
-  set server(newServer: string) {
-    if (newServer === this._server) {
+  set processor(newProcessor: string) {
+    if (newProcessor === this._processor) {
       return;
     }
 
-    if (newServer === 'No Server'){
+    if (newProcessor === 'No Processor'){
       (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
-      this._serverChanged.emit(newServer);
-      this._server = newServer;
+      this._processorChanged.emit(newProcessor);
+      this._processor = newProcessor;
       return;
     }
-    if (!(newServer in this.serverSettings)){
+    if (!(newProcessor in this.ffboProcessor.processors)){
       return;
     }
   
-    this._serverChanged.emit(newServer);
-    this._server = newServer;
+    this._processorChanged.emit(newProcessor);
+    this._processor = newProcessor;
 
     let removeNeurons = false;
     this.neu3DReady.then(()=>{
@@ -711,7 +711,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           title: 'Remove Neurons/Synapses?',
           body: `
             Current Neu3D contains neurons/synapses, do you want to 
-            keep the neurons or remove them after changing server?
+            keep the neurons or remove them after changing processor?
           `,
           buttons: [
               Dialog.cancelButton({ label: 'Keep' }),
@@ -739,7 +739,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             }
           }
         }
-        switch (this._server) {
+        switch (this._processor) {
           case 'larva(l1em)':
             this.neu3d._metadata.resetPosition =  {x: 42.057169835814626, y: 18.465885594337543, z: -509.65272951348953};
             this.neu3d._metadata.upVector = {x: 0.0022681554337180836, y: -0.9592325957384876, z: 0.2826087096034669};
@@ -778,7 +778,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             break;
           default:
             (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
-            console.error(`[Neu3D-Widget] Server ${newServer} not recognized.`);
+            console.error(`[Neu3D-Widget] Processor ${newProcessor} not recognized.`);
             break;
         }
 

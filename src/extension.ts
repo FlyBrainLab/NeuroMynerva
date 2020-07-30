@@ -44,12 +44,14 @@ import {
 
 
 import { fblIcon, neu3DIcon, neuGFXIcon, neuInfoIcon, masterIcon } from './icons';
+import { FFBOProcessor } from './ffboprocessor';
 import { MasterWidget } from './widgets/master-widget/index';
 import { IFBLWidget } from './widgets/template-widget/index';
 import { InfoWidget } from './widgets/info-widget/index';
 import { NeuGFXWidget } from './widgets/neugfx-widget/index';
 import { Neu3DWidget } from './widgets/neu3d-widget/index';
 import { FBLWidget } from './widgets/template-widget/index';
+
 import '../style/index.css';
 
 
@@ -83,7 +85,7 @@ export interface IFBLWidgetTrackers {
  * The FBL Widget Tracker Token
  */
 export const IFBLWidgetTrackers = new Token<IFBLWidgetTrackers>(
-  '@flybrainlab/fbl-extension:IFBLWidgetTrackers'
+  '@neuro-mynerva/fbl-extension:IFBLWidgetTrackers'
 );
 /* tslint:enable */
 
@@ -194,46 +196,6 @@ async function activateFBL(
 
   const { commands } = app;
 
-  // all available server settings
-  let fblServerSettings: FBL.FBLServerSettings = {};
-  
-  // Wait for the application to be restored and
-  // for the settings for this plugin to be loaded
-  Promise.all([app.restored, settings.load(extension.id)])
-    .then(([, setting]) => {
-      // Read the settings
-      fblServerSettings = FBL.loadFBLServerSetting(setting);
-      fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-          w.content.serverSettings = fblServerSettings;
-      });
-      fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-        w.content.serverSettings = fblServerSettings;
-      })
-      // Listen for your plugin setting changes using Signal
-      setting.changed.connect((setting)=>{
-        fblServerSettings = FBL.loadFBLServerSetting(setting);
-        fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-          w.content.serverSettings = fblServerSettings;
-        });
-        fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-          w.content.serverSettings = fblServerSettings;
-        });
-      }, extension);
-    })
-    .catch(reason => {
-      console.error(
-        `Something went wrong when reading the FBLServerSettings.\n${reason}`
-      );
-    });
-
-  // Ensure that the widgets' are aware of all server settings when added
-  fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.serverSettings = fblServerSettings;
-  }, extension);
-  fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.serverSettings = fblServerSettings;
-  }, extension);
-
   // Handle state restoration.
   restorer.restore(fblWidgetTrackers.trackers.Neu3D, {
     command: CommandIDs.Neu3DOpen,
@@ -245,8 +207,8 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
-        serverSettings: widget.content.serverSettings as unknown as ReadonlyPartialJSONObject,
-        server: widget.content.server,
+        ffboProcessor: widget.content.ffboProcessor as unknown as ReadonlyPartialJSONObject,
+        processor: widget.content.processor,
         clientId: widget.content.clientId,
         id: widget.content.id,
         path: path,
@@ -267,10 +229,10 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
-        serverSettings: widget.content.serverSettings as unknown as ReadonlyPartialJSONObject,
+        ffboProcessor: widget.content.ffboProcessor as unknown as ReadonlyPartialJSONObject,
         clientId: widget.content.clientId,
         id: widget.content.id,
-        server: widget.content.server,
+        processor: widget.content.processor,
         path: path,
         name: name
       };
@@ -282,19 +244,71 @@ async function activateFBL(
   window.app = app;
   window.fbltrackers = fblWidgetTrackers;
 
-  let masterWidget: Widget = undefined;
-  let infoWidget: Widget = undefined;
+  let masterWidget: MasterWidget = undefined;
+  let infoWidget: InfoWidget = undefined;
 
-  masterWidget = new MasterWidget(fblWidgetTrackers);
-  masterWidget.id = 'FBL-Master';
-  masterWidget.title.caption = 'FBL Widgets and Running Sessions';
-  masterWidget.title.icon = masterIcon;
-  // add to last
-  if (restorer) {
-    restorer.add(masterWidget, 'FBL-Master');
-  }
-  app.shell.add(masterWidget, 'left', {rank: 1900});
-  window.master = masterWidget;
+  // all available processor settings
+  let ffboProcessors: FFBOProcessor = undefined;
+  
+
+  // Wait for the application to be restored and
+  // for the settings for this plugin to be loaded
+  Promise.all([app.restored, settings.load(extension.id)])
+    .then(([, setting]) => {
+      // Read the settings
+      if (ffboProcessors === undefined){
+        ffboProcessors = new FFBOProcessor(setting);
+      } else{
+        ffboProcessors.load(setting);
+      }
+      if (masterWidget === undefined){
+        masterWidget = new MasterWidget(fblWidgetTrackers, ffboProcessors);
+        masterWidget.id = 'FBL-Master';
+        masterWidget.title.caption = 'FBL Widgets and Running Sessions';
+        masterWidget.title.icon = masterIcon;
+            // add to last
+        if (restorer) {
+          restorer.add(masterWidget, 'FBL-Master');
+        }
+        app.shell.add(masterWidget, 'left', {rank: 1900});
+        window.master = masterWidget;
+      } else {
+        masterWidget.ffboProcessor = ffboProcessors;
+      }
+
+      fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
+          w.content.ffboProcessor = ffboProcessors;
+      });
+      fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
+        w.content.ffboProcessor = ffboProcessors;
+      })
+
+      // Listen for your plugin setting changes using Signal
+      setting.changed.connect((setting)=>{
+        ffboProcessors.load(setting);
+        fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
+          w.content.ffboProcessor = ffboProcessors;
+        });
+        fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
+          w.content.ffboProcessor = ffboProcessors;
+        });
+        masterWidget.ffboProcessor = ffboProcessors;
+      }, extension);
+    })
+    .catch(reason => {
+      console.error(
+        `Something went wrong when reading the FFBO Processor Settings.\n${reason}`
+      );
+    });
+
+  // Ensure that the widgets' are aware of all processor settings when added
+  fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
+    w.content.ffboProcessor = ffboProcessors;
+  }, extension);
+  fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
+    w.content.ffboProcessor = ffboProcessors;
+  }, extension);
+  
 
   // add info panel
   infoWidget = new InfoWidget();
@@ -338,7 +352,7 @@ async function activateFBL(
         Module:Neu3DWidget,
         icon:NEU3DICON,
         moduleArgs:{
-          server: args.server as string ?? 'No Server',
+          processor: args.processor as string ?? 'No Processor',
           info:infoWidget, 
           _count: fblWidgetTrackers.trackers.Neu3D.size, 
           ...args
@@ -356,7 +370,7 @@ async function activateFBL(
         Module:Neu3DWidget,
         icon:NEU3DICON,
         moduleArgs: {
-          server: args.server as string ?? 'No Server',
+          processor: args.processor as string ?? 'No Processor',
           info:infoWidget,
           _count: fblWidgetTrackers.trackers.Neu3D.size,
           ...args
@@ -376,7 +390,7 @@ async function activateFBL(
           Module:NeuGFXWidget,
           icon:NEUGFXICON,
           moduleArgs:{
-            server: args.server as string ?? 'No Server',
+            processor: args.processor as string ?? 'No Processor',
             _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
@@ -420,22 +434,22 @@ async function activateFBL(
     label: 'Create FBL Workspace',
     icon: fblIcon,
     execute: async (args) => {
-      let server: string = 'No Server';
+      let processor: string = 'No Processor';
       let abort: boolean = false;
       await showDialog({
-        title: 'Change Server',
-        body: new FBL.ServerSelector(fblServerSettings),
+        title: 'Change Processor',
+        body: new FBL.ProcessorSelector(ffboProcessors),
         buttons: [
           Dialog.cancelButton(),
-          Dialog.warnButton({label: 'No Server'}),
+          Dialog.warnButton({label: 'No Processor'}),
           Dialog.okButton({label: 'Select'})
         ]
       }).then(result =>{
         if (result.button.accept){
           if (result.button.displayType === 'warn'){
-            server = 'No Server';
+            processor = 'No Processor';
           } else {
-            server = result.value;
+            processor = result.value;
           }
         } else{
           abort = true;
@@ -459,7 +473,7 @@ async function activateFBL(
           icon:NEU3DICON,
           moduleArgs: {
             info: infoWidget, 
-            server: server, 
+            processor: processor, 
             sessionContext: notebook_panel.sessionContext, 
             ...args
           },
@@ -475,7 +489,7 @@ async function activateFBL(
           icon:NEUGFXICON,
           moduleArgs: {
             clientId: neu3d_panel.content.clientId,
-            server: server, 
+            processor: processor,
             sessionContext: notebook_panel.sessionContext, 
             ...args
           },
@@ -538,16 +552,16 @@ async function activateFBL(
 }
 
 export namespace FBL {
-  export function arrToDict(serverSettings: IFBLServerSetting[]): FBLServerSettings {
-    let settings: FBLServerSettings = {};
-    for (let server of serverSettings) {
-      settings[server.name] = server;
+  export function arrToDict(ffboProcessor: IFBLProcessorSetting[]): FBLProcessorSettings {
+    let settings: FBLProcessorSettings = {};
+    for (let processor of ffboProcessor) {
+      settings[processor.name] = processor;
     }
     return settings;
   }
 
-  export type FBLServerSettings = {[name: string]: IFBLServerSetting};
-  export interface IFBLServerSetting {
+  export type FBLProcessorSettings = {[name: string]: IFBLProcessorSetting};
+  export interface IFBLProcessorSetting {
     name: string;
     AUTH: {
       ssl: boolean,
@@ -576,27 +590,27 @@ export namespace FBL {
    *
    * @param setting Extension settings
    */
-  export function loadFBLServerSetting(setting: ISettingRegistry.ISettings): FBLServerSettings {
-    return FBL.arrToDict((setting.get('fbl-servers').composite as any) as IFBLServerSetting[]);
+  export function loadFBLProcessorSetting(setting: ISettingRegistry.ISettings): FBLProcessorSettings {
+    return FBL.arrToDict((setting.get('fbl-processors').composite as any) as IFBLProcessorSetting[]);
   }
 
   /**
-   * A widget that provides a server selection.
+   * A widget that provides a processor selection.
    */
-  export class ServerSelector extends Widget {
+  export class ProcessorSelector extends Widget {
     /**
-     * Create a new kernel selector widget.
+     * Create a new processor selector widget.
      */
-    constructor(serverDict: FBLServerSettings) {
+    constructor(processor: FFBOProcessor) {
       const body = document.createElement('div');
       const text = document.createElement('label');
-      text.textContent = `Select server for FBL Workspace`;
+      text.textContent = `Select processor for FBL Workspace`;
       body.appendChild(text);
 
       const selector = document.createElement('select');
-      let all_servers = Object.keys(serverDict);
-      all_servers.push('No Server');
-      for (const name of all_servers){
+      let all_processors = Object.keys(processor.processors);
+      all_processors.push('No Processor');
+      for (const name of all_processors){
         const option = document.createElement('option');
         option.text = name;
         option.value = name;

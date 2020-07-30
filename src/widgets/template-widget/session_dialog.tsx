@@ -18,26 +18,26 @@ import {
     fblSettingIcon
 } from '../../icons';
 
-const TOOLBAR_SERVER_CLASS = 'jp-FBL-Server';
+const TOOLBAR_SERVER_CLASS = 'jp-FBL-Processor';
 
 /**
-* A widget that provides a Server selection.
+* A widget that provides a Processor selection.
 */
-export class ServerSelector extends Widget {
+export class ProcessorSelector extends Widget {
     /**
     * Create a new kernel selector widget.
     */
     constructor(widget: IFBLWidget) {
         const body = document.createElement('div');
         const text = document.createElement('label');
-        text.textContent = `Select Server for: "${widget.id}"`;
+        text.textContent = `Select Processor for: "${widget.id}"`;
         body.appendChild(text);
         
         const selector = document.createElement('select');
-        for (const server of Object.keys(widget.serverSettings)){
+        for (const processor of Object.keys(widget.ffboProcessor.processors)){
             const option = document.createElement('option');
-            option.text = server;
-            option.value = server;
+            option.text = processor;
+            option.value = processor;
             selector.appendChild(option);
         }
         body.appendChild(selector);
@@ -78,7 +78,7 @@ class SessionDialog extends Widget {
             text = `
             <div class="lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
             <table>
-                <tr><td><b>Server</b></td><td>${widget.server}</td></tr>
+                <tr><td><b>Processor</b></td><td>${widget.processor}</td></tr>
                 ${sessionDesc}
             </table>
             </div>
@@ -97,37 +97,37 @@ class SessionDialog extends Widget {
 
 
 /**
-* React component for a server name button.
-* This wraps the ToolbarButtonComponent and watches the server 
+* React component for a processor name button.
+* This wraps the ToolbarButtonComponent and watches the processor 
 * keyword
 */
-function ServerComponent(
+function ProcessorComponent(
     props: { widget: IFBLWidget }
 ) {
     const { widget } = props;
     const callback = () => showDialog({
-        title: 'Change Server',
-        body: new ServerSelector(widget),
+        title: 'Change Processor',
+        body: new ProcessorSelector(widget),
         buttons: [
             Dialog.cancelButton(),
             Dialog.warnButton({label: 'Change'})
         ]
     }).then(result =>{
         if (result.button.accept){
-            widget.server = result.value;
+            widget.processor = result.value;
         }
     });
     
-    const signal = widget.serverChanged;
-    const server = widget.server;
+    const signal = widget.processorChanged;
+    const processor = widget.processor;
     return (
-      <UseSignal signal={signal} initialArgs={server}>
-        {(_, server) => (
+      <UseSignal signal={signal} initialArgs={processor}>
+        {(_, processor) => (
           <ToolbarButtonComponent
             className={TOOLBAR_SERVER_CLASS}
             onClick={callback}
-            label={server}
-            tooltip={"Change Server"}
+            label={processor}
+            tooltip={"Change Processor"}
           />
         )}
       </UseSignal>
@@ -136,7 +136,7 @@ function ServerComponent(
 
 /**
 * React component for session overview dialog
-* This wraps the ToolbarButtonComponent and watches the server 
+* This wraps the ToolbarButtonComponent and watches the processor 
 * keyword
 */
 export function SessionDialogComponent(
@@ -161,11 +161,11 @@ export function SessionDialogComponent(
     );
 }
             
-export function createServerButton(
+export function createProcessorButton(
     widget: FBLWidget
 ): Widget {
     const el = ReactWidget.create(
-        <ServerComponent widget={widget}/>
+        <ProcessorComponent widget={widget}/>
         );
     el.addClass(TOOLBAR_SERVER_CLASS);
     return el;

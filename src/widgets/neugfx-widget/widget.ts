@@ -157,24 +157,24 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     return;
   }
 
-  get server(): string{
-    return this._server;
+  get processor(): string{
+    return this._processor;
   }
   
-  set server(newServer: string) {
-    if (newServer === this._server) {
+  set processor(newProcessor: string) {
+    if (newProcessor === this._processor) {
       return;
     }
-    if (newServer === "No Server") {
-      this._serverChanged.emit(newServer);
-      this._server = newServer;
+    if (newProcessor === "No Processor") {
+      this._processorChanged.emit(newProcessor);
+      this._processor = newProcessor;
       return;
     }
-    if (!(newServer in this.serverSettings)){
+    if (!(newProcessor in this.ffboProcessor.processors)){
       return;
     }
-    this._serverChanged.emit(newServer);
-    this._server = newServer;
+    this._processorChanged.emit(newProcessor);
+    this._processor = newProcessor;
   }
 
   /**

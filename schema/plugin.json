@@ -110,7 +110,7 @@
         }
     },
     "properties": {
-        "fbl-servers":{
+        "fbl-processors":{
             "title": "FlyBrainLab Backend Servers",
             "description": "Enumerates all available FBLBackend Servers",
             "$ref": "#/definitions/fbl-settings",

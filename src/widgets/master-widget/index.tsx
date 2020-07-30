@@ -16,7 +16,9 @@ import {
 import { fblIcon } from '../../icons';
 import { IFBLWidget } from '../template-widget/index';
 import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '../../index';
+import { FFBOProcessor } from '../../ffboprocessor';
 import '../../../style/widgets/master-widget/master.css';
+
 
 const MASTER_CLASS_JLab = 'jp-FBL-Master';
 
@@ -50,10 +52,6 @@ const ITEM_CLASS = 'jp-FBL-Master-item';
  */
 const ITEM_LABEL_CLASS = 'jp-FBL-Master-itemLabel';
 
-// /**
-//  * The class name added to a running session item shutdown button.
-//  */
-// const SHUTDOWN_BUTTON_CLASS = 'jp-RunningSessions-itemShutdown';
 
 /**
  * The class name added to a Dispose button for disposing fbl widget
@@ -65,26 +63,27 @@ const DISPOSE_BUTTON_CLASS = 'jp-FBL-Master-itemDispose';
 */
 export class MasterWidget extends ReactWidget {
   constructor(
-    fbltrackers: IFBLWidgetTrackers
+    fbltrackers: IFBLWidgetTrackers,
+    ffboProcessors: FFBOProcessor
   ) {
     console.log('Master Widget Created');
     super();
     this.fbltrackers = fbltrackers;
+    this.ffboProcessor = ffboProcessors;
     this.addClass(MASTER_CLASS_JLab);
     this.render();
   }
 
   protected render() {
-    return (<FBLWidgetReact.FBLWidgetTrackersComponent fbltrackers={this.fbltrackers}/>);
+    return (<FBLWidgetReact.FBLWidgetTrackersComponent ffboProcessor={this.ffboProcessor} fbltrackers={this.fbltrackers}/>);
   }
 
   /**
   * The Elements associated with the widget.
   */
   private fbltrackers: FBLWidgetTrackers;
+  ffboProcessor: FFBOProcessor
 };
-
-
 
 
 /**
@@ -93,11 +92,13 @@ export class MasterWidget extends ReactWidget {
 namespace FBLWidgetReact {
   export function FBLWidgetTrackersComponent(props: {
     fbltrackers: FBLWidgetTrackers;
+    ffboProcessor: FFBOProcessor;
   }) {
     const trackers_arr = Object.values(props.fbltrackers.trackers);
     const trackers_names = Object.keys(props.fbltrackers.trackers);
     return (
       <>
+        {/* <FFBOProcessorButton ffboprocessor={props.ffboProcessor}></FFBOProcessorButton> */}
         {trackers_arr.map((tracker, i) => (
           <Section key={i} name={trackers_names[i]} tracker={tracker}/>
         ))}

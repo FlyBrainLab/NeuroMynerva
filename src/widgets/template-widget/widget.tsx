@@ -16,22 +16,20 @@ import { fblIcon } from '../../icons';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { FBLWidgetModel, IFBLWidgetModel } from './model';
 import { 
-  createServerButton, 
+  createProcessorButton, 
   createSessionDialogButton
 } from './session_dialog';
-import { 
-  FBL
-} from '../../extension';
 
 import '../../../style/widgets/template-widget/template.css';
 import { InfoWidget } from '../info-widget';
+import { FFBOProcessor } from '../../ffboprocessor';
 
 export interface IFBLWidget extends Widget {
 
   /**
-   * All available server settings
+   * All available processor settings
    */
-  serverSettings: FBL.FBLServerSettings;
+  ffboProcessor: FFBOProcessor;
 
   /**
    * The sessionContext keeps track of the current running session
@@ -40,10 +38,10 @@ export interface IFBLWidget extends Widget {
   sessionContext: ISessionContext;
 
   /**
-   * A string indicating the connected server 
+   * A string indicating the connected processor
    * Has special setter that the neu3d visualization setting and rendered meshes
    */
-  server: string;
+  processor: string;
 
   /**
    * Dispose current widget
@@ -61,9 +59,9 @@ export interface IFBLWidget extends Widget {
   name: string
 
   /**
-   * Signal that emits new server name when changed
+   * Signal that emits new processor name when changed
    */
-  serverChanged: ISignal<IFBLWidget, string>;
+  processorChanged: ISignal<IFBLWidget, string>;
 
   /**
    * Signal that emits model change
@@ -111,15 +109,14 @@ export class FBLWidget extends Widget implements IFBLWidget {
       basePath,
       name,
       model,
-      server,
+      processor,
       sessionContext,
       icon,
       clientId,
-      serverSettings,
+      ffboProcessor,
       _count
     } = options;
-
-    this.serverSettings = serverSettings ?? {};
+    this.ffboProcessor = ffboProcessor;
 
     // keep track of number of instances
     Private.count += _count ?? 0;
@@ -189,13 +186,13 @@ export class FBLWidget extends Widget implements IFBLWidget {
         this.sessionContext.session.kernel.handleComms = true;
       }
       this._connected = new Date();  
-      await this.initFBLClient();
+      await this.initFBLClient(false);
       // register Comm only when kernel is changed
       this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
-      // set server after session is avaible, in case the setter needs the session
-      this.server = server ?? 'No Server';
+      // set processor after session is avaible, in case the setter needs the session
+      this.processor = processor ?? 'No Processor';
       Private.updateTitle(this, this._connected);
     });
 
@@ -447,10 +444,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
-   * Return A signal that indicates server change
+   * Return A signal that indicates processor change
    */
-  get serverChanged(): ISignal<this, string> {
-    return this._serverChanged;
+  get processorChanged(): ISignal<this, string> {
+    return this._processorChanged;
   }
 
   /** Code for initializing fbl in the connected kernel
@@ -469,47 +466,47 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * Code for initializing a client connected to the current widget
   * @param clientargs additional argument for client
   */
-  initClientCode(server?: string): string {
-    let currentServer = this.serverSettings[this.server];
-    if (server !== this.server && server in this.serverSettings){
-      currentServer = this.serverSettings[server];
+  initClientCode(processor?: string): string {
+    let currentProcessor = this.ffboProcessor.select(this.processor);
+    if (processor !== this.processor && processor in this.ffboProcessor.processors){
+      currentProcessor = this.ffboProcessor.select(processor);
     }
 
     let args = '';
-    if (currentServer?.USER?.user) {
-      args += `user='${currentServer.USER.user}',`;
+    if (currentProcessor?.USER?.user) {
+      args += `user='${currentProcessor.USER.user}',`;
     }
-    if (currentServer?.USER?.secret) {
-      args += `secret='${currentServer.USER.secret}',`;
+    if (currentProcessor?.USER?.secret) {
+      args += `secret='${currentProcessor.USER.secret}',`;
     }
 
     // DEBUG: ssl=True won't work for now, force to be False (default)
-    // if (currentServer?.AUTH?.ssl === true) {
+    // if (currentProcessor?.AUTH?.ssl === true) {
     //   args += 'ssl=True,';
     // }
 
-    if (currentServer?.AUTH?.ca_cert_file) {
-      args += `ca_cert_file="${currentServer.AUTH.ca_cert_file}",`;
+    if (currentProcessor?.AUTH?.ca_cert_file) {
+      args += `ca_cert_file="${currentProcessor.AUTH.ca_cert_file}",`;
     }
-    if (currentServer?.AUTH?.intermediate_cer_file) {
-      args += `intermediate_cer_file="${currentServer.AUTH.intermediate_cer_file}",`;
+    if (currentProcessor?.AUTH?.intermediate_cer_file) {
+      args += `intermediate_cer_file="${currentProcessor.AUTH.intermediate_cer_file}",`;
     }
-    if (currentServer?.DEBUG?.debug === false) {
+    if (currentProcessor?.DEBUG?.debug === false) {
       args += 'debug=False,';
     }
-    if (currentServer?.AUTH?.authentication === false) {
+    if (currentProcessor?.AUTH?.authentication === false) {
       args += 'authentication=False';
     }
-    let websocket = currentServer?.AUTH?.ssl === true ? 'wss' : 'ws';
-    if (currentServer?.SERVER?.ip) {
-      args += `url=u"${websocket}://${currentServer.SERVER.ip}/ws",`;
+    let websocket = currentProcessor?.AUTH?.ssl === true ? 'wss' : 'ws';
+    if (currentProcessor?.SERVER?.ip) {
+      args += `url=u"${websocket}://${currentProcessor.SERVER.ip}/ws",`;
     }
-    if (currentServer?.SERVER?.dataset) {
-      args += `dataset="${currentServer.SERVER.dataset[0] as string}",`;
+    if (currentProcessor?.SERVER?.dataset) {
+      args += `dataset="${currentProcessor.SERVER.dataset[0] as string}",`;
     }
 
-    if (currentServer?.SERVER?.realm) {
-      args += `realm=u"${currentServer.SERVER.realm}",`;
+    if (currentProcessor?.SERVER?.realm) {
+      args += `realm=u"${currentProcessor.SERVER.realm}",`;
     }
 
     let code = `
@@ -535,11 +532,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
-   * Initialize Client Based on Current Server Setting
-   * @param server 
+   * Initialize Client Based on Current Processor Setting
+   * @param processor 
    */
-  initClient(server?: string): void{
-    let code = this.initClientCode(server);
+  initClient(processor?: string): void{
+    let code = this.initClientCode(processor);
     try {
       this.sessionContext.session.kernel.requestExecute({ code: code });
     } catch(reason) {
@@ -551,7 +548,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
   * Initialize FBLClient on associated kernel
   */
-  async initFBLClient(): Promise<void> {
+  async initFBLClient(initClient = true): Promise<void> {
     if (!this.sessionContext.session?.kernel){
       return Promise.resolve(void 0); // no kernel
     }
@@ -589,7 +586,13 @@ export class FBLWidget extends Widget implements IFBLWidget {
       // TODO
     // }
 
-    const code = this.initClientCode() + this.initFBLCode();
+    let code = '';
+    if (initClient === false){
+      code = this.initFBLCode();
+    } else {
+      code = this.initClientCode() + this.initFBLCode();
+    }
+
     kernel.requestExecute({ code: code }).done.then((reply) => {
       if (reply && reply.content.status === 'error'){
         const traceback = ANSI.stripReplyError(reply.content.traceback);
@@ -622,7 +625,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   populateToolBar(): void {
     this.toolbar.addItem('spacer', Toolbar.createSpacerItem());
-    this.toolbar.addItem('Server Changer', createServerButton(this));
+    this.toolbar.addItem('Processor Changer', createProcessorButton(this));
     this.toolbar.addItem('Session Dialog', createSessionDialogButton(this));
     this.toolbar.addItem('restart', Toolbar.createRestartButton(this.sessionContext));
     this.toolbar.addItem('stop', Toolbar.createInterruptButton(this.sessionContext));
@@ -631,49 +634,49 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
   
   /**
-   * Set server
-   * @param newServer new Server to connect to
-   * triggers a server changed callback if server has changed
+   * Set processor
+   * @param newProcessor new Processor to connect to
+   * triggers a processor changed callback if processor has changed
    */
-  set server(newServer: string) {
-    if (newServer === this._server) {
+  set processor(newProcessor: string) {
+    if (newProcessor === this._processor) {
       return;
     }
-    if (newServer === 'No Server'){
-      this._serverChanged.emit(newServer);
-      this._server = newServer;
+    if (newProcessor === 'No Processor'){
+      this._processorChanged.emit(newProcessor);
+      this._processor = newProcessor;
       return;
     }
-    if (!(newServer in this.serverSettings)){
+    if (!(newProcessor in this.ffboProcessor.processors)){
       return;
     }
 
-    this._serverChanged.emit(newServer);
-    this._server = newServer;
+    this._processorChanged.emit(newProcessor);
+    this._processor = newProcessor;
   }
 
   /** 
-   * Returns server
-   * Note: setter/getter for server need to be redefined in child class
+   * Returns processor
+   * Note: setter/getter for processor need to be redefined in child class
    * See reference: https://github.com/microsoft/TypeScript/issues/338
   */
-  get server(): string {
-    return this._server
+  get processor(): string {
+    return this._processor
   }
 
   /**
   * The Elements associated with the widget.
   */
-  serverSettings: FBL.FBLServerSettings = {};
+  ffboProcessor: FFBOProcessor;
   protected _connected: Date;
   protected _isDisposed = false;
   protected _modelChanged = new Signal<this, object>(this);
-  protected _serverChanged = new Signal<this, string>(this);
+  protected _processorChanged = new Signal<this, string>(this);
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   comm: Kernel.IComm; // the actual comm object
   readonly name: string;
-  protected _server: any;
+  protected _processor: string = 'No Processor';
   clientId: string;
   innerContainer: HTMLDivElement;
   sessionContext: ISessionContext;
@@ -696,9 +699,9 @@ export namespace FBLWidget {
     app: JupyterFrontEnd;
 
     /**
-     * Server
+     * Processor
      */
-    server?: string;
+    processor?: string;
 
     /**
      * The path of an existing widget.
@@ -754,9 +757,9 @@ export namespace FBLWidget {
     info?: any;
 
     /**
-     * All available server settings
+     * All available processor settings
      */
-    serverSettings?: FBL.FBLServerSettings;
+    ffboProcessor?: FFBOProcessor;
 
     /**
      * Tracker instance to see how many widgets of the same kind already exist in the 
