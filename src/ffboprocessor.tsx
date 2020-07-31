@@ -52,7 +52,9 @@ export class FFBOProcessor extends Widget {
         this.editor = new JSONEditor(element, {
             schema: this.settings.schema,
             iconlib: "fontawesome5",
-            object_layout: "grid"
+            object_layout: "normal",
+            disable_edit_json: true,
+            disable_collapse: true
         });
 
         this.node.appendChild(element);
