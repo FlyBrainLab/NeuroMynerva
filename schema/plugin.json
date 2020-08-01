@@ -1,184 +1,158 @@
 {
-    "title": "FlyBrainLab",
-    "description": "FlyBrainLab FFBOProcessors Settings",
-    "type": "object",
-    "properties": {
-      "fbl-processors": {
-        "title": "FFBOProcessors",
-        "description": "Enumerates all available FFBOProcessors",
-        "uniqueItems": true,
-        "type": "array",
-        "items": {
-          "type": "object",
+  "title": "FlyBrainLab",
+  "description": "FlyBrainLab FFBOProcessors Settings",
+  "type": "object",
+  "definitions": {
+      "fbl-config": {
           "description": "One instance of FFBOProcessor settings",
           "properties": {
-            "NAME": {
-              "description": "Name of the FFBOProcessor",
-              "type": "string"
-            },
-            "AUTH": {
-              "description": "Connection Authentication Settings",
-              "properties": {
-                "ssl": {
-                  "type": "boolean",
-                  "format": "checkbox"
-                },
-                "authentication": {
-                  "type": "boolean",
-                  "format": "checkbox"
-                },
-                "cert": {
+              "NAME": { 
+                  "description": "Name of the processor.",
                   "type": "string"
-                },
-                "key": {
-                  "type": "string"
-                },
-                "chain-cert": {
-                  "type": "string"
-                },
-                "ca_cert_file": {
-                  "type": "string"
-                },
-                "intermediate_cert_file": {
-                  "type": "string"
-                }
               },
-              "required": [
-                "ssl",
-                "authentication"
-              ],
-              "type": "object"
+              "AUTH": {
+                "properties": {
+                    "ssl": {
+                        "type": "boolean"
+                    },
+                    "authentication": {
+                        "type": "boolean"
+                    },
+                    "cert": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "chain-cert": {
+                        "type": "string"
+                    },
+                    "ca_cert_file": {
+                        "type": "string"
+                    },
+                    "intermediate_cert_file": {
+                        "type": "string"
+                    }
+                },
+                "required":["ssl", "authentication"],
+                "type": "object"
             },
             "USER": {
-              "description": "User Connectivity Settings. Equal to the GUEST setting in the .ini used for ffbo.processor",
-              "properties": {
-                "user": {
-                  "type": "string"
+                "properties": {
+                    "user": {
+                        "type": "string"
+                    },
+                    "secret": {
+                        "type": "string"
+                    }
                 },
-                "secret": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "user",
-                "secret"
-              ],
-              "type": "object"
+                "required":["user", "secret"],
+                "type": "object"
             },
             "SERVER": {
-              "properties": {
-                "ip": {
-                  "description": "If ip is not specified, it is assumed that all components will run on localhost under the same network bridge",
-                  "type": "string"
+                "properties": {
+                    "ip address": {
+                        "type": "string"
+                    },
+                    "dataset": {
+                        "title": "NA databases",
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                    },
+                    "realm": {
+                        "description": "Do not change",
+                        "type": "string"
+                    }
                 },
-                "realm": {
-                  "description": "CrossBar Realm. Do not change!",
-                  "type": "string"
-                },
-                "dataset": {
-                  "title": "NA databases",
-                  "type": "array",
-                  "description": "Name of NeuroArch databases.",
-                  "format": "table",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              },
-              "required": [
-                "ip",
-                "dataset",
-                "realm"
-              ],
-              "type": "object"
+                "required":["ip", "dataset", "realm"],
+                "type": "object"
             },
             "DEBUG": {
-              "properties": {
-                "debug": {
-                  "type": "boolean",
-                  "format": "checkbox"
-                }
-              },
-              "type": "object"
+                "properties": {
+                    "debug": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
             }
-          },
-          "required": [
-            "NAME",
-            "AUTH",
-            "USER",
-            "SERVER"
-          ]
-        },
-        "format": "table",
-        "default": [{
-          "NAME": "larva(l1em)",
-          "AUTH": {
-            "ssl": false,
-            "authentication": true,
-            "ca_cert_file": "isrgrootx1.pem",
-            "intermediate_cert_file": "letsencryptauthorityx3.pem"
-          },
-          "USER": {
-            "user": "guest",
-            "secret": "guestpass"
-          },
-          "SERVER": {
-            "ip": "amacrine.ee.columbia.edu:6651",
-            "dataset": [
-              "l1em"
-            ],
-            "realm": "realm1"
-          },
-          "DEBUG": {
-            "debug": false
           }
-        },
-          {
-            "NAME": "adult(flycircuit)",
-            "AUTH": {
-              "ssl": true,
-              "authentication": true,
-              "ca_cert_file": "isrgrootx1.pem",
-              "intermediate_cert_file": "letsencryptauthorityx3.pem"
-            },
-            "USER": {
-              "user": "guest",
-              "secret": "guestpass"
-            },
-            "SERVER": {
-              "ip": "flycircuitdev.neuronlp.fruitflybrain.org",
-              "dataset": [
-                "flycircuit"
-              ],
-              "realm": "realm1"
-            },
-            "DEBUG": {
-              "debug": false
-            }
-          },
-          {
-            "NAME": "adult(hemibrain)",
-            "AUTH": {
-              "ssl": true,
-              "authentication": true,
-              "ca_cert_file": "isrgrootx1.pem",
-              "intermediate_cert_file": "letsencryptauthorityx3.pem"
-            },
-            "USER": {
-              "user": "guest",
-              "secret": "jije83b3jJN*31"
-            },
-            "SERVER": {
-              "ip": "hemibrain.neuronlp.fruitflybrain.org",
-              "dataset": [
-                "hemibrain"
-              ],
-              "realm": "realm1"
-            },
-            "DEBUG": {
-              "debug": false
-            }
-          }]
       }
-    }
+  },
+  "properties": {
+      "fbl-processors":{
+          "title": "FFBOProcessors",
+          "description": "Enumerates all available FFBOProcessors",
+          "$ref": "#/definitions/fbl-settings",
+          "format": "table",
+          "type": "array",
+          "items": { "$ref": "#/definitions/fbl-config" },
+          "default":[
+              {
+                  "NAME": "larva(l1em)",
+                  "AUTH": {
+                      "ssl": false,
+                      "authentication": true,
+                      "ca_cert_file": "isrgrootx1.pem",
+                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
+                  },
+                  "USER": {
+                      "user": "guest",
+                      "secret": "guestpass"
+                  },
+                  "SERVER": {
+                      "ip": "amacrine.ee.columbia.edu:6651",
+                      "dataset": ["l1em"],
+                      "realm": "realm1"
+                  },
+                  "DEBUG": {
+                      "debug": false
+                  }
+              },
+              {
+                  "NAME": "adult(flycircuit)",
+                  "AUTH": {
+                      "ssl": true,
+                      "authentication": true,
+                      "ca_cert_file": "isrgrootx1.pem",
+                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
+                  },
+                  "USER": {
+                      "user": "guest",
+                      "secret": "guestpass"
+                  },
+                  "SERVER": {
+                      "ip": "flycircuitdev.neuronlp.fruitflybrain.org",
+                      "dataset": ["flycircuit"],
+                      "realm": "realm1"
+                  },
+                  "DEBUG": {
+                      "debug": false
+                  }
+              },
+              {
+                  "NAME": "adult(hemibrain)",
+                  "AUTH": {
+                      "ssl": true,
+                      "authentication": true,
+                      "ca_cert_file": "isrgrootx1.pem",
+                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
+                  },
+                  "USER": {
+                      "user": "guest",
+                      "secret": "jije83b3jJN*31"
+                  },
+                  "SERVER": {
+                      "ip": "hemibrain.neuronlp.fruitflybrain.org",
+                      "dataset": ["hemibrain"],
+                      "realm": "realm1"
+                  },
+                  "DEBUG": {
+                      "debug": false
+                  }
+              }
+          ]
+      }
   }
+}

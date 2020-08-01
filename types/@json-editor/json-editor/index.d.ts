@@ -110,8 +110,12 @@ declare class JSONEditor {
     };
 
     getValue(): any;
-    on(event: string, callback: () => void): void;
+    setValue(val: any): any;
+    destroy(): void;
+    on(event: string, callback: (editor: any) => void): void;
     validate(): string[];
+    editors: { [name: string]: JSONEditor };
+    container: HTMLElement
 }
 
 declare module "@json-editor/json-editor" {
@@ -123,8 +127,13 @@ declare module "@json-editor/json-editor" {
         };
     
         getValue(): any;
-        on(event: string, callback: () => void): void;
+        setValue(val: any): any;
+        destroy(): void;
+        on(event: string, callback: (editor: any) => void): void;
         validate(): string[];
+        editors: { [name: string]: JSONEditor };
+        container: HTMLElement;
+        
     }
     export { JSONEditor };
 }

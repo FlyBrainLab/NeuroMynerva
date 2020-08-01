@@ -4,8 +4,8 @@ import * as ini from 'ini';
 import { JSONEditor } from '@json-editor/json-editor';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { Widget }from '@lumino/widgets';
-import { Dialog, showDialog }from '@jupyterlab/apputils';
-import { Signal, ISignal } from '@lumino/signaling';
+import { Dialog, showDialog } from '@jupyterlab/apputils';
+import '../style/processor.css';
 
 const FFBOPROCESSOR_BUTTON_CLASS = 'jp-fbl-processor-btn';
 
@@ -13,9 +13,10 @@ const FFBOPROCESSOR_BUTTON_CLASS = 'jp-fbl-processor-btn';
  * Create Processor Button
  * @param props 
  */
-export function FFBOProcessorButton(props:{ffboprocessor: FFBOProcessor}) {
-    const { ffboprocessor } = props;
+export function FFBOProcessorButton( props:{settings: ISettingRegistry.ISettings}) {
+    const { settings } = props;
     function onClick() {
+        let ffboprocessor = new FFBOProcessor(settings);
         void showDialog({
             title: 'All FFBOProcessor Settings',
             body: ffboprocessor,
@@ -25,8 +26,10 @@ export function FFBOProcessorButton(props:{ffboprocessor: FFBOProcessor}) {
             ]
         }).then(result => {
             if (result.button.accept){
-                ffboprocessor.settings.set('fbl-processor', ffboprocessor.getValue()['fbl-processors'] as any);
+                settings.set('fbl-processors', ffboprocessor.getValue()['fbl-processors'] as any);
             }
+            ffboprocessor.editor.destroy();
+            ffboprocessor.dispose();
         })
     }
     return (
@@ -53,14 +56,42 @@ export class FFBOProcessor extends Widget {
             schema: this.settings.schema,
             iconlib: "fontawesome5",
             object_layout: "normal",
-            disable_edit_json: true,
             disable_collapse: true
         });
-
-        this.node.appendChild(element);
+        
+        this.editor.on('change', () => {
+            this._updateDataSetClassList();
+        })
+        this.editor.on('ready', () => {
+            this.editor.setValue({ 'fbl-processors': this.settings.get('fbl-processors').composite as any });
+            this._updateDataSetClassList();
+        })
+        this.editor.on('addRow', (editor: any) => {
+            let buttons = editor.container.getElementsByTagName('button');
+            let inputs = editor.container.getElementsByTagName('input');
+            for (let btn of buttons) {   
+                (btn as HTMLButtonElement).classList.add('jp-mod-styled');
+            }
+            for (let inp of inputs) {
+                (inp as HTMLInputElement).classList.add('jp-mod-styled');
+            }
+        });
+        
+        let table = this.editor.editors['root.fbl-processors'].container.getElementsByClassName("je-indented-panel")[0] as HTMLDivElement;
+        this.node.appendChild(table);
         this.settings.changed.connect(() => {
             this.load(this.settings); // will exmit changed signal
         });
+    }
+
+    private _updateDataSetClassList() {
+        (this.editor.getValue()['fbl-processors'] as Array<any>).forEach((row, idx) => {
+            let datasetContainerName = `root.fbl-processors.${idx}.SERVER.dataset`;
+            let container = this.editor.editors[datasetContainerName].container;
+            if (!container.classList.contains('fbl-json-editor-datasets')) {
+                container.classList.add('fbl-json-editor-datasets');
+            }
+        })
     }
 
     select(processor: string): FFBOProcessor.ISettings | null {
@@ -73,24 +104,17 @@ export class FFBOProcessor extends Widget {
 
     load(setting?: ISettingRegistry.ISettings): void {
         setting = setting ?? this.settings;
-        let processors = FFBOProcessor.arrToDict(setting.get('fbl-processors').composite as any);
-        if (processors !== this.processors){
-            this.processors = processors;
-            this._settingsChanged.emit(this);
-        }
+        this.processors = FFBOProcessor.arrToDict(setting.get('fbl-processors').composite as any);
     }
 
-    get settingsChanged(): ISignal<this, FFBOProcessor> {
-        return this._settingsChanged;
-    }
 
     getValue(){
         return this.editor.getValue();
     }
 
+
     processors: FFBOProcessor.IProcessors;
     editor: JSONEditor; // should be JSONEditor
-    private _settingsChanged = new Signal<this, FFBOProcessor>(this);
     readonly settings: ISettingRegistry.ISettings
 }
 
@@ -99,7 +123,7 @@ export namespace FFBOProcessor {
     export function arrToDict(ffboProcessors: ISettings[]): IProcessors {
         let settings: IProcessors = {};
         for (let processor of ffboProcessors) {
-            settings[processor.name] = processor;
+            settings[processor.NAME] = processor;
         }
         return settings;
     }
@@ -107,7 +131,7 @@ export namespace FFBOProcessor {
     export type IProcessors = { [name: string]: ISettings };
     
     export interface ISettings {
-        name: string;
+        NAME: string;
         AUTH: {
             ssl: boolean,
             authentication: boolean,

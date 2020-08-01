@@ -25,7 +25,6 @@ import { InfoWidget } from '../info-widget';
 import { FFBOProcessor } from '../../ffboprocessor';
 
 export interface IFBLWidget extends Widget {
-
   /**
    * All available processor settings
    */

@@ -248,7 +248,7 @@ async function activateFBL(
   let infoWidget: InfoWidget = undefined;
 
   // all available processor settings
-  let ffboProcessors: FFBOProcessor = undefined;
+  let ffboProcessorSetting: ISettingRegistry.ISettings = undefined;
   
 
   // Wait for the application to be restored and
@@ -256,13 +256,10 @@ async function activateFBL(
   Promise.all([app.restored, settings.load(extension.id)])
     .then(([, setting]) => {
       // Read the settings
-      if (ffboProcessors === undefined){
-        ffboProcessors = new FFBOProcessor(setting);
-      } else{
-        ffboProcessors.load(setting);
-      }
+      ffboProcessorSetting = setting;
+
       if (masterWidget === undefined){
-        masterWidget = new MasterWidget(fblWidgetTrackers, ffboProcessors);
+        masterWidget = new MasterWidget(fblWidgetTrackers, ffboProcessorSetting);
         masterWidget.id = 'FBL-Master';
         masterWidget.title.caption = 'FBL Widgets and Running Sessions';
         masterWidget.title.icon = masterIcon;
@@ -273,26 +270,27 @@ async function activateFBL(
         app.shell.add(masterWidget, 'left', {rank: 1900});
         window.master = masterWidget;
       } else {
-        masterWidget.ffboProcessors = ffboProcessors;
+        masterWidget.ffboProcessorSetting = ffboProcessorSetting;
       }
 
+      let _settings = FBL.getProcessors(setting);
       fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessors = ffboProcessors.processors;
+        w.content.ffboProcessors = _settings
       });
       fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-        w.content.ffboProcessors = ffboProcessors.processors;
+        w.content.ffboProcessors = _settings;
       })
 
       // Listen for your plugin setting changes using Signal
       setting.changed.connect((setting)=>{
-        ffboProcessors.load(setting);
+        _settings = FBL.getProcessors(setting);
         fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessors = ffboProcessors.processors;
+          w.content.ffboProcessors = _settings;
         });
         fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessors = ffboProcessors.processors;
+          w.content.ffboProcessors = _settings;
         });
-        masterWidget.ffboProcessors = ffboProcessors;
+        masterWidget.ffboProcessorSetting = ffboProcessorSetting;
       }, extension);
     })
     .catch(reason => {
@@ -303,10 +301,10 @@ async function activateFBL(
 
   // Ensure that the widgets' are aware of all processor settings when added
   fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessors = ffboProcessors?.processors ?? {};
+    w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
   }, extension);
   fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessors = ffboProcessors?.processors ?? {};
+    w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
   }, extension);
   
 
@@ -438,7 +436,7 @@ async function activateFBL(
       let abort: boolean = false;
       await showDialog({
         title: 'Change Processor',
-        body: new FBL.ProcessorSelector(ffboProcessors),
+        body: new FBL.ProcessorSelector(ffboProcessorSetting),
         buttons: [
           Dialog.cancelButton(),
           Dialog.warnButton({label: 'No Processor'}),
@@ -552,47 +550,13 @@ async function activateFBL(
 }
 
 export namespace FBL {
-  export function arrToDict(ffboProcessors: IFBLProcessorSetting[]): FBLProcessorSettings {
-    let settings: FBLProcessorSettings = {};
-    for (let processor of ffboProcessors) {
-      settings[processor.name] = processor;
+  export function getProcessors(setting?: ISettingRegistry.ISettings): FFBOProcessor.IProcessors {
+    if (!setting) {
+      return {};
     }
-    return settings;
+    return FFBOProcessor.arrToDict(setting.get('fbl-processors').composite as any as FFBOProcessor.ISettings[]);
   }
-
-  export type FBLProcessorSettings = {[name: string]: IFBLProcessorSetting};
-  export interface IFBLProcessorSetting {
-    name: string;
-    AUTH: {
-      ssl: boolean,
-      authentication: boolean,
-      cert?: string,
-      key?: string,
-      'chain-cert'?: string,
-      ca_cert_file?: string,
-      intermediate_cer_file?: string
-    };
-    USER: {
-      user: string,
-      secret: string,
-    };
-    SERVER: {
-      ip: string,
-      realm: string,
-      dataset: string[]
-    };
-    DEBUG: {
-      debug: boolean
-    };
-  }
-  /**
-   * Load and Parse All available FBL Settings
-   *
-   * @param setting Extension settings
-   */
-  export function loadFBLProcessorSetting(setting: ISettingRegistry.ISettings): FBLProcessorSettings {
-    return FBL.arrToDict((setting.get('fbl-processors').composite as any) as IFBLProcessorSetting[]);
-  }
+  
 
   /**
    * A widget that provides a processor selection.
@@ -601,14 +565,15 @@ export namespace FBL {
     /**
      * Create a new processor selector widget.
      */
-    constructor(processor: FFBOProcessor) {
+    constructor(setting: ISettingRegistry.ISettings) {
       const body = document.createElement('div');
       const text = document.createElement('label');
       text.textContent = `Select processor for FBL Workspace`;
       body.appendChild(text);
 
       const selector = document.createElement('select');
-      let all_processors = Object.keys(processor.processors);
+
+      let all_processors = Object.keys(FBL.getProcessors(setting));
       all_processors.push('No Processor');
       for (const name of all_processors){
         const option = document.createElement('option');

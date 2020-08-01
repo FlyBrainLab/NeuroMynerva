@@ -1,0 +1,74 @@
+.je-table tbody {
+    vertical-align: top;
+}
+
+.je-table td {
+    padding: 0;
+}
+
+.je-indented-panel {
+    padding: 10px !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+.fbl-json-editor-datasets h3 {
+    font-size: var(--jp-ui-font-size1);
+    margin-bottom: 0;
+}
+
+.fbl-json-editor-datasets .je-indented-panel {
+    font-size: var(--jp-ui-font-size1);
+    margin-bottom: 0;
+    padding: 0px;
+}
+
+/* .fbl-json-editor-datasets .je-indented-panel[data-schematype="string"] {
+    display: flex;
+    justify-content: space-around;
+    align-items: baseline;
+}
+
+.fbl-json-editor-datasets .je-indented-panel[data-schematype="string"] .form-control {
+    width: 80%;
+}
+
+.fbl-json-editor-datasets .je-indented-panel[data-schematype="string"] .form-control label {
+    width: 30%;
+}
+
+.fbl-json-editor-datasets .je-indented-panel[data-schematype="string"] .form-control input {
+    width: 70%;
+}
+
+.fbl-json-editor-datasets .je-indented-panel[data-schematype="string"] > span {
+    width: 20%;
+} */
+
+label.je-form-input-label {
+    font-weight: bold;
+}
+p.je-form-input-label {
+    font-weight: lighter;
+    font-style: italic;
+}
+
+.je-table tbody tr:nth-child(odd){
+    background-color: lightgray;
+}
+
+button.json-editor-btn-edit_properties > span {
+    display: none;
+}
+button.json-editor-btn-edit > span {
+    display: none;
+}
+button.json-editor-btn-subtract > span {
+    display: none;
+}
+button.json-editor-btn-delete > span {
+    display: none;
+}
+button.json-editor-btn-add > span {
+    display: none;
+}

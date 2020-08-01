@@ -7,6 +7,9 @@ import {
   UseSignal,
   Dialog, showDialog
 } from'@jupyterlab/apputils';
+import {
+  ISettingRegistry
+} from '@jupyterlab/settingregistry';
 
 
 import { 
@@ -16,7 +19,7 @@ import {
 import { fblIcon } from '../../icons';
 import { IFBLWidget } from '../template-widget/index';
 import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '../../index';
-import { FFBOProcessor, FFBOProcessorButton } from '../../ffboprocessor';
+import { FFBOProcessorButton } from '../../ffboprocessor';
 import '../../../style/widgets/master-widget/master.css';
 
 
@@ -64,25 +67,25 @@ const DISPOSE_BUTTON_CLASS = 'jp-FBL-Master-itemDispose';
 export class MasterWidget extends ReactWidget {
   constructor(
     fbltrackers: IFBLWidgetTrackers,
-    ffboProcessors: FFBOProcessor
+    ffboProcessorSetting: ISettingRegistry.ISettings
   ) {
     console.log('Master Widget Created');
     super();
     this.fbltrackers = fbltrackers;
-    this.ffboProcessors = ffboProcessors;
+    this.ffboProcessorSetting = ffboProcessorSetting;
     this.addClass(MASTER_CLASS_JLab);
     this.render();
   }
 
   protected render() {
-    return (<FBLWidgetReact.FBLWidgetTrackersComponent ffboProcessors={this.ffboProcessors} fbltrackers={this.fbltrackers}/>);
+    return (<FBLWidgetReact.FBLWidgetTrackersComponent settings={this.ffboProcessorSetting} fbltrackers={this.fbltrackers}/>);
   }
 
   /**
   * The Elements associated with the widget.
   */
   private fbltrackers: FBLWidgetTrackers;
-  ffboProcessors: FFBOProcessor
+  ffboProcessorSetting: ISettingRegistry.ISettings
 };
 
 
@@ -92,13 +95,13 @@ export class MasterWidget extends ReactWidget {
 namespace FBLWidgetReact {
   export function FBLWidgetTrackersComponent(props: {
     fbltrackers: FBLWidgetTrackers;
-    ffboProcessors: FFBOProcessor;
+    settings: ISettingRegistry.ISettings;
   }) {
     const trackers_arr = Object.values(props.fbltrackers.trackers);
     const trackers_names = Object.keys(props.fbltrackers.trackers);
     return (
       <>
-        <FFBOProcessorButton ffboprocessor={props.ffboProcessors}></FFBOProcessorButton>
+        <FFBOProcessorButton settings={props.settings}></FFBOProcessorButton>
         {trackers_arr.map((tracker, i) => (
           <Section key={i} name={trackers_names[i]} tracker={tracker}/>
         ))}
