@@ -120,6 +120,8 @@ export class FFBOProcessor extends Widget {
 
 
 export namespace FFBOProcessor {
+    export const NO_PROCESSOR = "No Processor";
+    
     export function arrToDict(ffboProcessors: ISettings[]): IProcessors {
         let settings: IProcessors = {};
         for (let processor of ffboProcessors) {
@@ -146,7 +148,7 @@ export namespace FFBOProcessor {
             secret: string,
         };
         SERVER: {
-            ip: string,
+            IP: string,
             realm: string,
             dataset: string[]
         };

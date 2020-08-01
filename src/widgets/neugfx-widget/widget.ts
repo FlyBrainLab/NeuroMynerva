@@ -6,6 +6,7 @@ import { NeuGFXModel, INeuGFXModel } from './model';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import { Icons } from '../../index';
 import '../../../style/widgets/neugfx-widget/neugfx.css';
+import { FFBOProcessor } from '../../ffboprocessor';
 
 const NeuGFX_CLASS_JLab = "jp-FBL-NeuGFX";
 
@@ -165,7 +166,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     if (newProcessor === this._processor) {
       return;
     }
-    if (newProcessor === "No Processor") {
+    if (newProcessor === FFBOProcessor.NO_PROCESSOR) {
       this._processorChanged.emit(newProcessor);
       this._processor = newProcessor;
       return;

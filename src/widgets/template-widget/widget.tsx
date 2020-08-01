@@ -191,7 +191,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
       // set processor after session is avaible, in case the setter needs the session
-      this.processor = processor ?? 'No Processor';
+      this.processor = processor ?? FFBOProcessor.NO_PROCESSOR;
       Private.updateTitle(this, this._connected);
     });
 
@@ -470,7 +470,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (processor !== this.processor && processor in this.ffboProcessors){
       currentProcessor = this.ffboProcessors[processor];
     }
-
     let args = '';
     if (currentProcessor?.USER?.user) {
       args += `user='${currentProcessor.USER.user}',`;
@@ -478,12 +477,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (currentProcessor?.USER?.secret) {
       args += `secret='${currentProcessor.USER.secret}',`;
     }
-
     // DEBUG: ssl=True won't work for now, force to be False (default)
     // if (currentProcessor?.AUTH?.ssl === true) {
     //   args += 'ssl=True,';
     // }
-
     if (currentProcessor?.AUTH?.ca_cert_file) {
       args += `ca_cert_file="${currentProcessor.AUTH.ca_cert_file}",`;
     }
@@ -497,13 +494,12 @@ export class FBLWidget extends Widget implements IFBLWidget {
       args += 'authentication=False';
     }
     let websocket = currentProcessor?.AUTH?.ssl === true ? 'wss' : 'ws';
-    if (currentProcessor?.SERVER?.ip) {
-      args += `url=u"${websocket}://${currentProcessor.SERVER.ip}/ws",`;
+    if (currentProcessor?.SERVER?.IP) {
+      args += `url=u"${websocket}://${currentProcessor.SERVER.IP}/ws",`;
     }
     if (currentProcessor?.SERVER?.dataset) {
       args += `dataset="${currentProcessor.SERVER.dataset[0] as string}",`;
     }
-
     if (currentProcessor?.SERVER?.realm) {
       args += `realm=u"${currentProcessor.SERVER.realm}",`;
     }
@@ -548,6 +544,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * Initialize FBLClient on associated kernel
   */
   async initFBLClient(initClient = true): Promise<void> {
+    if (this.processor === FFBOProcessor.NO_PROCESSOR) {
+      return 
+    }
     if (!this.sessionContext.session?.kernel){
       return Promise.resolve(void 0); // no kernel
     }
@@ -641,7 +640,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (newProcessor === this._processor) {
       return;
     }
-    if (newProcessor === 'No Processor'){
+    if (newProcessor === FFBOProcessor.NO_PROCESSOR){
       this._processorChanged.emit(newProcessor);
       this._processor = newProcessor;
       return;

@@ -350,7 +350,7 @@ async function activateFBL(
         Module:Neu3DWidget,
         icon:NEU3DICON,
         moduleArgs:{
-          processor: args.processor as string ?? 'No Processor',
+          processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
           info:infoWidget, 
           _count: fblWidgetTrackers.trackers.Neu3D.size, 
           ...args
@@ -368,7 +368,7 @@ async function activateFBL(
         Module:Neu3DWidget,
         icon:NEU3DICON,
         moduleArgs: {
-          processor: args.processor as string ?? 'No Processor',
+          processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
           info:infoWidget,
           _count: fblWidgetTrackers.trackers.Neu3D.size,
           ...args
@@ -388,7 +388,7 @@ async function activateFBL(
           Module:NeuGFXWidget,
           icon:NEUGFXICON,
           moduleArgs:{
-            processor: args.processor as string ?? 'No Processor',
+            processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
             _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
@@ -432,20 +432,20 @@ async function activateFBL(
     label: 'Create FBL Workspace',
     icon: fblIcon,
     execute: async (args) => {
-      let processor: string = 'No Processor';
+      let processor: string = FFBOProcessor.NO_PROCESSOR;
       let abort: boolean = false;
       await showDialog({
         title: 'Change Processor',
         body: new FBL.ProcessorSelector(ffboProcessorSetting),
         buttons: [
           Dialog.cancelButton(),
-          Dialog.warnButton({label: 'No Processor'}),
+          Dialog.warnButton({label: FFBOProcessor.NO_PROCESSOR}),
           Dialog.okButton({label: 'Select'})
         ]
       }).then(result =>{
         if (result.button.accept){
           if (result.button.displayType === 'warn'){
-            processor = 'No Processor';
+            processor = FFBOProcessor.NO_PROCESSOR;
           } else {
             processor = result.value;
           }
@@ -574,7 +574,7 @@ export namespace FBL {
       const selector = document.createElement('select');
 
       let all_processors = Object.keys(FBL.getProcessors(setting));
-      all_processors.push('No Processor');
+      all_processors.push(FFBOProcessor.NO_PROCESSOR);
       for (const name of all_processors){
         const option = document.createElement('option');
         option.text = name;

@@ -13,6 +13,7 @@ import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import * as Icons from '../../icons';
 import '../../../style/widgets/neu3d-widget/neu3d.css';
+import { FFBOProcessor } from '../../ffboprocessor';
 
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
 
@@ -296,7 +297,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     if (thisMsg.widget == 'NLP') {
       switch (thisMsg.messageType) {
         case "Message": {
-          INotification.success(thisMsg.data.info.success);
+          if (thisMsg.data.info.success) {
+            INotification.success(thisMsg.data.info.success);  
+          } else if (thisMsg.data.info.error) {
+            INotification.error(thisMsg.data.info.error);  
+          }
           console.log('[NEU3D] Message received.', thisMsg.data);
           break;
         }
@@ -690,7 +695,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       return;
     }
 
-    if (newProcessor === 'No Processor'){
+    if (newProcessor === FFBOProcessor.NO_PROCESSOR){
       (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
       this._processorChanged.emit(newProcessor);
       this._processor = newProcessor;

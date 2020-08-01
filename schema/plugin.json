@@ -7,7 +7,7 @@
           "description": "One instance of FFBOProcessor settings",
           "properties": {
               "NAME": { 
-                  "description": "Name of the processor.",
+                  "description": "Name of the processor",
                   "type": "string"
               },
               "AUTH": {
@@ -51,7 +51,7 @@
             },
             "SERVER": {
                 "properties": {
-                    "ip address": {
+                    "IP": {
                         "type": "string"
                     },
                     "dataset": {
@@ -66,7 +66,7 @@
                         "type": "string"
                     }
                 },
-                "required":["ip", "dataset", "realm"],
+                "required":["IP", "dataset", "realm"],
                 "type": "object"
             },
             "DEBUG": {
@@ -78,6 +78,11 @@
                 "type": "object"
             }
           }
+      },
+      "fbl-settings": {
+          "description": "All available connections for a given FlyBrainLab",
+          "type": "array",
+          "items": { "$ref": "#/definitions/fbl-config" }
       }
   },
   "properties": {
@@ -102,7 +107,7 @@
                       "secret": "guestpass"
                   },
                   "SERVER": {
-                      "ip": "amacrine.ee.columbia.edu:6651",
+                      "IP": "amacrine.ee.columbia.edu:6651",
                       "dataset": ["l1em"],
                       "realm": "realm1"
                   },
@@ -123,7 +128,7 @@
                       "secret": "guestpass"
                   },
                   "SERVER": {
-                      "ip": "flycircuitdev.neuronlp.fruitflybrain.org",
+                      "IP": "flycircuitdev.neuronlp.fruitflybrain.org",
                       "dataset": ["flycircuit"],
                       "realm": "realm1"
                   },
@@ -144,7 +149,7 @@
                       "secret": "jije83b3jJN*31"
                   },
                   "SERVER": {
-                      "ip": "hemibrain.neuronlp.fruitflybrain.org",
+                      "IP": "hemibrain.neuronlp.fruitflybrain.org",
                       "dataset": ["hemibrain"],
                       "realm": "realm1"
                   },
