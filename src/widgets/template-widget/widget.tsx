@@ -6,6 +6,11 @@ import { IDisposable } from '@lumino/disposable'
 import { Message } from '@lumino/messaging';
 import { PathExt, Time } from '@jupyterlab/coreutils';
 import { Widget } from '@lumino/widgets';
+import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea';
+import {
+  RenderMimeRegistry,
+  standardRendererFactories as initialFactories
+} from '@jupyterlab/rendermime';
 import {
   ISessionContext, SessionContext, 
   sessionContextDialogs, showDialog
@@ -532,11 +537,24 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   initClient(processor?: string): void{
     let code = this.initClientCode(processor);
-    try {
-      this.sessionContext.session.kernel.requestExecute({ code: code });
-    } catch(reason) {
-      console.warn(`[FBL-Widget] initClient failed, ${reason}`);
-    }
+    const model = new OutputAreaModel();
+    const rendermime = new RenderMimeRegistry({ initialFactories });
+    const outputArea = new OutputArea({ model, rendermime });
+    outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
+    outputArea.future.done.then((reply) => {
+      if (reply && reply.content.status === 'ok') {
+        return Promise.resolve(void 0);
+      } else {
+        showDialog({
+          title: `FBLClient Initialization Registration Failed`,
+          body: outputArea,
+        }).then(()=>{
+          return Promise.resolve('Execution Failed');
+        })
+      }
+    }, (failure) => {
+      return Promise.reject(failure);
+    });
   }
 
 
@@ -590,31 +608,49 @@ export class FBLWidget extends Widget implements IFBLWidget {
     } else {
       code = this.initClientCode() + this.initFBLCode();
     }
-
-    kernel.requestExecute({ code: code }).done.then((reply) => {
-      if (reply && reply.content.status === 'error'){
-        const traceback = ANSI.stripReplyError(reply.content.traceback);
-        const body = (
-          <div>
-            {traceback && (
-              <details className="jp-mod-wide">
-                <pre>{traceback}</pre>
-              </details>
-            )}
-          </div>
-        );
+    const model = new OutputAreaModel();
+    const rendermime = new RenderMimeRegistry({ initialFactories });
+    const outputArea = new OutputArea({ model, rendermime });
+    outputArea.future = kernel.requestExecute({ code });
+    outputArea.future.done.then((reply) => {
+      if (reply && reply.content.status === 'ok') {
+        return Promise.resolve(void 0);
+      } else {
         showDialog({
           title: `FBLClient Initialization Registration Failed (${this._commTarget})`,
-          body: body
+          body: outputArea,
         }).then(()=>{
           return Promise.resolve('Execution Failed');
         })
-      } else if (reply && reply.content.status === 'ok'){
-        return Promise.resolve(void 0);
       }
     }, (failure) => {
       return Promise.reject(failure);
     });
+    
+    // kernel.requestExecute({ code: code }).done.then((reply) => {
+    //   if (reply && reply.content.status === 'error'){
+    //     const traceback = ANSI.stripReplyError(reply.content.traceback);
+    //     const body = (
+    //       <div>
+    //         {traceback && (
+    //           <details className="jp-mod-wide">
+    //             <pre>{traceback}</pre>
+    //           </details>
+    //         )}
+    //       </div>
+    //     );
+    //     showDialog({
+    //       title: `FBLClient Initialization Registration Failed (${this._commTarget})`,
+    //       body: body
+    //     }).then(()=>{
+    //       return Promise.resolve('Execution Failed');
+    //     })
+    //   } else if (reply && reply.content.status === 'ok'){
+    //     return Promise.resolve(void 0);
+    //   }
+    // }, (failure) => {
+    //   return Promise.reject(failure);
+    // });
   }
 
   /**
@@ -807,9 +843,9 @@ namespace Private {
   }
 }
 
-namespace ANSI {
-  export function stripReplyError(msg: Array<string>): string {
-    const characters = /\[-|\[[0-1];[0-9]+m|\[[0]m/g;
-    return msg.join('\n').replace(characters, '');
-  }
-}
+// namespace ANSI {
+//   export function stripReplyError(msg: Array<string>): string {
+//     const characters = /\[-|\[[0-1];[0-9]+m|\[[0]m/g;
+//     return msg.join('\n').replace(characters, '');
+//   }
+// }
