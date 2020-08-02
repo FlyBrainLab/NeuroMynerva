@@ -541,6 +541,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     const rendermime = new RenderMimeRegistry({ initialFactories });
     const outputArea = new OutputArea({ model, rendermime });
     outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
+    outputArea.node.style.display = 'block';
     outputArea.future.done.then((reply) => {
       if (reply && reply.content.status === 'ok') {
         return Promise.resolve(void 0);
@@ -612,6 +613,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     const rendermime = new RenderMimeRegistry({ initialFactories });
     const outputArea = new OutputArea({ model, rendermime });
     outputArea.future = kernel.requestExecute({ code });
+    outputArea.node.style.display = 'block';
     outputArea.future.done.then((reply) => {
       if (reply && reply.content.status === 'ok') {
         return Promise.resolve(void 0);
