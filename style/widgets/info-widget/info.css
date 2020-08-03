@@ -27,6 +27,10 @@ border-bottom: var(--jp-border-width) solid var(--jp-border-color2);
 margin-top: 8px;
 }
 
+.jp-FBL-Info-section-BtnHeader {
+    justify-content: flex-end;
+}
+
 .jp-FBL-Info-sectionHeader h2 {
 flex: 0 0 auto;
 font-weight: 600;

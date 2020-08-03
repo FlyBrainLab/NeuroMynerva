@@ -1,18 +1,18 @@
 // FBL Master Widget Class
 import * as React from 'react';
-import { 
-  Signal
-} from '@lumino/signaling';
-
+import { Signal } from '@lumino/signaling';
+import { refreshIcon } from '@jupyterlab/ui-components';
 import { 
   ReactWidget, 
   UseSignal,
+  ToolbarButtonComponent
  } from'@jupyterlab/apputils';
 
 import { SummaryTable } from './summary_table';
 import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
 import '../../../style/widgets/info-widget/info.css';
+import { SessionDialogComponent } from '../template-widget';
 
 const INFO_CLASS_JLab = 'jp-FBL-Info';
 
@@ -25,6 +25,9 @@ const SECTION_CLASS = 'jp-FBL-Info-section';
  * The class name added to the Section Header
  */
 const SECTION_HEADER_CLASS = 'jp-FBL-Info-sectionHeader';
+
+
+const SECTION_BTN_HEADER_CLASS = 'jp-FBL-Info-sectionHeader jp-FBL-Info-section-BtnHeader';
 
 /**
  * The class name added to a section container.
@@ -182,6 +185,8 @@ export class InfoWidget extends ReactWidget {
 
   /** Reset Info to empty */
   reset() {
+    this.tabConnPost?.tabulator?.redraw();
+    this.tabConnPre?.tabulator?.redraw();
     this.dataChanged.emit({
       data: empty_data,
       inWorkspace: this.inWorkspace,
@@ -193,7 +198,12 @@ export class InfoWidget extends ReactWidget {
   protected render() {
     return (
       <div className={SECTION_CLASS}>
-      {/* <div className={SECTION_HEADER_CLASS}>
+        <div className={SECTION_BTN_HEADER_CLASS}>
+        <ToolbarButtonComponent
+          tooltip="Reset Info Panel"
+          icon={refreshIcon}
+          onClick={this.reset.bind(this)}
+          />
         <UseSignal
           signal={this.dataChanged}
           initialArgs={{
@@ -203,14 +213,14 @@ export class InfoWidget extends ReactWidget {
           }}
         >
           {(_, val) => {
-            if (val.neu3d){
+            if (val.neu3d) {
               return <SessionDialogComponent widget={val.neu3d}></SessionDialogComponent>
             } else {
               return <></>
             }
           }}
         </UseSignal>
-      </div> */}
+      </div>
       <header className={SECTION_HEADER_CLASS}>
         <h2>Summary</h2>
       </header>

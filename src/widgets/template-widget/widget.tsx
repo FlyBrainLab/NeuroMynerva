@@ -519,30 +519,20 @@ export class FBLWidget extends Widget implements IFBLWidget {
     fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
     `
     return code;
-    // console.warn('[FBL-Widgets] initClientCode will be replaced by initClient after 0.2.0 beta release');
-    // return `
-    // if 'fbl' not in globals():
-    //     import flybrainlab as fbl
-    //     fbl.init()
-    // # if '${this.clientId}' not in fbl.client_manager.clients:
-    // _comm = fbl.MetaComm('${this.clientId}', fbl)
-    // _client = fbl.Client(FFBOLabcomm = _comm ${clientargs || ''})
-    // fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
-    // `;
   }
 
   /**
    * Initialize Client Based on Current Processor Setting
    * @param processor 
    */
-  initClient(processor?: string): void{
+  initClient(processor?: string): Promise<any> {
     let code = this.initClientCode(processor);
     const model = new OutputAreaModel();
     const rendermime = new RenderMimeRegistry({ initialFactories });
     const outputArea = new OutputArea({ model, rendermime });
     outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
     outputArea.node.style.display = 'block';
-    outputArea.future.done.then((reply) => {
+    return outputArea.future.done.then((reply) => {
       if (reply && reply.content.status === 'ok') {
         return Promise.resolve(void 0);
       } else {

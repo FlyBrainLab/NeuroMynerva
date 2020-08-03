@@ -56,7 +56,7 @@ export class ConnTable {
 
   addSynColumn(){
     if (!this.tabulator.getColumn("has_syn_morph")) {
-      this.tabulator.addColumn(this.synColumn, true, "name");
+      this.tabulator.addColumn(this.synColumn, true, "uname");
       this.tabulator.redraw();
     }
   }
@@ -136,7 +136,7 @@ export class ConnTable {
     this.synColumn,
     {
       title: "Name",
-      field: "name",
+      field: "uname",
       hozAlign: "center",
       headerFilter: true,
       headerFilterPlaceholder: "filter name"
