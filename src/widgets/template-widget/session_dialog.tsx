@@ -9,7 +9,7 @@ import {
     Widget
 } from '@lumino/widgets';
 import { 
-    Toolbar, ToolbarButtonComponent 
+    ToolbarButtonComponent 
 } from '@jupyterlab/apputils';
 import {
     IFBLWidget, FBLWidget
@@ -17,6 +17,7 @@ import {
 import { 
     fblSettingIcon
 } from '../../icons';
+import { FFBOProcessor } from '../../ffboprocessor';
 
 const TOOLBAR_SERVER_CLASS = 'jp-FBL-Processor';
 
@@ -56,42 +57,52 @@ export class ProcessorSelector extends Widget {
 /**
 * A widget show all information regarding a given FBL session
 */
-class SessionDialog extends Widget {
+class SessionDialog extends ReactWidget {
     /**
     * Create a new kernel selector widget.
     */
     constructor(widget: FBLWidget) {
-        const body = document.createElement('div');
-        const desc = document.createElement('div');
-        let text = '';
-        if (widget.sessionContext){
-            let sessionDesc = ''
-            if (widget.sessionContext.session) {
-                sessionDesc = `
-                <tr><td><b>Kernel Session</b></td><td> ${widget.sessionContext.name} </td></tr>
-                <tr><td><b>Kernel Path</b></td><td> ${PathExt.dirname(widget.sessionContext.path)}</td></tr>
-                <tr><td><b>Kernel Name</b></td><td> ${widget.sessionContext.kernelDisplayName}</td></tr>
-                <tr><td><b>Comm Target</b></td><td> ${widget._commTarget}</td></tr>
-                <tr><td><b>Comm Id</b></td><td> ${widget.comm.commId}</td></tr>
-                `
-            }
-            text = `
-            <div class="lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-            <table>
-                <tr><td><b>Processor</b></td><td>${widget.processor}</td></tr>
-                ${sessionDesc}
-            </table>
-            </div>
-            `;
-        } else {
-            text = 'Widget not connected to kernel.'
+        super();
+        this.widget = widget;
+    }
+
+    protected render() {
+        let kernelInfo = [];
+        let processorInfo = [];
+        let commInfo = [];
+        if (this.widget.sessionContext.session) {
+            kernelInfo.push(<tr key={"kernel-0"}><td><b>Kernel Path</b></td><td> {PathExt.dirname(this.widget.sessionContext.path)}</td></tr>);
+            kernelInfo.push(<tr key={"kernel-1"}><td><b>Kernel Name</b></td><td> {this.widget.sessionContext.kernelDisplayName}</td></tr>);
         }
-        desc.innerHTML = text;
-        body.appendChild(desc);
-        super({node: body});
+        if (this.widget.processor && this.widget.processor !== FFBOProcessor.NO_PROCESSOR) {
+            const processor = this.widget.ffboProcessors[this.widget.processor];
+            processorInfo.push(<tr key={"processor-1"}><td><b>IP</b></td><td> {processor.SERVER.IP} </td></tr>);
+            processorInfo.push(<tr key={"processor-2"}><td><b>User</b></td><td> {processor.USER.user} </td></tr>);
+            processorInfo.push(<tr key={"processor-3"}><td><b>Secret</b></td><td> {processor.USER.secret} </td></tr>);
+            processorInfo.push(<tr key={"processor-4"}><td><b>Dataset</b></td><td> {processor.SERVER.dataset[0]} </td></tr>);
+        }
+        if (this.widget.comm) {
+            commInfo.push(<tr key={"comm-0"}><td><b>Comm Id</b></td><td> {this.widget.comm.commId ?? "Comm Not Established"}</td></tr>);
+        }
+
+        return (
+            <div className="lm-Widget p-Widget">
+                <div className="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+                    <table>
+                        <tbody>
+                            <tr key={"kernel"}><td><b>Kernel</b></td><td>{this.widget.sessionContext?.name ?? 'No Kernel'}</td></tr>
+                            {kernelInfo}
+                            <tr key={"processor"}><td><b>Processor</b></td><td>{this.widget.processor}</td></tr>
+                            {processorInfo}
+                            <tr key={"comm"}><td><b>Comm Target</b></td><td>{this.widget._commTarget}</td></tr>
+                            {commInfo}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )
     }
     widget: FBLWidget;
-    toolbar: Toolbar;
 }
 
 

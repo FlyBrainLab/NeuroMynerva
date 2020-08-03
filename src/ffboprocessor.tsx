@@ -6,6 +6,8 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { Widget }from '@lumino/widgets';
 import { Dialog, showDialog } from '@jupyterlab/apputils';
 import '../style/processor.css';
+import { ffboProcessorIcon } from './icons';
+import { ToolbarButtonComponent } from '@jupyterlab/apputils';
 
 const FFBOPROCESSOR_BUTTON_CLASS = 'jp-fbl-processor-btn';
 
@@ -33,12 +35,12 @@ export function FFBOProcessorButton( props:{settings: ISettingRegistry.ISettings
         })
     }
     return (
-        <button
-            className={`${FFBOPROCESSOR_BUTTON_CLASS} jp-mod-styled`}
+        <ToolbarButtonComponent
+            className={FFBOPROCESSOR_BUTTON_CLASS}
             onClick={onClick}
-        >
-            FFBOProcessors Settings
-        </button>
+            icon={ffboProcessorIcon}
+            tooltip={"FFBOProcessor Button"}
+        />
     );
 }
 

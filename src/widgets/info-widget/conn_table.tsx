@@ -2,6 +2,7 @@ import "@fortawesome/fontawesome-free/js/all.js";
 // import { ReactTabulator } from "react-tabulator";
 import Tabulator from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css"; //import Tabulator stylesheet
+import { Neu3DWidget } from "../neu3d-widget";
 
 export class ConnTable {
   constructor(props: {
@@ -17,7 +18,7 @@ export class ConnTable {
       columns: this.columns, //define table columns
       tooltips: true,
       pagination: "local",
-      paginationSize: 6,
+      paginationSize: 5,
       page: 3,
       initialSort: [{ column: "number", dir: "desc" }],
       layout: "fitColumns",
@@ -62,16 +63,17 @@ export class ConnTable {
   }
 
   readonly synColumn = {
-    title: "+/- Synapse",
+    title: "Synapse",
     field: "has_syn_morph",
     hozAlign: "center",
+    sorter: "boolean",
     headerFilter: true,
     headerFilterParams: {
       true: "True",
       false: "False"
     },
     headerFilterPlaceholder: "in workspace",
-    width: 110,
+    width: 70,
     formatter: (cell: any, formatterParams: any) => {
       if (cell.getValue()) {
         if (this.neu3d?.isInWorkspace(cell.getData().syn_rid)) {
@@ -83,14 +85,14 @@ export class ConnTable {
       return;
     },
     cellClick: (e: any, cell: any) => {
-      let { syn_uname, syn_rid } = cell.getData();
+      let { syn_rid } = cell.getData();
       if (!this.neu3d?.isInWorkspace(syn_rid)) {
         // not in workspace
-        this.neu3d?.addByUname(syn_uname).then(()=>{
+        this.neu3d?.addByRid(syn_rid).then(()=>{
           cell.getRow().reformat();
         })
       } else {
-        this.neu3d?.removeByUname(syn_uname).then(()=>{
+        this.neu3d?.removeByRid(syn_rid).then(()=>{
           cell.getRow().reformat();
         })
       }
@@ -99,7 +101,7 @@ export class ConnTable {
 
   readonly columns = [
     {
-      title: "+/- Neuron",
+      title: "Neuron",
       field: "has_morph",
       hozAlign: "center",
       headerFilter: true,
@@ -107,8 +109,9 @@ export class ConnTable {
         true: "True",
         false: "False"
       },
+      sorter:"boolean",
       headerFilterPlaceholder: "in workspace",
-      width: 100,
+      width: 70,
       formatter: (cell: any, formatterParams: any) => {
         if (cell.getValue()) {
           if (this.neu3d?.isInWorkspace(cell.getData().rid)) {
@@ -120,14 +123,14 @@ export class ConnTable {
         return;
       },
       cellClick: (e: any, cell: any) => {
-        let { uname, rid } = cell.getData();
+        let { rid } = cell.getData();
         if (!this.neu3d?.isInWorkspace(rid)) {
           // not in workspace
-          this.neu3d?.addByUname(uname).then(()=>{
+          this.neu3d?.addByRid(rid).then(()=>{
             cell.getRow().reformat();
           })
         } else {
-          this.neu3d?.removeByUname(uname).then(()=>{
+          this.neu3d?.removeByRid(rid).then(()=>{
             cell.getRow().reformat();
           })
         }
@@ -138,6 +141,7 @@ export class ConnTable {
       title: "Name",
       field: "uname",
       hozAlign: "center",
+      sorter:"alphanum",
       headerFilter: true,
       headerFilterPlaceholder: "filter name"
     },
@@ -145,14 +149,15 @@ export class ConnTable {
       title: "Number",
       field: "number",
       hozAlign: "center",
+      sorter:"number",
       headerFilter: "number",
       headerFilterPlaceholder: "at least...",
       headerFilterFunc: ">=",
-      width: 100
+      width: 70
     }
   ];
 
   data: any;
   tabulator: any;
-  neu3d: any;
+  neu3d: Neu3DWidget;
 }

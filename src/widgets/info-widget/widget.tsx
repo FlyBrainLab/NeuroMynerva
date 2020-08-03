@@ -1,7 +1,9 @@
 // FBL Master Widget Class
 import * as React from 'react';
 import { Signal } from '@lumino/signaling';
-import { refreshIcon } from '@jupyterlab/ui-components';
+import {
+  refreshIcon, 
+} from '@jupyterlab/ui-components';
 import { 
   ReactWidget, 
   UseSignal,
@@ -155,7 +157,6 @@ export class InfoWidget extends ReactWidget {
         this.tabConnPost.removeSynColumn();
       }
     }, this);
-
   }
   
   /**
@@ -168,13 +169,13 @@ export class InfoWidget extends ReactWidget {
       let neuron_data = {
         name: item["name"] ?? item['name'] ?? item['rid'],
         uname: item["uname"] ?? item["name"] ?? item['rid'],
-        number: item["number"],
+        number: parseInt(item["number"]),
         rid: item["rid"],
         syn_uname: item.syn_uname,
         s_rid: item.s_rid,
         syn_rid: item.syn_rid,
-        has_syn_morph: item["has_syn_morph"],
-        has_morph: item["has_morph"]
+        has_syn_morph: item["has_syn_morph"]  == 1,
+        has_morph: item["has_morph"] == 1
       };
 
       new_data.push(neuron_data);
@@ -274,80 +275,12 @@ export class InfoWidget extends ReactWidget {
       </header>
       <div className={CONTAINER_CLASS}>
         <div id="info-connTable-pre"/>
-        {/* <UseSignal
-          signal={this.dataChanged}
-          initialArgs={{
-            data: this.data,
-            inWorkspace: this.inWorkspace,
-            neu3d: undefined
-          }}
-        >
-          {(_, val) => {
-            if (val.data?.connectivity){
-              return  <ConnTable
-                data={val.data.connectivity.pre}
-                inWorkspace={val.inWorkspace}
-                addByRid={(rid: string) => {
-                  val.neu3d?.addByRid(rid);
-                }}
-                removeByRid={(rid: string) => {
-                  val.neu3d?.removeByRid(rid);
-                }}
-              />
-            } else{
-              return <ConnTable
-                data={empty_data.connectivity.pre}
-                inWorkspace={this.inWorkspace}
-                addByRid={(rid: string) => {
-                  val.neu3d?.addByRid(rid);
-                }}
-                removeByRid={(rid: string) => {
-                  val.neu3d?.removeByRid(rid);
-                }}
-              />
-            }
-          }}
-        </UseSignal> */}
       </div>
       <header className={SECTION_HEADER_CLASS}>
-        <h2>Postsynaptic Partners</h2>
+          <h2>Postsynaptic Partners</h2>
       </header>
       <div className={CONTAINER_CLASS}>
       <div id="info-connTable-post"/>
-        {/* <UseSignal
-          signal={this.dataChanged}
-          initialArgs={{
-            data: this.data,
-            inWorkspace: this.inWorkspace,
-            neu3d: undefined
-          }}
-        >
-          {(_, val) => {
-            if (val.data?.connectivity){
-              return  <ConnTable
-                data={val.data.connectivity.post}
-                inWorkspace={val.inWorkspace}
-                addByRid={(rid: string) => {
-                  val.neu3d?.addByRid(rid);
-                }}
-                removeByRid={(rid: string) => {
-                  val.neu3d?.removeByRid(rid);
-                }}
-              />
-            } else{
-              return <ConnTable
-                data={empty_data.connectivity.post}
-                inWorkspace={this.inWorkspace}
-                addByRid={(rid: string) => {
-                  val.neu3d?.addByRid(rid);
-                }}
-                removeByRid={(rid: string) => {
-                  val.neu3d?.removeByRid(rid);
-                }}
-              />
-            }
-          }}
-        </UseSignal> */}
       </div>
     </div>
     );
@@ -359,7 +292,9 @@ export class InfoWidget extends ReactWidget {
   tabConnPost: ConnTable;
   data: IInfoData; // data to be displayed
   neu3d: any;  // caller neu3d widget
-  dataChanged = new Signal< this, { data: any; inWorkspace: any; neu3d: any }>(this);
+  dataChanged = new Signal<this, {
+    data: any; inWorkspace: any; neu3d: any, type?: 'neu3d' | 'data' | 'workspace'
+  }>(this);
   inWorkspace: (rid: string)=>boolean;
 };
 

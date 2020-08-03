@@ -525,7 +525,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * Initialize Client Based on Current Processor Setting
    * @param processor 
    */
-  initClient(processor?: string): Promise<any> {
+  async initClient(processor?: string): Promise<boolean> {
     let code = this.initClientCode(processor);
     const model = new OutputAreaModel();
     const rendermime = new RenderMimeRegistry({ initialFactories });
@@ -534,13 +534,13 @@ export class FBLWidget extends Widget implements IFBLWidget {
     outputArea.node.style.display = 'block';
     return outputArea.future.done.then((reply) => {
       if (reply && reply.content.status === 'ok') {
-        return Promise.resolve(void 0);
+        return Promise.resolve(true);
       } else {
         showDialog({
           title: `FBLClient Initialization Registration Failed`,
           body: outputArea,
         }).then(()=>{
-          return Promise.resolve('Execution Failed');
+          return Promise.resolve(false);
         })
       }
     }, (failure) => {
@@ -552,7 +552,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
   * Initialize FBLClient on associated kernel
   */
-  async initFBLClient(initClient = true): Promise<void> {
+  async initFBLClient(initClient = true): Promise<boolean> {
     if (this.processor === FFBOProcessor.NO_PROCESSOR) {
       return 
     }
@@ -606,13 +606,13 @@ export class FBLWidget extends Widget implements IFBLWidget {
     outputArea.node.style.display = 'block';
     outputArea.future.done.then((reply) => {
       if (reply && reply.content.status === 'ok') {
-        return Promise.resolve(void 0);
+        return Promise.resolve(true);
       } else {
         showDialog({
           title: `FBLClient Initialization Registration Failed (${this._commTarget})`,
           body: outputArea,
         }).then(()=>{
-          return Promise.resolve('Execution Failed');
+          return Promise.resolve(false);
         })
       }
     }, (failure) => {

@@ -5,6 +5,7 @@ import infoIconStr from '../style/icons/neuinfo_icon.svg';
 import neu3DIconStr from '../style/icons/neu3d_icon.svg';
 import neuGFXIconStr from '../style/icons/neugfx_icon.svg';
 import masterIconStr from '../style/icons/master_icon.svg';
+import ffboProcessorIconStr from '../style/icons/ffboprocessor_icon.svg';
 
 import chartAreaStr from '../style/icons/chart-area.svg';
 import codeStr from '../style/icons/code.svg';
@@ -43,6 +44,10 @@ export const neuInfoIcon = new LabIcon({
 export const masterIcon = new LabIcon({
   name: 'fbl:master',
   svgstr: masterIconStr
+});
+export const ffboProcessorIcon = new LabIcon({
+  name: 'fbl:processor',
+  svgstr: ffboProcessorIconStr
 });
 // export const workspaceIcon = new LabIcon({
 //   name: 'fbl:workspace',

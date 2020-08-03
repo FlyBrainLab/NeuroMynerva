@@ -101,7 +101,9 @@ namespace FBLWidgetReact {
     const trackers_names = Object.keys(props.fbltrackers.trackers);
     return (
       <>
-        <FFBOProcessorButton settings={props.settings}></FFBOProcessorButton>
+        <div className={SECTION_HEADER_CLASS}>
+          <FFBOProcessorButton settings={props.settings}></FFBOProcessorButton>
+        </div>
         {trackers_arr.map((tracker, i) => (
           <Section key={i} name={trackers_names[i]} tracker={tracker}/>
         ))}
