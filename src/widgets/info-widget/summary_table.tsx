@@ -1,41 +1,33 @@
 import * as React from "react";
 import '../../../style/widgets/info-widget/summary.css';
+const SUMMARY_TABLE_SUBHEADER_CLASS = "jp-FBL-Info-summary-table-header";
 
-const displayData: string[] = [
-  "name",
-  "class",
-  "vfb_id",
-  "data_source",
-  "transgenic_lines",
-  "transmitters",
-  "expresses"
-];
+const displayData: {[rawName: string]: string} = {
+  uname: "Unique Name",
+  name: "Type",
+  class: "Class",
+  data_source: "Data Source",
+  referenceId: "ID in Data Source",
+  transgenic_lines: "Transgenic Lines",
+  transmitters: "Neurotransmitters"
+}
 
-const flyCircuitData: string[] = [
-  "Lineage",
-  "Similarneurons",
-  "Name",
-  "Author",
-  "Driver",
-  "GenderAge",
-  "Stock"
-];
-
-const morphData: string[] = [
-  "totalLength",
-  "totalSurfaceArea",
-  "totalVolume",
-  "maximumEuclideanDistance",
-  "width",
-  "height",
-  "depth",
-  "numberOfBifurcations",
-  "maxPathDistance",
-  "averageDiameter"
-];
+const morphData: {[rawName: string]: string} = {
+  totalLength: "Total Length",
+  totalSurfaceArea: "Total Surface Area",
+  totalVolume: "Total Volume",
+  maximumEuclideanDistance: "Max. Euclidean Distance",
+  width: "Width",
+  height: "Height",
+  depth: "Depth",
+  numberOfBifurcations: "N. Bifurcations",
+  maxPathDistance: "Max. Path Dist.",
+  averageDiameter: "Average Diam."
+}
 
 /**
  * Reformat Field
+ * Convert Arrays and Objects to table-friendly rendering
  */
 function reformatField(id: string, value: any) {
   if (typeof(value) === 'string') {
@@ -94,51 +86,54 @@ function reformatField(id: string, value: any) {
 //   }
 // }
 
+/**
+ * Display Summary Table in table format
+ * @param props 
+ */
 export function SummaryTable(props: {data: any, neu3d: any }) {
   const rawData = props.data;
-  let display = [];
-  let morph = [];
-  let flycircuit = [];
+  let display: any[] = [];
+  let morph: any[] = [];
+  let info: any[] = [];
 
   for (let [key, val] of Object.entries(rawData)) {
-    if (displayData.indexOf(key) > -1) {
-      if (key.toLowerCase() === "name") {
+    if (val == undefined || val == null) {
+      continue;
+    }
+    if (key in displayData) { 
+      if (key.toLowerCase() === "uname") {
         display.unshift(
           <tr key={key}>
-            <td>{jsUcfirst(key)}</td>
+            <td><b>{displayData[key]}</b></td>
             <td>{reformatField(key, val)}
               {/* <button onClick={()=>{
-                onAddRemoveClick(props.data.rid, props.data.uname, props.neu3d)}}
+                onAddRemoveClick(props.data.orid, props.data.uname, props.neu3d)}}
                 id="info-summarytable-addremove-neuron"
-              >-</button> */}
+              >{props.neu3d.isInWorkspace(props.data.orid) ? '-' : '+'}</button> */}
             </td>
           </tr>
         );
       } else {
-        display.push(
-          <tr key={key}>
-            <td>{jsUcfirst(key)}</td>
-            <td>{reformatField(key, val)}</td>
-          </tr>
-        );
+        display.push(<tr key={key}>
+          <td>{displayData[key]}</td>
+          <td>{reformatField(key, val)}</td>
+        </tr>);
       }
-    } else if (morphData.indexOf(key) > -1) {
+    } else if (key in morphData) {
       morph.push(
         <tr key={key}>
-          <td>{jsUcfirst(key)}</td>
+          <td>{morphData[key]}</td>
           <td>{reformatField(key, val)}</td>
         </tr>
       );
-    } else if (key === "flycircuit_data") {
+    } else if (key === 'info') { // object of abitrary data
       for (let [key2, val2] of Object.entries(val)) {
-        if (flyCircuitData.indexOf(key2) > -1) {
-          flycircuit.push(
-            <tr key={key2}>
-              <td>{jsUcfirst(key2)}</td>
-              <td>{reformatField(key2, val2)}</td>
-            </tr>
-          );
-        }
+        info.push(
+          <tr key={key2}>
+            <td>{jsUcfirst(key2)}</td>
+            <td>{reformatField(key2, val2)}</td>
+          </tr>
+        );
       }
     }
   }
@@ -147,14 +142,47 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
     return (
       <>
         <div 
-        className={"table-grid lm-Widget p-Widget jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+        className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
         data-mime-type={"text/markdown"}
         >
           <table className={"summary-table"}>
             <tbody>
-              {display.concat(flycircuit).concat(morph)}
+              {display}
             </tbody>
           </table>
+          {() => {
+            if (morph.length > 0) {
+              return (
+                <>
+                  <div className={SUMMARY_TABLE_SUBHEADER_CLASS}>Morphometry</div>
+                    <table className={"summary-table"}>
+                      <tbody>
+                        {morph}
+                      </tbody>
+                    </table>
+                </>
+              )
+            } else {
+              return <></>;
+            }
+          }}
+          {() => {
+            if (info.length > 0) {
+              return (
+                <>
+                <div className={SUMMARY_TABLE_SUBHEADER_CLASS}>Additional Information</div>
+                <table className={"summary-table"}>
+                  <tbody>
+                    {info}
+                  </tbody>
+                </table>
+                </>
+              )
+            } else {
+              return <></>
+            }
+          }}
+          
         </div>
       </>
     );

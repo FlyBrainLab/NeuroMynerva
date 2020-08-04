@@ -6,7 +6,7 @@ const COLORS_POST = ["#2859b8", "#527ac6", "#7e9bd4", "#a9bce2", "#d4ddf0"];
 
 export function ConnSVG(props: { pre: any; post: any }) {
   let pre_arr = [];
-  if (props.pre.profile) {
+  if (props.pre?.profile != null) {
     for (let [key, number] of Object.entries(props.pre.profile)) {
       pre_arr.push({ name: key, proportion: number });
     }
@@ -16,7 +16,7 @@ export function ConnSVG(props: { pre: any; post: any }) {
   });
 
   let post_arr = [];
-  if (props.post.profile) {
+  if (props.post?.profile != null) {
     for (let [key, number] of Object.entries(props.post.profile)) {
       post_arr.push({ name: key, proportion: number });
     }
@@ -26,7 +26,7 @@ export function ConnSVG(props: { pre: any; post: any }) {
   });
 
   let chunkWidth = 30;
-  if (pre_arr.length || post_arr.length) {
+  if (pre_arr.length > 0 || post_arr.length > 0) {
     return (
       <PieChart
         width={chunkWidth * 9}
