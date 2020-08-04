@@ -455,6 +455,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     res['verb'] = 'add'
     res['query']= [{'action': {'method': {'query': {'rid': '${rid}'}}},
                     'object': {'rid': '${rid}'}}]
+    res['format'] = 'morphology'
     `;
 
     code = code + this.querySender();

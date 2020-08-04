@@ -22,10 +22,30 @@ export class ConnTable {
       page: 3,
       initialSort: [{ column: "number", dir: "desc" }],
       layout: "fitColumns",
-      rowMouseOver: (e: any, row:any) => {
-        const rid = row.getData().rid;
-        if (this.neu3d?.isInWorkspace(rid)){
-          this.neu3d.neu3d.highlight(rid);
+      cellMouseOver: (e: any, cell:any) => {
+        console.log(cell, cell.getColumn(), cell.getData());
+        const { rid, syn_rid } = cell.getData();
+        switch (cell.getColumn().getField()) {
+          case 'has_syn_morph':
+            if (this.neu3d?.isInWorkspace(syn_rid)){
+              this.neu3d.neu3d.highlight(syn_rid);
+            }
+            break;
+          default:
+            if (this.neu3d?.isInWorkspace(rid)){
+              this.neu3d.neu3d.highlight(rid);
+            }
+            // let highlight_rids = []
+            // if (this.neu3d?.isInWorkspace(rid)) {
+            //   highlight_rids.push(rid);
+            // }
+            // if (this.neu3d?.isInWorkspace(syn_rid)) {
+            //   highlight_rids.push(syn_rid);
+            // }
+            // if (highlight_rids.length > 0) {
+            //   this.neu3d.neu3d.highlight(highlight_rids);  
+            // }
+            break;
         }
       },
       rowMouseOut: (e: any, row:any) =>{
@@ -85,26 +105,26 @@ export class ConnTable {
       return;
     },
     cellClick: (e: any, cell: any) => {
-      let { syn_uname, syn_rid } = cell.getData();
-        if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
-          this.neu3d?.addByUname(syn_uname).then(()=>{
-            cell.getRow().reformat();
-          })
-        } else {
-          this.neu3d?.removeByUname(syn_uname).then(()=>{
-            cell.getRow().reformat();
-          })
-        }
-      // let { syn_rid } = cell.getData();
-      // if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
-      //   this.neu3d?.addByRid(syn_rid).then(()=>{
-      //     cell.getRow().reformat();
-      //   })
-      // } else {
-      //   this.neu3d?.removeByRid(syn_rid).then(()=>{
-      //     cell.getRow().reformat();
-      //   })
-      // }
+      // let { syn_uname, syn_rid } = cell.getData();
+      //   if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
+      //     this.neu3d?.addByUname(syn_uname).then(()=>{
+      //       cell.getRow().reformat();
+      //     })
+      //   } else {
+      //     this.neu3d?.removeByUname(syn_uname).then(()=>{
+      //       cell.getRow().reformat();
+      //     })
+      //   }
+      let { s_rid, syn_rid } = cell.getData();
+      if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
+        this.neu3d?.addByRid(s_rid).then(()=>{
+          cell.getRow().reformat();
+        })
+      } else {
+        this.neu3d?.removeByRid(s_rid).then(()=>{
+          cell.getRow().reformat();
+        })
+      }
     }
   };
 
@@ -132,26 +152,26 @@ export class ConnTable {
         return;
       },
       cellClick: (e: any, cell: any) => {
-        let { uname, rid } = cell.getData();
-        if (!this.neu3d?.isInWorkspace(rid)) { // not in workspace
-          this.neu3d?.addByUname(uname).then(()=>{
-            cell.getRow().reformat();
-          })
-        } else {
-          this.neu3d?.removeByUname(uname).then(()=>{
-            cell.getRow().reformat();
-          })
-        }
-        // let { rid } = cell.getData();
+        // let { uname, rid } = cell.getData();
         // if (!this.neu3d?.isInWorkspace(rid)) { // not in workspace
-        //   this.neu3d?.addByRid(rid).then(()=>{
+        //   this.neu3d?.addByUname(uname).then(()=>{
         //     cell.getRow().reformat();
         //   })
         // } else {
-        //   this.neu3d?.removeByRid(rid).then(()=>{
+        //   this.neu3d?.removeByUname(uname).then(()=>{
         //     cell.getRow().reformat();
         //   })
         // }
+        let { n_rid, rid } = cell.getData();
+        if (!this.neu3d?.isInWorkspace(rid)) { // not in workspace
+          this.neu3d?.addByRid(n_rid).then(()=>{
+            cell.getRow().reformat();
+          })
+        } else {
+          this.neu3d?.removeByRid(n_rid).then(()=>{
+            cell.getRow().reformat();
+          })
+        }
       }
     },
     this.synColumn,

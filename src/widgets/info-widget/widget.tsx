@@ -167,15 +167,16 @@ export class InfoWidget extends ReactWidget {
     let new_data = [];
     for (let item of connData["details"]) {
       let neuron_data = {
-        name: item["name"] ?? item['name'] ?? item['rid'],
-        uname: item["uname"] ?? item["name"] ?? item['rid'],
-        number: parseInt(item["number"]),
-        rid: item["rid"],
+        name: item.name ?? item.name ?? item.rid,
+        uname: item.uname ?? item.name ?? item.rid,
         syn_uname: item.syn_uname,
-        s_rid: item.s_rid,
+        number: parseInt(item.number),
+        rid: item.rid,
         syn_rid: item.syn_rid,
-        has_syn_morph: item["has_syn_morph"]  == 1,
-        has_morph: item["has_morph"] == 1
+        n_rid: item.n_rid,
+        s_rid: item.s_rid,
+        has_syn_morph: item.has_syn_morph  == 1,
+        has_morph: item.has_morph == 1
       };
 
       new_data.push(neuron_data);

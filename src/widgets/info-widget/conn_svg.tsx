@@ -30,7 +30,7 @@ export function ConnSVG(props: { pre: any; post: any }) {
     return (
       <PieChart
         width={chunkWidth * 9}
-        height={250}
+        height={chunkWidth * 6}
         style={{ margin: "0 auto" }}
       >
         {pre_arr.length ? (
@@ -38,7 +38,7 @@ export function ConnSVG(props: { pre: any; post: any }) {
             data={pre_arr}
             isAnimationActive={false}
             cx={chunkWidth * 2}
-            cy={100}
+            cy={chunkWidth * 3}
             innerRadius={chunkWidth}
             outerRadius={chunkWidth * 2}
             fill="#8884d8"
@@ -57,7 +57,7 @@ export function ConnSVG(props: { pre: any; post: any }) {
               content={
                 <PrePost
                   cx={chunkWidth * 2}
-                  cy={100}
+                  cy={chunkWidth * 3}
                   pre={true}
                   num={props.pre.number}
                 />
@@ -72,7 +72,7 @@ export function ConnSVG(props: { pre: any; post: any }) {
             data={post_arr}
             isAnimationActive={false}
             cx={chunkWidth * 6.5}
-            cy={100}
+            cy={chunkWidth * 3}
             innerRadius={chunkWidth}
             outerRadius={chunkWidth * 2}
             fill="#8884d8"
@@ -91,7 +91,7 @@ export function ConnSVG(props: { pre: any; post: any }) {
               content={
                 <PrePost
                   cx={chunkWidth * 6.5}
-                  cy={100}
+                  cy={chunkWidth * 3}
                   pre={false}
                   num={props.post.number}
                 />
