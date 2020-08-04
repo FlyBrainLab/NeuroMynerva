@@ -3,6 +3,7 @@
  */
 
 export var LarvaMesh = {
+    set: {defaultSynapseRadius: 0.35},
     AL: {
       filename: 'https://data.flybrainlab.fruitflybrain.org/data/AL_um.json',
       label: 'AL',
