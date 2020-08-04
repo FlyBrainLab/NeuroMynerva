@@ -23,7 +23,6 @@ export class ConnTable {
       initialSort: [{ column: "number", dir: "desc" }],
       layout: "fitColumns",
       cellMouseOver: (e: any, cell:any) => {
-        console.log(cell, cell.getColumn(), cell.getData());
         const { rid, syn_rid } = cell.getData();
         switch (cell.getColumn().getField()) {
           case 'has_syn_morph':
