@@ -1,5 +1,5 @@
 **[Get Start](#get-started)** |
-**[Development](#development)** |
+**[Installation](#installation)** |
 **[Getting help](#getting-help)** 
 
 # NeuroMynerva _v2_ - [FlyBrainLab](http://fbl.fruitflybrain.org/)'s JupyterLab Extension
