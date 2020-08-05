@@ -1,4 +1,6 @@
-# NeuroMynerva
+# DEPRECATED - NeuroMynerva V1
+
+**As of August 4th 2020, NeuroMynerva entered its V2 phase, the V1 branch will no longer be maintained.**
 
 NeuroMynerva integrates the Fruit Fly Brain Observatory (FFBO) Project with JupyterLab, providing CAD capabilities and a neuroscientific data exploration platform.
 
