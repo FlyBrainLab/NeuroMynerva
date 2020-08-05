@@ -45,7 +45,7 @@ pip install txaio twisted autobahn crochet service_identity autobahn-sync matplo
 pip install pypiwin32
 
 # install inhouse packages and NeuroMynerva
-git clone --branch v2-dev https://github.com/FlyBrainLab/NeuroMynerva.git
+git clone https://github.com/FlyBrainLab/NeuroMynerva.git
 git clone https://github.com/FlyBrainLab/Neuroballad.git
 git clone https://github.com/FlyBrainLab/FBLClient.git
 cd ./Neuroballad
