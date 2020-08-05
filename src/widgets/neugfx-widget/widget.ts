@@ -87,7 +87,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
       if (event.data.messageType == 'NLPloadTag') {
         console.log('loadTag');
         let code_to_send = `
-        _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].loadTag(query="${event.data.tag}")
+        _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].loadTag("${event.data.tag}")
         `;
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.loadTag("' + event.data.tag + '"); _FFBOLabcomm.send(data=_FFBOLABres)' } });
