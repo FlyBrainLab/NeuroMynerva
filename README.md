@@ -2,7 +2,7 @@
 **[Development](#development)** |
 **[Getting help](#getting-help)** 
 
-# NeuroMynerva _v2alpha_ - [FlyBrainLab](http://fbl.fruitflybrain.org/)'s JupyterLab Extension
+# NeuroMynerva _v2_ - [FlyBrainLab](http://fbl.fruitflybrain.org/)'s JupyterLab Extension
 NeuroMynerva V2 is currently in _alpha_, most main user-facing features have been implemented but we expect bug fixes and additional features to be incorporated in the near future. If you want to report a bug, please see [Getting Help](#getting-help). To follow the latest developments on this project, follow the Fruit Fly Brain Observatory(FFBO) [Twitter](https://twitter.com/flybrainobs) where we post weekly updates.
 
 ![image](img/neuromynerva_ui.png)
