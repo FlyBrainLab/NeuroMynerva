@@ -1,3 +1,0 @@
-[submodule "packages/neu3d"]
-	path = packages/neu3d
-	url = git@github.com:fruitflybrain/neu3d.git
