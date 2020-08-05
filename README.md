@@ -9,7 +9,7 @@ NeuroMynerva V2 is currently in _alpha_, most main user-facing features have bee
 
 ## Get Started
 NeuroMynerva V2 is yet to be hosted on [NPM](https://www.npmjs.com/). 
-For the time being, please follow installation instruction detailed in [Development](#development) section.
+For the time being, please follow installation instruction detailed in [Installation](#installation) section.
 
 ### Tutorials
 
