@@ -25,10 +25,13 @@ NeuroMynerva front-end currently includes 4 key components:
 ## Installation
 ### Prerequisites
 NeuroMynerva has the following requirements:
-    - Python Version 3.6+
-    - Jupyter: Developed on `JupyterLab 2.1.5`
-    - Public packages (see `requirements.txt`)
-    - Inhouse packages: [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git), [FBLClient](https://github.com/FlyBrainLab/FBLClient.git)
+
+- Python Version 3.6+
+- Jupyter: Developed on `JupyterLab 2.1.5`
+- Public packages (see `requirements.txt`)
+- Inhouse packages: 
+    * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git)
+    * [FBLClient](https://github.com/FlyBrainLab/FBLClient.git)
 
 ### Installation Script
 We use [Anaconda](https://www.anaconda.com/) to manage development environment, you can use the following script to setup the development environment. 
@@ -74,9 +77,10 @@ V2 of NeuroMynerva is a complete overhaul of V1, which was developed when Jupyte
 
 
 ### Work in Progress Changes
+Work in progress changes are tracked in the [V2 Milestone](https://github.com/FlyBrainLab/NeuroMynerva/milestone/1), some key features being worked on are as follows:
 
 1. Kernel entry point: users currently can instantiated widgets by interacting with the JupyterLab Launch Menu or the Command Palette, which executes code in the front-end to spawn widgets. We are working on supporting spawning and control widgets from within the kernel (in Notebook or Console).
-2. FFBO Server Settings: currently the information regarding available backends and connection settings for each backend is not visible to the user. We are working on supporting user settings for interacting with custom Crossbar components.
+2. Improved CAD capabilities with NeuGFX. NeuGFX is currently designed around interactions with a collection of hand-made circuit diagrams. More general support for circuit manipulation and visualization is being worked on.
 
 
 ## Getting Help
