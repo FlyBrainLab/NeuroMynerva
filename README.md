@@ -37,7 +37,7 @@ We use [Anaconda](https://www.anaconda.com/) to manage development environment, 
 conda create -n fblv2 python=3.7 nodejs scipy pandas cookiecutter git yarn -c conda-forge -y
 conda activate fblv2
 pip install jupyter jupyterlab==2.1.5
-pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx
+pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx msgpack
 # If on Windows, execute the following:
 pip install pypiwin32
 
