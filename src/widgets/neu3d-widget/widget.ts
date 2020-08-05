@@ -755,8 +755,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
             // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
-            this.initClient();
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";
+            this.initClient().then((value) => {
+              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";  
+            }, (reason) => {
+              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
+            });
+            
             break;
           case 'adult(flycircuit)':
             this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
@@ -766,9 +770,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
             // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
-            this.initClient();
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show neurons in ellipsoid body)";
-
+            this.initClient().then((value) => {
+              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show neurons in ellipsoid body)";
+            }, (reason) => {
+              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
+            });
+            
             break;
           case 'adult(hemibrain)':
             this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
@@ -779,11 +786,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
             // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
-            this.initClient();
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";
+            this.initClient().then((value) => {
+              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show APL)";
+            }, (reason) => {
+              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
+            });
             break;
           default:
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
+            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to processor.';
             console.error(`[Neu3D-Widget] Processor ${newProcessor} not recognized.`);
             break;
         }

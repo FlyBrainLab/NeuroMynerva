@@ -467,6 +467,34 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
+   * Initialize FBL
+   */
+  initFBL(): Promise<boolean> {
+    let code = this.initFBLCode();
+    const model = new OutputAreaModel();
+    const rendermime = new RenderMimeRegistry({ initialFactories });
+    const outputArea = new OutputArea({ model, rendermime });
+    outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
+    outputArea.node.style.display = 'block';
+    return outputArea.future.done.then((reply) => {
+      if (reply && reply.content.status === 'ok') {
+        outputArea.dispose();
+        return Promise.resolve(true);
+      } else {
+        showDialog({
+          title: `FBL Initialization Registration Failed`,
+          body: outputArea,
+        }).then(()=>{
+          return Promise.reject('FBL Initialization Failed');
+        })
+      }
+    }, (failure) => {
+      outputArea.dispose();
+      return Promise.reject(failure);
+    });
+  }
+
+  /**
   * Code for initializing a client connected to the current widget
   * @param clientargs additional argument for client
   */
@@ -534,18 +562,21 @@ export class FBLWidget extends Widget implements IFBLWidget {
     outputArea.node.style.display = 'block';
     return outputArea.future.done.then((reply) => {
       if (reply && reply.content.status === 'ok') {
+        outputArea.dispose();
         return Promise.resolve(true);
       } else {
         showDialog({
           title: `FBLClient Initialization Registration Failed`,
           body: outputArea,
         }).then(()=>{
-          return Promise.resolve(false);
+          return Promise.reject('FBLClient Initialization Failed');
         })
       }
     }, (failure) => {
+      outputArea.dispose();
       return Promise.reject(failure);
     });
+    
   }
 
 
@@ -553,9 +584,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * Initialize FBLClient on associated kernel
   */
   async initFBLClient(initClient = true): Promise<boolean> {
-    if (this.processor === FFBOProcessor.NO_PROCESSOR) {
-      return 
-    }
     if (!this.sessionContext.session?.kernel){
       return Promise.resolve(void 0); // no kernel
     }
@@ -592,32 +620,15 @@ export class FBLWidget extends Widget implements IFBLWidget {
       // if commtarget already exists, set this.comm to that comm
       // TODO
     // }
+    this.initFBL();
 
-    let code = '';
-    if (initClient === false){
-      code = this.initFBLCode();
-    } else {
-      code = this.initClientCode() + this.initFBLCode();
+    if (initClient === false) {
+      return;
     }
-    const model = new OutputAreaModel();
-    const rendermime = new RenderMimeRegistry({ initialFactories });
-    const outputArea = new OutputArea({ model, rendermime });
-    outputArea.future = kernel.requestExecute({ code });
-    outputArea.node.style.display = 'block';
-    outputArea.future.done.then((reply) => {
-      if (reply && reply.content.status === 'ok') {
-        return Promise.resolve(true);
-      } else {
-        showDialog({
-          title: `FBLClient Initialization Registration Failed (${this._commTarget})`,
-          body: outputArea,
-        }).then(()=>{
-          return Promise.resolve(false);
-        })
-      }
-    }, (failure) => {
-      return Promise.reject(failure);
-    });
+    if (this.processor === FFBOProcessor.NO_PROCESSOR) {
+      return;
+    }
+    this.initClient()
     
     // kernel.requestExecute({ code: code }).done.then((reply) => {
     //   if (reply && reply.content.status === 'error'){

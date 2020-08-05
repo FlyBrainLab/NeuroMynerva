@@ -92,72 +92,7 @@
           "$ref": "#/definitions/fbl-settings",
           "format": "table",
           "type": "array",
-          "items": { "$ref": "#/definitions/fbl-config" },
-          "default":[
-              {
-                  "NAME": "larva(l1em)",
-                  "AUTH": {
-                      "ssl": false,
-                      "authentication": true,
-                      "ca_cert_file": "isrgrootx1.pem",
-                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
-                  },
-                  "USER": {
-                      "user": "guest",
-                      "secret": "guestpass"
-                  },
-                  "SERVER": {
-                      "IP": "amacrine.ee.columbia.edu:6651",
-                      "dataset": ["l1em"],
-                      "realm": "realm1"
-                  },
-                  "DEBUG": {
-                      "debug": false
-                  }
-              },
-              {
-                  "NAME": "adult(flycircuit)",
-                  "AUTH": {
-                      "ssl": true,
-                      "authentication": true,
-                      "ca_cert_file": "isrgrootx1.pem",
-                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
-                  },
-                  "USER": {
-                      "user": "guest",
-                      "secret": "guestpass"
-                  },
-                  "SERVER": {
-                      "IP": "flycircuitdev.neuronlp.fruitflybrain.org",
-                      "dataset": ["flycircuit"],
-                      "realm": "realm1"
-                  },
-                  "DEBUG": {
-                      "debug": false
-                  }
-              },
-              {
-                  "NAME": "adult(hemibrain)",
-                  "AUTH": {
-                      "ssl": true,
-                      "authentication": true,
-                      "ca_cert_file": "isrgrootx1.pem",
-                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
-                  },
-                  "USER": {
-                      "user": "guest",
-                      "secret": "jije83b3jJN*31"
-                  },
-                  "SERVER": {
-                      "IP": "hemibrain.neuronlp.fruitflybrain.org",
-                      "dataset": ["hemibrain"],
-                      "realm": "realm1"
-                  },
-                  "DEBUG": {
-                      "debug": false
-                  }
-              }
-          ]
+          "items": { "$ref": "#/definitions/fbl-config" }
       }
   }
 }
