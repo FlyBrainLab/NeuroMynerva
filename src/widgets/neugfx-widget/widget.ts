@@ -77,6 +77,11 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         }
       }
       if (event.data.messageType == 'NLPquery') {
+        console.log('NLPquery');
+        let code_to_send = `
+        _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].executeNLPquery(query="${event.data.query}")
+        `;
+        _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.executeNLPquery(query="' + event.data.query + '"); _FFBOLabcomm.send(data=_FFBOLABres)' } });
       }
       if (event.data.messageType == 'NLPloadTag') {
