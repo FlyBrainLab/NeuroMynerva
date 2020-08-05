@@ -1,16 +1,24 @@
 {
   "compilerOptions": {
-    "target": "es2015",
-    "module": "commonjs",
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
-    "sourceMap": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "baseUrl": "./packages",
-    "paths": {
-      "@neuro-mynerva/*": ["./*/src"]
-    }
-  }
+    "esModuleInterop": true,
+    "jsx": "react",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmitOnError": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "preserveWatchOutput": true,
+    "resolveJsonModule": true,
+    "outDir": "lib",
+    "rootDir": "src",
+    "strict": true,
+    "strictNullChecks": false,
+    "target": "es2017",
+    "types": ["tabulator-tables", "@json-editor/json-editor"],
+    "typeRoots": ["types", "node_modules/@types"]
+  },
+  "include": ["src/widgets/**/*.tsx", "src/widgets/**/*.ts", "src/*"]
 }
