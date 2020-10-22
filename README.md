@@ -23,6 +23,9 @@ NeuroMynerva front-end currently includes 4 key components:
 4. `Master-Widget`: A side panel widget that keeps track of all currently running NeuroMynerva widgets.
 
 ## Installation
+### Quick Installation
+Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab/blob/master/README.md. Follow the steps below for a manual installation of the front-end that may not be up-to-date.
+
 ### Prerequisites
 NeuroMynerva has the following requirements:
 
