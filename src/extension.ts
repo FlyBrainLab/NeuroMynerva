@@ -85,7 +85,7 @@ export interface IFBLWidgetTrackers {
  * The FBL Widget Tracker Token
  */
 export const IFBLWidgetTrackers = new Token<IFBLWidgetTrackers>(
-  '@neuro-mynerva/fbl-extension:IFBLWidgetTrackers'
+  '@flybrainlab/neuromynerva:IFBLWidgetTrackers'
 );
 /* tslint:enable */
 
@@ -169,7 +169,7 @@ namespace CommandIDs {
  * Initialization data for the neu3d-extension extension.
  */
 const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
-  id: '@neuro-mynerva/fbl-extension:plugin',
+  id: '@flybrainlab/neuromynerva:plugin',
   autoStart: true,
   requires: [ICommandPalette, ILauncher, ILayoutRestorer, ISettingRegistry],
   provides: IFBLWidgetTrackers,
