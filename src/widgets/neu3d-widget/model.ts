@@ -3,7 +3,6 @@ import { FBLWidgetModel, IFBLWidgetModel } from '../template-widget/index';
 
 /**
 * ID and a few selected attributes of the associated mesh dict items
-* 
 */
 interface IMeshDictItem {
   label?: String,
@@ -56,6 +55,15 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     });
   }
 
+  /**
+   * Add Mesh 
+   * 
+   * Will save the mesh information in the data object (dict)
+   * and emit a dataChanged signal
+   * 
+   * @param rid 
+   * @param value 
+   */
   addMesh(rid:string, value:IMeshDictItem){
     if (value.background) {
       return;
@@ -71,6 +79,14 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     });
   }
 
+  /**
+   * Remove Mesh 
+   * 
+   * Will remove the mesh information from the data object (dict)
+   * and emit a dataChanged signal
+   * 
+   * @param rid 
+   */
   removeMesh(rid:string){
     let oldValue = this.data[rid];
     if (oldValue) { // check if mesh exists
@@ -85,6 +101,14 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     }
   }
 
+  /**
+   * Pin Mesh 
+   * 
+   * Will updated the pin information in the data object (dict)
+   * and emit a dataChanged signal
+   * 
+   * @param rid 
+   */
   pinMeshes(rids:Array<string>){
     for (let rid of rids){
       let oldValue = this.data[rid]['pinned'];
@@ -102,6 +126,14 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     }
   }
 
+  /**
+   * UnPin Mesh 
+   * 
+   * Will updated the pin information in the data object (dict)
+   * and emit a dataChanged signal
+   * 
+   * @param rid 
+   */
   unpinMeshes(rids:Array<string>){
     for (let rid of rids){
       let oldValue = this.data[rid]['pinned'];
@@ -119,6 +151,14 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     }
   }
 
+  /**
+   * Hide Mesh 
+   * 
+   * Will updated the visilibity information in the data object (dict)
+   * and emit a dataChanged signal
+   * 
+   * @param rid 
+   */
   hideMeshes(rids:Array<string>){
     for (let rid of rids){
       let oldValue = this.data[rid]['visibility'];
@@ -136,6 +176,14 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     }
   }
 
+  /**
+   * Show Meshes
+   * 
+   * Will updated the visibility information in the data object (dict)
+   * and emit a dataChanged signal
+   * 
+   * @param rid 
+   */
   showMeshes(rids:Array<string>){
       for (let rid of rids){
         let oldValue = this.data[rid]['visibility'];

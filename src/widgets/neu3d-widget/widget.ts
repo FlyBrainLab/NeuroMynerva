@@ -189,16 +189,21 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   //   super.onKernelChanged(context, args);
   // }
 
+
+  /**
+   * Dispose of the widget and free-up resource
+   */
   dispose() {
     this.neu3d.dispose();
     delete this.neu3d;
     super.dispose();
   }
 
-  initFBLCode(): string {
-    return super.initFBLCode();
-  }
 
+  /**
+   * Initialize the model and connect model change signals
+   * @param model 
+   */
   initModel(model: Partial<INeu3DModel>){
     // create model
     this.model = new Neu3DModel(model);
@@ -241,30 +246,56 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     // }
   }
 
+
+  /**
+   * Callback for when model.metadata is changed
+   * 
+   * TODO: to be added to handle rendering changes
+   * @param change 
+   */
   onDataChanged(change: any) {
     // this.renderModel(change);
     // do nothing
     return;
   }
 
+
+  /**
+   * Callback for when model.metadata is changed
+   * 
+   * TODO: to be added to handle rendering changes
+   * @param change 
+   */
   onStatesChanged(change: any) {
     // this.renderModel(change);
     // no-op
     return;
   }
 
+
+  /**
+   * Callback for when model.metadata is changed
+   * 
+   * TODO: to be added to handle rendering changes
+   * @param change 
+   */
   onMetadataChanged(change: any) {
     // do nothing
     // this.renderModel(change);
     return;
   }
 
+
+  /**
+   * Get signal if the data in the neu3D workspace has changed
+   */
   get workspaceChanged(): ISignal<this, any> {
     return this._workspaceChanged;
   }
 
+
   /**
-   * Handle Command CommMsg
+   * Handle Command message from Comm from Kernel
    * @param message 
    */
   _receiveCommand(message: any) {
@@ -282,9 +313,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       });
   }
 
+
   /**
-   * Handle Messages for Comm or Info
-   * @param msg 
+   * Handle Command message from Comm from Kernel
+   * @param message 
    */
   onCommMsg(msg: any) {
     super.onCommMsg(msg);
@@ -364,49 +396,48 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    * @returns  if object in workspace
   */
   isInWorkspace(rid: string): boolean {
-    if(this.model?.data)
-    {
+    if(this.model?.data){
       return (rid in this.model.data);
     }
     return false;
   }
 
+
   /** 
-   * Fires a query
+   * Return string for NA query that is aware of the right clientId 
    */
   querySender(): string {
     let code = `
     fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(res)
     `;
-
     return code;
   }
 
 
   /** 
-   * Fires an NLP query
+   * Return string for NLP query that is aware of the right clientId
    */
   NLPquerySender(): string {
     let code = `
     fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(res)
     `;
-
     return code;
   }
 
-  /**
-   * Method passed to info panel to ensure stateful data
-   * 
-   * Addresses 
-   * @param command 
-   */
-  infoCommandWrapper(command: any){ 
+  // /**
+  //  * Method passed to info panel to ensure stateful data
+  //  * 
+  //  * Addresses 
+  //  * @param command 
+  //  */
+  // infoCommandWrapper(command: any){ 
 
-  }
+  // }
+
 
   /** 
-   * Add an object into the workspace.
-   *
+   * Add an object into the workspace using Uname by Kernel Call.
+   * 
    * @param uname -  uname of target object (neuron/synapse)
    */
   async addByUname(uname: string): Promise<any> {
@@ -416,16 +447,15 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
-
     code = code + this.querySender();
-
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('addByUname', uname, result);
     return result;
   }
 
+
   /**
-   * Remove an object into the workspace.
+   * Remove an object into the workspace using Uname by Kernel Call.
    *
    * @param uname -  uname of target object (neuron/synapse)
    */
@@ -436,16 +466,15 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
-
     code = code + this.querySender();
-
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('removeByUname', uname, result);
     return result;
   }
 
+
   /** 
-   * Add an object into the workspace.
+   * Add an object into the workspace using Rid by Kernel Call.
    *
    * @param rid -  rid of target object (neuron/synapse)
    */
@@ -457,9 +486,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
                     'object': {'rid': '${rid}'}}]
     res['format'] = 'morphology'
     `;
-
     code = code + this.querySender();
-
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('addByRid', rid, result);
     return result;
@@ -467,7 +494,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
 
   /** 
-   * Remove an object from the workspace.
+   * Remove an object from the workspace using Rid by Kernel Call.
    *
    * @param rid -  rid of target object (neuron/synapse)
    */
@@ -478,9 +505,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     res['query']= [{'action': {'method': {'query': {'rid': '${rid}'}}},
                     'object': {'rid': '${rid}'}}]
     `;
-
     code = code + this.querySender();
-
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('removeByRid', rid, result);
     return result;
@@ -494,11 +519,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   async executeNLPquery(query: string): Promise<any> {
     let code = `
     res = '${query}'
-
     `;
-
     code = code + this.NLPquerySender();
-
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('NLPquery', result);
     return result;
@@ -516,7 +538,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
   
   /** 
-   * Instantiate Neu3D and add to DOM after widget attached to DOM 
+   * Callback after the DOM element is attached to the Browser.
+   * 
+   * Note: Does the following
+   * 1. Instantiate Neu3D and add to DOM
+   * 2. Setup Callbacks
    * */
   onAfterAttach(msg: Message){
     super.onAfterAttach(msg);
@@ -590,7 +616,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     },
     'visibility');
 
-    /** Visualization Setting */
+    /** Callback when Visualization Settings Change */
     this.neu3d.settings.on("change", ((e:any) => {
       let settings = this.neu3d.export_settings();
       this.model.metadata = settings;
@@ -602,6 +628,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         "highlightedObjectOpacity", "nonHighlightableOpacity", "lowOpacity"
       ]);
 
+    /** Callback when Shape/Size Settings Change */
     this.neu3d.settings.on('change', ((e:any) => {
       let settings = this.neu3d.export_settings();
       this.model.metadata = settings;
@@ -609,6 +636,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this._modelChanged.emit(e);
     }), ['radius', 'strength', 'threshold', 'enabled']);
   
+    /** Callback when ToneMappingPass Settings Change */
     this.neu3d.settings.toneMappingPass.on('change', ((e:any) => {
       let settings = this.neu3d.export_settings();
       this.model.metadata = settings;
@@ -616,6 +644,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this._modelChanged.emit(e);
     }), 'brightness');
 
+    /** Callback when Background Settings Change */
     this.neu3d.settings.on('change', ((e:any) => {
       let settings = this.neu3d.export_settings();
       this.model.metadata = settings;
@@ -646,11 +675,16 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     if (!objEmpty(this.model.states)) {
       this.neu3d.import_state(this.model.states);
     }
+
+    /** Initialize neu3d's model metadata and states */
     this.model.metadata = this.neu3d.export_settings();
     this.model.states = this.neu3d.export_state();
     this.renderModel();
+
+    /** Widget is ready */
     this._neu3DReady.resolve(void 0);
   }
+
 
   /**
    * Instantiate neu3d and setup callback hooks after widget is shown
@@ -677,18 +711,30 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
   
   /** 
-   * Returns processor
+   * Returns processor.
+   * 
+   * Processors are the objects that manage connection to the backend.
    */
   get processor(): string {
     return this._processor
   }
 
+
+  /**
+   * A promise for when the extension is ready that is resolved after OnAfterAttach.
+   */
   get neu3DReady(): Promise<void> {
     return this._neu3DReady.promise;
   }
 
   /**
-   * Set processor
+   * Change processor.
+   * 
+   * A change in processor promotes:
+   * 1. Change the rendering settings (coordinate systems, camera angles)
+   * 2. search bar content
+   * 3. Brain meshes
+   * 
    * @param newProcessor new processor to be added
    */
   set processor(newProcessor: string) {
@@ -804,6 +850,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     });
   }
 
+  /**
+   * Populate the toolbar on the top of the widget
+   */
   populateToolBar(): void {
     this.toolbar.addItem(
       'upload', 
@@ -857,10 +906,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   private _neu3DReady = new PromiseDelegate<void>();
   private _neu3dContainer: HTMLDivElement;
   private _neu3dSearchbar: HTMLDivElement;
-  private _blockingDiv: HTMLDivElement;
+  private _blockingDiv: HTMLDivElement; // On browser refresh, a blocking div is shown to prompt user
   private _workspaceChanged = new Signal<this, any>(this);
   model: Neu3DModel;
-  info: any; // info panel widget
+  info: any; // info panel widget that this extension is connected to
 };
 
 
@@ -868,6 +917,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
  * A namespace for private data.
  */
 namespace Private {
+
+  // The count is for managing the name of the widget every time a new one is added to the browser
   export let count = 1;
 
   export function createButton(
