@@ -4,3 +4,5 @@ node_modules
 lib/
 tsconfig.tsbuildinfo
 *.ipynb
+.vscode
+.ipynb_checkpoints
