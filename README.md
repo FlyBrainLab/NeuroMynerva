@@ -8,7 +8,7 @@ NeuroMynerva V2 is currently in _alpha_, most main user-facing features have bee
 <center><img src="img/neuromynerva_ui.png" width="1080"/></center>
 
 ## Get Started
-NeuroMynerva V2 is be hosted on [NPM](https://www.npmjs.com/package/@flybrainlab/neuromynerva) 
+NeuroMynerva V2 is hosted on [NPM](https://www.npmjs.com/package/@flybrainlab/neuromynerva) 
 Please follow installation instruction detailed in [Installation](#installation) section.
 
 ### Tutorials
@@ -43,7 +43,7 @@ jupyter labextension install @flybrainlab/neuromynerva
 ```
 
 or via JupyterLab's extension panel:
-<center><img src="img/neuromynerva_installation_menu.png" width="720"/></center>
+<center><img src="img/neuromynerva_installation_menu.png" width="580"/></center>
 
 ### Develop NeuroMynerva
 We use [Anaconda](https://www.anaconda.com/) to manage development environment, you can use the following script to setup the development environment. 
