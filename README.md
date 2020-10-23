@@ -1,5 +1,6 @@
 **[Get Start](#get-started)** |
 **[Installation](#installation)** |
+**[Develop](#develop-neuromynerva)** |
 **[Getting help](#getting-help)** 
 
 # NeuroMynerva _v2_ - [FlyBrainLab](http://fbl.fruitflybrain.org/)'s JupyterLab Extension
@@ -23,9 +24,6 @@ NeuroMynerva front-end currently includes 4 key components:
 4. `Master-Widget`: A side panel widget that keeps track of all currently running NeuroMynerva widgets.
 
 ## Installation
-### Installation of Full FlyBrainLab Eco-System 
-Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab/blob/master/README.md. Follow the steps below for a manual installation of the front-end that may not be up-to-date.
-
 ### Prerequisites
 NeuroMynerva has the following requirements:
 
@@ -35,6 +33,9 @@ NeuroMynerva has the following requirements:
 - Inhouse packages: 
     * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git)
     * [FBLClient](https://github.com/FlyBrainLab/FBLClient.git)
+
+### Installation of Full FlyBrainLab Eco-System 
+Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab/blob/master/README.md.
 
 ### Installation of NeuroMynerva
 You can either install NeuroMynerva via command line as 
