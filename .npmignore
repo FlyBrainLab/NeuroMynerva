@@ -1,0 +1,6 @@
+.DS_Store
+node_modules
+tsconfig.tsbuildinfo
+*.ipynb
+.vscode
+.ipynb_checkpoints
