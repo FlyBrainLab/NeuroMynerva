@@ -1,7 +1,7 @@
 {
-  "name": "@neuro-mynerva/fbl-extension",
+  "name": "@flybrainlab/neuromynerva",
   "version": "0.2.0",
-  "description": "FBL Extension.",
+  "description": " NeuroMynerva extension for FlyBrainLab",
   "keywords": [
     "jupyter",
     "jupyterlab",
