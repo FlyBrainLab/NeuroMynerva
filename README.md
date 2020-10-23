@@ -30,7 +30,7 @@ Up-to-date installation instructions for the whole FlyBrainLab ecosystem are ava
 NeuroMynerva has the following requirements:
 
 - Python Version 3.6+
-- Jupyter: Developed on `JupyterLab 2.1.5`
+- Jupyter: Developed on `JupyterLab 2.1.5`, Tested on `JupyterLab 2.2.8` (Oct. 23rd 2020)
 - Public packages (see `requirements.txt`)
 - Inhouse packages: 
     * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git)
@@ -42,7 +42,7 @@ We use [Anaconda](https://www.anaconda.com/) to manage development environment, 
 # create conda environment and install python dependencies
 conda create -n fblv2 python=3.7 nodejs scipy pandas cookiecutter git yarn -c conda-forge -y
 conda activate fblv2
-pip install jupyter jupyterlab==2.1.5
+pip install jupyter jupyterlab==2.2.8
 pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx msgpack
 # If on Windows, execute the following:
 pip install pypiwin32
