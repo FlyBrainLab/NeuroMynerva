@@ -5,11 +5,11 @@
 # NeuroMynerva _v2_ - [FlyBrainLab](http://fbl.fruitflybrain.org/)'s JupyterLab Extension
 NeuroMynerva V2 is currently in _alpha_, most main user-facing features have been implemented but we expect bug fixes and additional features to be incorporated in the near future. If you want to report a bug, please see [Getting Help](#getting-help). To follow the latest developments on this project, follow the Fruit Fly Brain Observatory(FFBO) [Twitter](https://twitter.com/flybrainobs) where we post weekly updates.
 
-![image](https://github.com/FlyBrainLab/NeuroMynerva/raw/v2alpha/img/neuromynerva_ui.png)
+<center><img src="img/neuromynerva_ui.png" width="1080"/></center>
 
 ## Get Started
-NeuroMynerva V2 is yet to be hosted on [NPM](https://www.npmjs.com/). 
-For the time being, please follow installation instruction detailed in [Installation](#installation) section.
+NeuroMynerva V2 is be hosted on [NPM](https://www.npmjs.com/package/@flybrainlab/neuromynerva) 
+Please follow installation instruction detailed in [Installation](#installation) section.
 
 ### Tutorials
 
@@ -23,7 +23,7 @@ NeuroMynerva front-end currently includes 4 key components:
 4. `Master-Widget`: A side panel widget that keeps track of all currently running NeuroMynerva widgets.
 
 ## Installation
-### Quick Installation
+### Installation of Full FlyBrainLab Eco-System 
 Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab/blob/master/README.md. Follow the steps below for a manual installation of the front-end that may not be up-to-date.
 
 ### Prerequisites
@@ -36,7 +36,16 @@ NeuroMynerva has the following requirements:
     * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git)
     * [FBLClient](https://github.com/FlyBrainLab/FBLClient.git)
 
-### Installation Script
+### Installation of NeuroMynerva
+You can either install NeuroMynerva via command line as 
+```
+jupyter labextension install @flybrainlab/neuromynerva
+```
+
+or via JupyterLab's extension panel:
+<center><img src="img/neuromynerva_installation_menu.png" width="720"/></center>
+
+### Develop NeuroMynerva
 We use [Anaconda](https://www.anaconda.com/) to manage development environment, you can use the following script to setup the development environment. 
 ```bash
 # create conda environment and install python dependencies
@@ -77,13 +86,12 @@ V2 of NeuroMynerva is a complete overhaul of V1, which was developed when Jupyte
 3. `Master-Extension` in V1 has been removed since no single point of communication with the server backend is required in V2. Instead, a new `Master-Widget` has been introduced as a side panel that shows all currently running NeuroMynerva widgets.
 4. `Neu3D-Widget` under V2 can be used for data visualization with or without python kernel support. It now supports visualization of local neuron skeleton or neuropil mesh files (in `swc` or `obj` formats).
 
-
-
 ### Work in Progress Changes
 Work in progress changes are tracked in the [V2 Milestone](https://github.com/FlyBrainLab/NeuroMynerva/milestone/1), some key features being worked on are as follows:
 
 1. Kernel entry point: users currently can instantiated widgets by interacting with the JupyterLab Launch Menu or the Command Palette, which executes code in the front-end to spawn widgets. We are working on supporting spawning and control widgets from within the kernel (in Notebook or Console).
 2. Improved CAD capabilities with NeuGFX. NeuGFX is currently designed around interactions with a collection of hand-made circuit diagrams. More general support for circuit manipulation and visualization is being worked on.
+3. Dark Mode
 
 
 ## Getting Help
