@@ -1,4 +1,3 @@
-// FBL Master Widget Class
 import * as React from 'react';
 import { Signal } from '@lumino/signaling';
 import {
@@ -16,6 +15,9 @@ import { ConnSVG } from './conn_svg';
 import '../../../style/widgets/info-widget/info.css';
 import { SessionDialogComponent } from '../template-widget';
 
+/**
+ * The class of the extension
+ */
 const INFO_CLASS_JLab = 'jp-FBL-Info';
 
 /**
@@ -28,7 +30,9 @@ const SECTION_CLASS = 'jp-FBL-Info-section';
  */
 const SECTION_HEADER_CLASS = 'jp-FBL-Info-sectionHeader';
 
-
+/**
+ * The class name for the button for each section
+ */
 const SECTION_BTN_HEADER_CLASS = 'jp-FBL-Info-sectionHeader jp-FBL-Info-section-BtnHeader';
 
 /**
@@ -36,6 +40,9 @@ const SECTION_BTN_HEADER_CLASS = 'jp-FBL-Info-sectionHeader jp-FBL-Info-section-
  */
 const CONTAINER_CLASS = 'jp-FBL-Master-sectionContainer';
 
+/**
+ * An interface for data that is sent to info widget
+ */
 interface IInfoData {
   connectivity?: {
     pre?: {
@@ -89,8 +96,15 @@ const empty_data: IInfoData = {
 };
 
 /**
-* An Info Widget
-*/
+ * An Info Widget
+ * 
+ * This Widget is a singleton in the entire FBL Workspace.
+ * 
+ * Note: when the InfoWidget is instantiated (or updated),
+ * the instance of Neu3DWidget whose data it's rendering is also
+ * passed as an argument and cached. This allows for calls to add/remove neurons
+ * to the Neu3DWidget 
+ */
 export class InfoWidget extends ReactWidget {
   constructor(props?: {
     data: IInfoData, 
@@ -185,7 +199,7 @@ export class InfoWidget extends ReactWidget {
   }
 
 
-  /** Reset Info to empty */
+  /** Reset Info to empty and re-render the table */
   reset() {
     this.tabConnPost?.tabulator?.redraw();
     this.tabConnPre?.tabulator?.redraw();
@@ -196,7 +210,7 @@ export class InfoWidget extends ReactWidget {
     })
   }
 
-  /** Render */
+  /** Render the  ReactJS components */
   protected render() {
     return (
       <div className={SECTION_CLASS}>

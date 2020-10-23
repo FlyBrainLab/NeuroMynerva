@@ -1,5 +1,5 @@
+// Connectivity table that uses tabulator class to render connectivity data object
 import "@fortawesome/fontawesome-free/js/all.js";
-// import { ReactTabulator } from "react-tabulator";
 import Tabulator from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css"; //import Tabulator stylesheet
 import { Neu3DWidget } from "../neu3d-widget";
@@ -58,6 +58,10 @@ export class ConnTable {
     }
   }
 
+  /**
+   * Check an array of whether if a connection has morphology data of the synapses
+   * @param connData 
+   */
   hasSynMorph(connData: Array<any>) {
     for (let entry of connData) {
       if (entry.has_syn_morph) {
@@ -67,6 +71,9 @@ export class ConnTable {
     return false;
   }
 
+  /**
+   * Remove the synapse colummn if no synapse morphology
+   */
   removeSynColumn(){
     if (this.tabulator.getColumn("has_syn_morph")) {
       this.tabulator.deleteColumn("has_syn_morph");
@@ -74,6 +81,9 @@ export class ConnTable {
     }
   }
 
+  /**
+   * Add the synapse colummn if has synapse morphology
+   */
   addSynColumn(){
     if (!this.tabulator.getColumn("has_syn_morph")) {
       this.tabulator.addColumn(this.synColumn, true, "uname");
@@ -81,6 +91,9 @@ export class ConnTable {
     }
   }
 
+  /**
+   * Schema for the synapse column
+   */
   readonly synColumn = {
     title: "Synapse",
     field: "has_syn_morph",
@@ -127,6 +140,9 @@ export class ConnTable {
     }
   };
 
+  /**
+   * Schema for all columns.
+   */
   readonly columns = [
     {
       title: "Neuron",

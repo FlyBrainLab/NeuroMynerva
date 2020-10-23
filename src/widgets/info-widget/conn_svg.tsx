@@ -1,3 +1,5 @@
+// an diagram that renders the percentage neuron types pre/post synaptic to a given neuron
+// Uses ReCharts to draw PieCharts
 import * as React from "react";
 import { PieChart, Pie, Cell, Tooltip, Label } from "recharts";
 

@@ -1,3 +1,5 @@
+// Summary Table that renders the metadata of a given neuron 
+// in a table format
 import * as React from "react";
 import '../../../style/widgets/info-widget/summary.css';
 const SUMMARY_TABLE_SUBHEADER_CLASS = "jp-FBL-Info-summary-table-header";
