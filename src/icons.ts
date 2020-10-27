@@ -23,6 +23,7 @@ import eyeSlashStr from '../style/icons/eye-slash.svg';
 import syncStr from '../style/icons/sync.svg';
 import cameraStr from '../style/icons/camera.svg';
 import mapUpinStr from '../style/icons/map-unpin.svg';
+import webStr from '../style/icons/web.svg';
 
 // svgstr is the raw contents of an icon's svg file
 export const fblIcon = new LabIcon({
@@ -53,6 +54,10 @@ export const ffboProcessorIcon = new LabIcon({
 //   name: 'fbl:workspace',
 //   svgstr: workspaceIconStr
 // });
+export const webIcon = new LabIcon({
+  name: 'fbl:web',
+  svgstr: webStr // TODO: change to use fbl icon
+});
 
 export const fblSettingIcon = new LabIcon({
     name: 'fbl:setting',
