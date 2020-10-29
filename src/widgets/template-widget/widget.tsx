@@ -17,8 +17,10 @@ import {
 } from '@jupyterlab/apputils';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Toolbar } from '@jupyterlab/apputils';
-import { fblIcon } from '../../icons';
+import { INotification } from "jupyterlab_toastify";
 import { LabIcon } from '@jupyterlab/ui-components';
+
+import { fblIcon } from '../../icons';
 import { FBLWidgetModel, IFBLWidgetModel } from './model';
 import { 
   createProcessorButton, 
@@ -323,6 +325,21 @@ export class FBLWidget extends Widget implements IFBLWidget {
           return Promise.resolve(void 0);
         })
         break;
+      }
+      case 'toast': {
+        for (let [type, data] of Object.entries(thisMsg.data.info)){
+          switch (type) {
+            case 'success':
+              INotification.success(data, {'autoClose': 1500});
+              break;
+            case 'error':
+              INotification.error(data, {'autoClose': 5000});
+              break;
+            default:
+              INotification.info(data, {'autoClose': 2000});
+              break;
+          }
+        }
       }
       default: {
         // no-op

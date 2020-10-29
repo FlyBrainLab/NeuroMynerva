@@ -330,9 +330,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       switch (thisMsg.messageType) {
         case "Message": {
           if (thisMsg.data.info.success) {
-            INotification.success(thisMsg.data.info.success);  
+            INotification.success(thisMsg.data.info.success, {'autoClose': 1500});  
           } else if (thisMsg.data.info.error) {
-            INotification.error(thisMsg.data.info.error);  
+            INotification.error(thisMsg.data.info.error, {'autoClose': 5000});  
           }
           console.log('[NEU3D] Message received.', thisMsg.data);
           break;
