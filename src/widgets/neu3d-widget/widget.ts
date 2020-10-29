@@ -537,6 +537,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
   }
   
+
   /** 
    * Callback after the DOM element is attached to the Browser.
    * 
@@ -687,18 +688,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
 
   /**
-   * Instantiate neu3d and setup callback hooks after widget is shown
+   * Resize neu3d after widget is shown to ensure the right aspect ratio.
    * @param msg 
    */
   onAfterShow(msg: Message){
     this.neu3d?.onWindowResize();
-    if (!objEmpty(this.model.metadata)) {
-      this.neu3d?.import_settings(this.model.metadata);
-    }
-    if (!objEmpty(this.model.states)) {
-      this.neu3d?.import_state(this.model.states);
-    }
-    super.onAfterShow(msg);
   }
 
   /**
@@ -727,6 +721,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return this._neu3DReady.promise;
   }
 
+
+  /**
+   * Setter for processor to ignore startUp keyword
+   */
+  set processor(newProcessor: string) {
+    this.setProcessor(newProcessor);
+  }
   /**
    * Change processor.
    * 
@@ -736,8 +737,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    * 3. Brain meshes
    * 
    * @param newProcessor new processor to be added
+   * @param startUp whether this setter is being called on startup, 
+   *    if on startup, the dialog for removing neuron will not be shown
    */
-  set processor(newProcessor: string) {
+  setProcessor(newProcessor: string, startUp: boolean = false) {
     if (newProcessor === this._processor) {
       return;
     }
@@ -758,7 +761,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     let removeNeurons = false;
     this.neu3DReady.then(()=>{
       let selected = new PromiseDelegate();
-      if ((this.neu3d as any).groups.front.children.length > 0){
+      if ((!startUp) && ((this.neu3d as any).groups.front.children.length > 0)){
         showDialog({
           title: 'Remove Neurons/Synapses?',
           body: `

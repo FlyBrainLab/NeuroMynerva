@@ -65,13 +65,19 @@ export interface IFBLWidget extends Widget {
   /**
    * Signal that emits new processor name when changed
    */
-  processorChanged: ISignal<IFBLWidget, string>;
+  processorChanged: ISignal<FBLWidget, string>;
 
   /**
    * Signal that emits model change
    */
-  modelChanged: ISignal<IFBLWidget, object>;
+  modelChanged: ISignal<FBLWidget, object>;
 
+  /**
+   * Signal that emits the widget when it is getting disposed. Only fires once.
+   */
+  gettingDisposed: ISignal<FBLWidget, object>;
+
+  
   /**
    * Icon associated with the widget
    */
@@ -98,6 +104,12 @@ export interface IFBLWidget extends Widget {
    * Note: currently only required by Neu3D-Widget.
    */
   info?: InfoWidget
+
+
+  isDirty: boolean
+  dirty: ISignal<FBLWidget, boolean>;
+  setDirty(state: boolean): void;
+
 }
 
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
@@ -121,7 +133,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       _count
     } = options;
     this.ffboProcessors = ffboProcessors;
-
+    
     // keep track of number of instances
     Private.count += _count ?? 0;
     const count = Private.count++;
@@ -196,11 +208,16 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
       // set processor after session is avaible, in case the setter needs the session
-      this.processor = processor ?? FFBOProcessor.NO_PROCESSOR;
+      this.setProcessor(processor ?? FFBOProcessor.NO_PROCESSOR, true);
       Private.updateTitle(this, this._connected);
     });
 
     Private.updateTitle(this, this._connected);
+
+    // connect model changed signal to dirty state after initialization
+    this.modelChanged.connect(() => {
+      this.setDirty(true);
+    })
   }
 
   /**
@@ -368,6 +385,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (this._isDisposed === true) {
       return;
     }
+    this._gettingDisposed.emit(this);
+    window.removeEventListener('beforeunload', this._unloadEventListener);
     const code_to_send =`
     try:
       del fbl.widget_manager.widgets['${this.id}']
@@ -387,6 +406,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
     this.model?.dispose();
     Signal.disconnectAll(this._modelChanged);
+    Signal.disconnectAll(this._gettingDisposed);
     super.dispose();
     this._isDisposed = true;
   }
@@ -674,8 +694,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * Set processor
    * @param newProcessor new Processor to connect to
    * triggers a processor changed callback if processor has changed
+   * @param startUp optional argument for check if the setProcessor is called at startup
    */
-  set processor(newProcessor: string) {
+  setProcessor(newProcessor: string, startUp=false) {
     if (newProcessor === this._processor) {
       return;
     }
@@ -692,6 +713,14 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this._processor = newProcessor;
   }
 
+  set processor(newProcessor: string) {
+    this.setProcessor(newProcessor);
+  }
+
+  get gettingDisposed(): ISignal<this, object> {
+    return this._gettingDisposed;
+  }
+
   /** 
    * Returns processor
    * Note: setter/getter for processor need to be redefined in child class
@@ -702,6 +731,35 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
+   * Return the state of the widget being dirty or not
+   */
+  get isDirty(): boolean {
+    return this._isDirty;
+  }
+
+  /**
+   * A signal that emits the current dirty state of the widget
+   */
+  get dirty(): ISignal<this, boolean> {
+    return this._dirty;
+  }
+
+  /**
+   * Set the dirty state of the given widget, emits the state when changed
+   * @param state dirty state
+   */
+  setDirty(state: boolean) {
+    if (state === true) { // whenever it's dirty
+      this._dirty.emit(true);
+    } else {
+      if (state !== this._isDirty) { // not dirty but used to be 
+        this._dirty.emit(false);
+      }
+    }
+    this._isDirty = state;
+  }
+
+  /**
   * The Elements associated with the widget.
   */
   ffboProcessors: FFBOProcessor.IProcessors;
@@ -709,8 +767,12 @@ export class FBLWidget extends Widget implements IFBLWidget {
   protected _isDisposed = false;
   protected _modelChanged = new Signal<this, object>(this);
   protected _processorChanged = new Signal<this, string>(this);
+  protected _gettingDisposed = new Signal<this, object>(this);
+  private _unloadEventListener: (e: Event) => string | undefined;
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
+  private _isDirty = false;
+  protected _dirty = new Signal<this, boolean>(this);
   comm: Kernel.IComm; // the actual comm object
   readonly name: string;
   protected _processor: string;

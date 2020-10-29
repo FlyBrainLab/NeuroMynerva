@@ -1,7 +1,8 @@
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin,
-  ILayoutRestorer
+  ILayoutRestorer,
+  ILabStatus
 } from '@jupyterlab/application';
 
 import {
@@ -20,6 +21,8 @@ import {
   ReadonlyPartialJSONObject,
   Token
 } from '@lumino/coreutils';
+
+import { IDisposable } from '@lumino/disposable';
 
 import {
   ICommandPalette,
@@ -55,8 +58,10 @@ import { FBLWidget } from './widgets/template-widget/index';
 import '../style/index.css';
 
 
+const FBL_CLASS_NAME = '.jp-FBL';
 const NEU3D_CLASS_NAME = '.jp-FBL-Neu3D';
 const NEUGFX_CLASS_NAME = '.jp-FBL-NeuGFX';
+const DIRTY_CLASS = 'jp-mod-dirty';
 const NEU3DICON = neu3DIcon;
 const NEUGFXICON = neuGFXIcon;
 
@@ -78,6 +83,9 @@ export interface IFBLWidgetTrackers {
   trackers:  {[name: string]: FBLTracker};
   sessionsDict: {[sessionPath: string]: FBLPanel[] };
   sessions: Session.ISessionConnection[];
+  addWidget(widget: MainAreaWidget<IFBLWidget>, ModuleName: string, status: ILabStatus): Promise<any>;
+  saveState(): void;
+  totalSize: number;
 }
 
 /* tslint:disable */
@@ -108,6 +116,44 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
     if (!(name in this.trackers)){
       this.trackers[name] = tracker;
     }
+  }
+
+  addWidget(panel: MainAreaWidget<IFBLWidget>, ModuleName: string, status: ILabStatus): Promise<any> {
+    if (!(ModuleName in this.trackers)) {
+      console.warn(`[FBL Extension] Tracker ${ModuleName} not found`);
+      return Promise.resolve(null);
+    }
+
+    // when widget dirty state changes, need to
+    // 1. if became dirty, set labstatus to be dirty
+    // 2. if no longer dity, dispose labstatus dirty 
+    let disposable: IDisposable | null = null;
+    panel.content.dirty.connect((_, dirty: boolean) => {
+      if (dirty === true) {
+        if (!disposable) {
+          disposable = status.setDirty();
+        }
+        if (!(panel.title.className.includes(DIRTY_CLASS))) {
+          panel.title.className += ` ${DIRTY_CLASS}`; 
+        }
+      } else {
+        if (disposable) {
+          disposable.dispose();
+          disposable = null;
+        }
+        panel.title.className = panel.title.className.replace(DIRTY_CLASS, '');
+      }
+    });
+
+    // when widget is disposed, disregard busy status.
+    panel.content.gettingDisposed.connect(() => {
+      if (disposable) {
+        disposable.dispose();
+        disposable = null;
+      }
+    })
+
+    return this.trackers[ModuleName].add(panel);
   }
 
   /**
@@ -149,6 +195,29 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
     return Array.from(new Set(sessions));
   }
 
+  /**
+   * Save the state of all the widgets
+   */
+  saveState(): void {
+    for (let key of Object.keys(this.trackers)) {
+      this.trackers[key].forEach((p) => {
+        this.trackers[key].save(p);
+        p.content.setDirty(false);
+      })
+    }
+  }
+
+  /**
+   * Return total number of widgets in the ftracker
+   */
+  get totalSize(): number {
+    let size: number = 0;
+    for (let key of Object.keys(this.trackers)) {
+      size += this.trackers[key].size;
+    }
+    return size;
+  }
+
   trackers: {[name: string]: FBLTracker};
 }
 
@@ -163,6 +232,11 @@ namespace CommandIDs {
   export const NeuGFXOpen = 'fbl-neugfx:open';
   export const NeuGFXCreateConsole = 'fbl-neugfx:create-console';
   export const CreateWorkspace = 'fbl-workspace:create';
+  /** Save state for a given widget */
+  export const SaveNeu3DState = 'fbl-neu3d:save-state';
+  export const SaveNeuGFXState = 'fbl-neugfx:save-state';
+  export const SaveAllState = 'fbl:save-state';
+
 }
 
 /**
@@ -171,7 +245,7 @@ namespace CommandIDs {
 const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
   id: '@flybrainlab/neuromynerva:plugin',
   autoStart: true,
-  requires: [ICommandPalette, ILauncher, ILayoutRestorer, ISettingRegistry],
+  requires: [ICommandPalette, ILauncher, ILayoutRestorer, ISettingRegistry, ILabStatus],
   provides: IFBLWidgetTrackers,
   activate: activateFBL
 };
@@ -186,7 +260,8 @@ async function activateFBL(
   palette: ICommandPalette,
   launcher: ILauncher,
   restorer: ILayoutRestorer,
-  settings: ISettingRegistry
+  settings: ISettingRegistry,
+  status: ILabStatus
 ): Promise<IFBLWidgetTrackers> {
   console.log("FBL Extension Activated");
   const fblWidgetTrackers = new FBLWidgetTrackers({
@@ -320,7 +395,7 @@ async function activateFBL(
   app.shell.add(infoWidget, 'left', {rank: 2000});
   window.info = infoWidget;
 
-  // Get the current widget and activate unless the args specify otherwise.
+  /** Get the current widget of a given widget type and activate unless the args specify otherwise. */
   function getCurrent(args: ReadonlyPartialJSONObject): MainAreaWidget<IFBLWidget> | null {
     let widget = undefined;
     switch (args['widget']) {
@@ -355,7 +430,9 @@ async function activateFBL(
           _count: fblWidgetTrackers.trackers.Neu3D.size, 
           ...args
         },
-        tracker:fblWidgetTrackers.trackers.Neu3D
+        fbltracker: fblWidgetTrackers,
+        ModuleName: 'Neu3D',
+        status: status
       });
     }
   });
@@ -373,7 +450,9 @@ async function activateFBL(
           _count: fblWidgetTrackers.trackers.Neu3D.size,
           ...args
         },
-        tracker:fblWidgetTrackers.trackers.Neu3D
+        fbltracker: fblWidgetTrackers,
+        ModuleName: 'Neu3D',
+        status: status
       });
     }
   });
@@ -392,7 +471,9 @@ async function activateFBL(
             _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
-          tracker:fblWidgetTrackers.trackers.NeuGFX
+          fbltracker: fblWidgetTrackers,
+          ModuleName: 'NeuGFX',
+          status: status
         });
     }
   });
@@ -475,7 +556,9 @@ async function activateFBL(
             sessionContext: notebook_panel.sessionContext, 
             ...args
           },
-          tracker: fblWidgetTrackers.trackers.Neu3D,
+          fbltracker: fblWidgetTrackers,
+          ModuleName: 'NeuGFX',
+          status: status,
           add_widget_options:{ref: notebook_panel.id, mode: 'split-left'}
         });
 
@@ -491,9 +574,58 @@ async function activateFBL(
             sessionContext: notebook_panel.sessionContext, 
             ...args
           },
-          tracker: fblWidgetTrackers.trackers.NeuGFX,
+          fbltracker: fblWidgetTrackers,
+          ModuleName: 'NeuGFX',
+          status: status,
           add_widget_options:{ref: neu3d_panel.id, mode: 'split-bottom'}
         });
+    }
+  });
+
+  commands.addCommand(CommandIDs.SaveNeu3DState, {
+    label: 'Save the State of a Neu3D Widget For Restoration',
+    icon: NEU3DICON,
+    execute: args => {
+      const current = getCurrent({ ...args, widget:'neu3d', activate:false});
+      if (!current) { return; }
+      fblWidgetTrackers.trackers['Neu3D'].save(current);
+      current.content.setDirty(false);
+    },
+    isEnabled: () => {
+      const current = getCurrent({ widget: 'neu3d', activate: false });
+      if (current?.content?.isDirty) {
+        return true;
+      }
+      return false;
+    }
+  });
+
+  commands.addCommand(CommandIDs.SaveNeuGFXState, {
+    label: 'Save the State of a NeuGFX Widget For Restoration',
+    icon: NEUGFXICON,
+    execute: args => {
+      const current = getCurrent({ ...args, widget:'neugfx', activate:false});
+      if (!current) { return; }
+      fblWidgetTrackers.trackers['NeuGFX'].save(current);
+      current.content.setDirty(false);
+    },
+    isEnabled: () => {
+      const current = getCurrent({widget:'neugfx', activate: false});
+      if (current?.content?.isDirty) {
+        return true;
+      }
+      return false;
+    }
+  });
+
+  commands.addCommand(CommandIDs.SaveAllState, {
+    label: 'Save the State of a All FBL Widgets For Restoration',
+    icon: fblIcon,
+    execute: args => {
+      fblWidgetTrackers.saveState();
+    },
+    isEnabled: () => {
+      return fblWidgetTrackers.totalSize > 0;
     }
   });
 
@@ -517,7 +649,6 @@ async function activateFBL(
 
   }
 
-
   /**
    * Add the create-console to context Menu
    * The browser will look class `selecttor` to see if the command should be enabled
@@ -533,13 +664,52 @@ async function activateFBL(
     selector: NEUGFX_CLASS_NAME,
     rank: Infinity
   });
+  app.contextMenu.addItem({
+    command: CommandIDs.SaveNeu3DState,
+    selector: NEU3D_CLASS_NAME,
+    rank: Infinity
+  });
+  app.contextMenu.addItem({
+    command: CommandIDs.SaveNeuGFXState,
+    selector: NEUGFX_CLASS_NAME,
+    rank: Infinity
+  });
+
+
+  /**
+   * Add keyboard shortcuts to save the widget states.
+   * `Accel` correspond to `Command` on Mac and `Ctrl` on Windows/Linux
+   */
+  app.commands.addKeyBinding({
+    command: CommandIDs.SaveNeu3DState,
+    args: {},
+    keys: ['Accel S'],
+    selector: NEU3D_CLASS_NAME
+  });
+
+  app.commands.addKeyBinding({
+    command: CommandIDs.SaveNeuGFXState,
+    args: {},
+    keys: ['Accel S'],
+    selector: NEUGFX_CLASS_NAME
+  });
+
+  app.commands.addKeyBinding({
+    command: CommandIDs.SaveAllState,
+    args: {},
+    keys: ['Accel Shift S'],
+    selector: FBL_CLASS_NAME
+  });
 
   // Add the command to the palette.
   [
     CommandIDs.Neu3DCreate,
     CommandIDs.Neu3DCreateConsole,
     CommandIDs.NeuGFXCreate,
-    CommandIDs.NeuGFXCreateConsole
+    CommandIDs.NeuGFXCreateConsole,
+    CommandIDs.SaveNeu3DState,
+    CommandIDs.SaveNeuGFXState,
+    CommandIDs.SaveAllState
   ].forEach(command=>{
     palette.addItem({command, category: 'FlyBrainLab' });
   })
@@ -654,16 +824,18 @@ export namespace FBL {
     Module: any,
     icon: LabIcon,
     moduleArgs: Partial<FBLWidget.IOptions>,
-    tracker: WidgetTracker<MainAreaWidget<IFBLWidget>>,
+    fbltracker: FBLWidgetTrackers,
+    ModuleName: 'Neu3D' | 'NeuGFX' | string,
+    status: ILabStatus,
     add_widget_options?: DocumentRegistry.IOpenOptions
   }) : Promise<MainAreaWidget<IFBLWidget>> {
     let widget: IFBLWidget;
     const {
-      app, Module, icon, moduleArgs, tracker, add_widget_options
+      app, Module, icon, moduleArgs, fbltracker, ModuleName, status, add_widget_options
     } = options;
 
 
-    let sessionContext = moduleArgs.sessionContext ?? tracker.currentWidget?.content?.sessionContext;
+    let sessionContext = moduleArgs.sessionContext ?? fbltracker.trackers[ModuleName].currentWidget?.content?.sessionContext;
 
     if (sessionContext === undefined){
       moduleArgs['kernelPreference'] = {
@@ -679,22 +851,27 @@ export namespace FBL {
       ...moduleArgs,
     });
 
-    let panel = new MainAreaWidget({content: widget, toolbar: widget.toolbar});
-    if (!tracker.has(panel)){
-      await tracker.add(panel);
+    let panel = new MainAreaWidget({ content: widget, toolbar: widget.toolbar });
+    panel.node.classList.add(FBL_CLASS_NAME);
+
+    if (!fbltracker.trackers[ModuleName].has(panel)) {
+      await fbltracker.addWidget(panel, ModuleName, status);
+      // await fbltracker.trackers[ModuleName].add(panel);
     }
     widget.sessionContext.propertyChanged.connect(()=>{
-      void tracker.save(panel);
+      void fbltracker.trackers[ModuleName].save(panel);
     });
-    widget.modelChanged.connect(()=>{
-      void tracker.save(panel);
-    });
+
+    // widget.modelChanged.connect(()=>{
+    //   void tracker.save(panel);
+    // });
     // Attach the widget to the main work area if it's not there
     app.shell.add(panel, 'main', add_widget_options);
     widget.update();
     panel.update();
     // Activate the widget
     app.shell.activateById(panel.id);
+
     return panel;
   }
 
@@ -711,6 +888,4 @@ export namespace FBL {
         activate: args['activate'] as boolean
       });
   }
-
-  export const testAttr: string = 'test';
 }
