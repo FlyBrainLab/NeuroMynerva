@@ -111,7 +111,6 @@ export interface IFBLWidget extends Widget {
   isDirty: boolean
   dirty: ISignal<FBLWidget, boolean>;
   setDirty(state: boolean): void;
-
 }
 
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
@@ -403,7 +402,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
       return;
     }
     this._gettingDisposed.emit(this);
-    window.removeEventListener('beforeunload', this._unloadEventListener);
     const code_to_send =`
     try:
       del fbl.widget_manager.widgets['${this.id}']
@@ -448,7 +446,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
-    }
+    } 
   }
 
   /**
@@ -521,9 +519,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
         showDialog({
           title: `FBL Initialization Registration Failed`,
           body: outputArea,
-        }).then(()=>{
-          return Promise.reject('FBL Initialization Failed');
-        })
+        });
+        return Promise.reject('FBL Initialization Failed');
       }
     }, (failure) => {
       outputArea.dispose();
@@ -605,9 +602,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
         showDialog({
           title: `FBLClient Initialization Registration Failed`,
           body: outputArea,
-        }).then(()=>{
-          return Promise.reject('FBLClient Initialization Failed');
-        })
+        });
+        return Promise.reject('FBLClient Initialization Failed');
       }
     }, (failure) => {
       outputArea.dispose();
@@ -621,6 +617,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * Initialize FBLClient on associated kernel
   */
   async initFBLClient(initClient = true): Promise<boolean> {
+
     if (!this.sessionContext.session?.kernel){
       return Promise.resolve(void 0); // no kernel
     }
@@ -653,11 +650,15 @@ export class FBLWidget extends Widget implements IFBLWidget {
         this.onCommClose(msg);
       };
     });
-    // } else {
-      // if commtarget already exists, set this.comm to that comm
-      // TODO
-    // }
-    this.initFBL();
+    
+    // import flybrainlab and add current widget to widget_manager in kernel
+    await this.initFBL().catch(() => {
+      INotification.error(`
+        FBL Initialization Failed. This is most likely because the flybrainlab python package
+        cannot be found.
+      `);
+      return;
+    });
 
     if (initClient === false) {
       return;
@@ -665,32 +666,14 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (this.processor === FFBOProcessor.NO_PROCESSOR) {
       return;
     }
-    this.initClient()
-    
-    // kernel.requestExecute({ code: code }).done.then((reply) => {
-    //   if (reply && reply.content.status === 'error'){
-    //     const traceback = ANSI.stripReplyError(reply.content.traceback);
-    //     const body = (
-    //       <div>
-    //         {traceback && (
-    //           <details className="jp-mod-wide">
-    //             <pre>{traceback}</pre>
-    //           </details>
-    //         )}
-    //       </div>
-    //     );
-    //     showDialog({
-    //       title: `FBLClient Initialization Registration Failed (${this._commTarget})`,
-    //       body: body
-    //     }).then(()=>{
-    //       return Promise.resolve('Execution Failed');
-    //     })
-    //   } else if (reply && reply.content.status === 'ok'){
-    //     return Promise.resolve(void 0);
-    //   }
-    // }, (failure) => {
-    //   return Promise.reject(failure);
-    // });
+
+    // create fblclient instance with a processor connection.
+    await this.initClient().catch(() => {
+      INotification.error(`
+        FBL Client Initialization Failed. See popup for more info
+      `, { 'autoClose': 5000 });
+      return;
+    })
   }
 
   /**
@@ -785,7 +768,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
   protected _modelChanged = new Signal<this, object>(this);
   protected _processorChanged = new Signal<this, string>(this);
   protected _gettingDisposed = new Signal<this, object>(this);
-  private _unloadEventListener: (e: Event) => string | undefined;
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   private _isDirty = false;

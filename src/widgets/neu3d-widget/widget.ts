@@ -523,7 +523,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     code = code + this.NLPquerySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.log('NLPquery', result);
-    return result;
+    return Promise.resolve(result);
   }
 
   /**
