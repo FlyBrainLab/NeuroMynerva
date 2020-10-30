@@ -275,7 +275,8 @@ async function activateFBL(
   restorer.restore(fblWidgetTrackers.trackers.Neu3D, {
     command: CommandIDs.Neu3DOpen,
     args: widget => {
-      const { path, name } = widget.content.sessionContext;
+      const { path } = widget.content.sessionContext;
+      const name = widget.content.name;
       return {
         model: {
           data: widget.content.model?.data,
@@ -290,14 +291,15 @@ async function activateFBL(
         name: name
       };
     },
-    name: widget => widget.content.sessionContext.name,
+    name: widget => widget.content.id,
     when: app.serviceManager.ready
   });
 
   restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
     command: CommandIDs.NeuGFXOpen,
     args: widget => {
-      const { path, name } = widget.content.sessionContext;
+      const { path } = widget.content.sessionContext;
+      const name = widget.content.name;
       return {
         model: {
           data: widget.content.model?.data,
@@ -312,7 +314,7 @@ async function activateFBL(
         name: name
       };
     },
-    name: widget => widget.content.sessionContext.name,
+    name: widget => widget.content.id,
     when: app.serviceManager.ready
   });
 
@@ -554,10 +556,11 @@ async function activateFBL(
             info: infoWidget, 
             processor: processor, 
             sessionContext: notebook_panel.sessionContext, 
+            _count: fblWidgetTrackers.trackers.Neu3D.size,
             ...args
           },
           fbltracker: fblWidgetTrackers,
-          ModuleName: 'NeuGFX',
+          ModuleName: 'Neu3D',
           status: status,
           add_widget_options:{ref: notebook_panel.id, mode: 'split-left'}
         });
@@ -572,6 +575,7 @@ async function activateFBL(
             clientId: neu3d_panel.content.clientId,
             processor: processor,
             sessionContext: notebook_panel.sessionContext, 
+            _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
           fbltracker: fblWidgetTrackers,
