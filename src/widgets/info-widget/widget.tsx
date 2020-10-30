@@ -9,7 +9,9 @@ import {
   ToolbarButtonComponent
  } from'@jupyterlab/apputils';
 
-import { SummaryTable } from './summary_table';
+import {
+  SummaryTable, MorphometryTable, AdditionalInfoTable
+} from './summary_table';
 import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
 import '../../../style/widgets/info-widget/info.css';
@@ -38,7 +40,7 @@ const SECTION_BTN_HEADER_CLASS = 'jp-FBL-Info-sectionHeader jp-FBL-Info-section-
 /**
  * The class name added to a section container.
  */
-const CONTAINER_CLASS = 'jp-FBL-Master-sectionContainer';
+const CONTAINER_CLASS = 'jp-FBL-Info-sectionContainer';
 
 /**
  * An interface for data that is sent to info widget
@@ -251,6 +253,42 @@ export class InfoWidget extends ReactWidget {
               return <SummaryTable data={val.data.summary} neu3d={val.neu3d} />  
             } else{
               return <SummaryTable data={empty_data.summary} neu3d={val.neu3d} />
+            }}
+          }
+        </UseSignal>
+      }></Components.CollapsibleSection>
+      <Components.CollapsibleSection title={'Additional Info'} children={
+          <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            inWorkspace: this.inWorkspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => {
+            if (val.data?.summary){
+              return <AdditionalInfoTable data={val.data.summary} neu3d={val.neu3d} />  
+            } else{
+              return <AdditionalInfoTable data={empty_data.summary} neu3d={val.neu3d} />
+            }}
+          }
+        </UseSignal>
+      }></Components.CollapsibleSection>
+      <Components.CollapsibleSection title={'Morphometry'} children={
+          <UseSignal
+          signal={this.dataChanged}
+          initialArgs={{
+            data: this.data,
+            inWorkspace: this.inWorkspace,
+            neu3d: undefined
+          }}
+        >
+          {(_, val) => {
+            if (val.data?.summary){
+              return <MorphometryTable data={val.data.summary} neu3d={val.neu3d} />  
+            } else{
+              return <MorphometryTable data={empty_data.summary} neu3d={val.neu3d} />
             }}
           }
         </UseSignal>

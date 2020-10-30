@@ -33,10 +33,20 @@ color: var(--font-color-p);
     margin: 0;
 }
 
-.jp-FBL-Master-sectionContainer {
+.morphometry-table {
+    width: 100%;
+    margin: 0;
+}
+
+.additional-info-table {
+    width: 100%;
+    margin: 0;
+}
+
+.jp-FBL-Info-sectionContainer {
     display: block;
 }
 
-.jp-FBL-Master-sectionContainer.hidden {
+.jp-FBL-Info-sectionContainer.hidden {
     display: none;
 }

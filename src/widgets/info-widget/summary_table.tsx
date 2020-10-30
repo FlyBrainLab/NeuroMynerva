@@ -2,7 +2,6 @@
 // in a table format
 import * as React from "react";
 import '../../../style/widgets/info-widget/summary.css';
-const SUMMARY_TABLE_SUBHEADER_CLASS = "jp-FBL-Info-summary-table-header";
 
 const displayData: {[rawName: string]: string} = {
   uname: "Unique Name",
@@ -95,9 +94,7 @@ function reformatField(id: string, value: any) {
 export function SummaryTable(props: {data: any, neu3d: any }) {
   const rawData = props.data;
   let display: any[] = [];
-  let morph: any[] = [];
-  let info: any[] = [];
-
+  
   for (let [key, val] of Object.entries(rawData)) {
     if (val == undefined || val == null) {
       continue;
@@ -121,22 +118,6 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
           <td>{reformatField(key, val)}</td>
         </tr>);
       }
-    } else if (key in morphData) {
-      morph.push(
-        <tr key={key}>
-          <td>{morphData[key]}</td>
-          <td>{reformatField(key, val)}</td>
-        </tr>
-      );
-    } else if (key === 'info') { // object of abitrary data
-      for (let [key2, val2] of Object.entries(val)) {
-        info.push(
-          <tr key={key2}>
-            <td>{jsUcfirst(key2)}</td>
-            <td>{reformatField(key2, val2)}</td>
-          </tr>
-        );
-      }
     }
   }
 
@@ -152,39 +133,6 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
               {display}
             </tbody>
           </table>
-          {() => {
-            if (morph.length > 0) {
-              return (
-                <>
-                  <div className={SUMMARY_TABLE_SUBHEADER_CLASS}>Morphometry</div>
-                    <table className={"summary-table"}>
-                      <tbody>
-                        {morph}
-                      </tbody>
-                    </table>
-                </>
-              )
-            } else {
-              return <></>;
-            }
-          }}
-          {() => {
-            if (info.length > 0) {
-              return (
-                <>
-                <div className={SUMMARY_TABLE_SUBHEADER_CLASS}>Additional Information</div>
-                <table className={"summary-table"}>
-                  <tbody>
-                    {info}
-                  </tbody>
-                </table>
-                </>
-              )
-            } else {
-              return <></>
-            }
-          }}
-          
         </div>
       </>
     );
@@ -192,6 +140,100 @@ export function SummaryTable(props: {data: any, neu3d: any }) {
     return (
       <>
         No summary information available
+      </>
+    );
+  }
+}
+
+/**
+ * Display MorphoMetry in table format
+ * @param props 
+ */
+export function MorphometryTable(props: {data: any, neu3d: any }) {
+  const rawData = props.data;
+  let morph: any[] = [];
+
+  for (let [key, val] of Object.entries(rawData)) {
+    if (val == undefined || val == null) {
+      continue;
+    }
+    if (key in morphData) {
+      morph.push(
+        <tr key={key}>
+          <td>{morphData[key]}</td>
+          <td>{reformatField(key, val)}</td>
+        </tr>
+      );
+    }
+  }
+
+  if (morph.length > 0) {
+    return (
+      <>
+        <div 
+        className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+        data-mime-type={"text/markdown"}
+        >
+          <table className={"morphometry-table"}>
+            <tbody>
+              {morph}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  } else {
+    return (
+      <>
+        No Morphometry Information Available
+      </>
+    );
+  }
+}
+
+/**
+ * Display Additional Info in table format
+ * @param props 
+ */
+export function AdditionalInfoTable(props: {data: any, neu3d: any }) {
+  const rawData = props.data;
+  let info: any[] = [];
+
+  for (let [key, val] of Object.entries(rawData)) {
+    if (val == undefined || val == null) {
+      continue;
+    }
+    if (key === 'info') { // object of abitrary data
+      for (let [key2, val2] of Object.entries(val)) {
+        info.push(
+          <tr key={key2}>
+            <td>{jsUcfirst(key2)}</td>
+            <td>{reformatField(key2, val2)}</td>
+          </tr>
+        );
+      }
+    }
+  }
+
+  if (info.length > 0) {
+    return (
+      <>
+        <div 
+        className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+        data-mime-type={"text/markdown"}
+        >
+          <table className={"additional-info-table"}>
+            <tbody>
+              {info}
+            </tbody>
+          </table>
+        </div>
+      </>
+    );
+  } else {
+    return (
+      <>
+        No Morphometry Information Available
       </>
     );
   }
