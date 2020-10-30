@@ -74,7 +74,7 @@ declare global {
   }
 }
 
-export type FBLPanel = MainAreaWidget<IFBLWidget>;
+export type FBLPanel = MainAreaWidget<IFBLWidget | Neu3DWidget | NeuGFXWidget>;
 export type IFBLTracker = IWidgetTracker<FBLPanel>;
 export type FBLTracker = WidgetTracker<FBLPanel>;
 
@@ -295,28 +295,29 @@ async function activateFBL(
     when: app.serviceManager.ready
   });
 
-  restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
-    command: CommandIDs.NeuGFXOpen,
-    args: widget => {
-      const { path } = widget.content.sessionContext;
-      const name = widget.content.name;
-      return {
-        model: {
-          data: widget.content.model?.data,
-          metadata: widget.content.model?.metadata,
-          states: widget.content.model?.states
-        },
-        ffboProcessors: widget.content.ffboProcessors as unknown as ReadonlyPartialJSONObject,
-        clientId: widget.content.clientId,
-        id: widget.content.id,
-        processor: widget.content.processor,
-        path: path,
-        name: name
-      };
-    },
-    name: widget => widget.content.id,
-    when: app.serviceManager.ready
-  });
+  // restorer.restore(fblWidgetTrackers.trackers.NeuGFX, {
+  //   command: CommandIDs.NeuGFXOpen,
+  //   args: widget => {
+  //     const { path } = widget.content.sessionContext;
+  //     const name = widget.content.name;
+  //     return {
+  //       model: {
+  //         data: widget.content.model?.data,
+  //         metadata: widget.content.model?.metadata,
+  //         states: widget.content.model?.states
+  //       },
+  //       ffboProcessors: widget.content.ffboProcessors as unknown as ReadonlyPartialJSONObject,
+  //       clientId: widget.content.clientId,
+  //       id: widget.content.id,
+  //       iFrameSrc: (widget.content as any).iFrameSrc,
+  //       processor: widget.content.processor,
+  //       path: path,
+  //       name: name
+  //     };
+  //   },
+  //   name: widget => widget.content.id,
+  //   when: app.serviceManager.ready
+  // });
 
   window.app = app;
   window.fbltrackers = fblWidgetTrackers;
@@ -343,7 +344,7 @@ async function activateFBL(
             // add to last
         if (restorer) {
           restorer.add(masterWidget, 'FBL-Master');
-        }
+        } 
         app.shell.add(masterWidget, 'left', {rank: 1900});
         window.master = masterWidget;
       } else {
@@ -461,6 +462,27 @@ async function activateFBL(
 
   commands.addCommand(CommandIDs.NeuGFXCreate, {
     label: 'Create NeuGFX Instance',
+    icon: NEUGFXICON,
+    execute: async (args) => {
+      await FBL.createFBLWidget(
+        {
+          app:app,
+          Module:NeuGFXWidget,
+          icon:NEUGFXICON,
+          moduleArgs:{
+            processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
+            _count: fblWidgetTrackers.trackers.NeuGFX.size,
+            ...args
+          },
+          fbltracker: fblWidgetTrackers,
+          ModuleName: 'NeuGFX',
+          status: status
+        });
+    }
+  });
+
+  commands.addCommand(CommandIDs.NeuGFXOpen, {
+    label: 'Open Existing NeuGFX Instance',
     icon: NEUGFXICON,
     execute: async (args) => {
       await FBL.createFBLWidget(

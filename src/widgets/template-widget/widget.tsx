@@ -434,6 +434,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     args: Session.ISessionConnection.IKernelChangedArgs
   ) {
     const newKernel: Kernel.IKernelConnection | null = args.newValue;
+    this.setDirty(true);
     if (newKernel === null){
       this.comm?.dispose();
       return;
@@ -470,6 +471,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * A method that handles changing session Context
   */
   onPathChanged(msg?: any): void {
+    this.setDirty(true);
     if (this.sessionContext.session) {
       Private.updateTitle(this, this._connected);
     }
@@ -703,6 +705,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (newProcessor === FFBOProcessor.NO_PROCESSOR){
       this._processorChanged.emit(newProcessor);
       this._processor = newProcessor;
+      this.setDirty(true);
       return;
     }
     if (!(newProcessor in this.ffboProcessors)){
@@ -711,6 +714,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
 
     this._processorChanged.emit(newProcessor);
     this._processor = newProcessor;
+    this.setDirty(true);
   }
 
   set processor(newProcessor: string) {

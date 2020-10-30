@@ -155,6 +155,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
       this._neugfxContainer.src = url;
     }
     this._iFrameSrcChanged.emit(url);
+    this._modelChanged.emit({ url: this._iFrameSrc });
     return;
   }
 
