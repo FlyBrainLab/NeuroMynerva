@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Signal } from '@lumino/signaling';
 import {
-  refreshIcon, 
+  refreshIcon, caretRightIcon, caretDownIcon
 } from '@jupyterlab/ui-components';
 import { 
   ReactWidget, 
@@ -237,11 +237,8 @@ export class InfoWidget extends ReactWidget {
           }}
         </UseSignal>
       </div>
-      <header className={SECTION_HEADER_CLASS}>
-        <h2>Summary</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
-        <UseSignal
+      <Components.CollapsibleSection title={'Summary'} children={
+          <UseSignal
           signal={this.dataChanged}
           initialArgs={{
             data: this.data,
@@ -257,11 +254,8 @@ export class InfoWidget extends ReactWidget {
             }}
           }
         </UseSignal>
-      </div>
-      <header className={SECTION_HEADER_CLASS}>
-        <h2>Connectivity Profile</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
+      }></Components.CollapsibleSection>
+      <Components.CollapsibleSection title={'Connectivity Profile'} children={
         <UseSignal
           signal={this.dataChanged}
           initialArgs={{
@@ -271,12 +265,12 @@ export class InfoWidget extends ReactWidget {
           }}
         >
           {(_, val) => {
-            if (val.data?.connectivity){
+            if (val.data?.connectivity) {
               return <ConnSVG
-                      pre={val.data.connectivity.pre.summary}
-                      post={val.data.connectivity.post.summary}
-                    />
-            } else{
+                pre={val.data.connectivity.pre.summary}
+                post={val.data.connectivity.post.summary}
+              />
+            } else {
               return <ConnSVG
                 pre={empty_data.connectivity.pre.summary}
                 post={empty_data.connectivity.post.summary}
@@ -284,19 +278,13 @@ export class InfoWidget extends ReactWidget {
             }
           }}
         </UseSignal>
-      </div>
-      <header className={SECTION_HEADER_CLASS}>
-        <h2>Presynaptic Partners</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
+      }></Components.CollapsibleSection>
+      <Components.CollapsibleSection title={'Presynaptic Partners'} children={
         <div id="info-connTable-pre"/>
-      </div>
-      <header className={SECTION_HEADER_CLASS}>
-          <h2>Postsynaptic Partners</h2>
-      </header>
-      <div className={CONTAINER_CLASS}>
-      <div id="info-connTable-post"/>
-      </div>
+      }></Components.CollapsibleSection>
+      <Components.CollapsibleSection title={'Postsynaptic Partners'} children={
+        <div id="info-connTable-post"/>
+      }></Components.CollapsibleSection>
     </div>
     );
   }
@@ -314,3 +302,37 @@ export class InfoWidget extends ReactWidget {
 };
 
 
+namespace Components {
+  export class CollapsibleSection extends React.Component<{
+    title: string,
+    children: React.Component | any
+  }, { visible: boolean }>{
+
+    state: Readonly<{ visible: boolean }> = {
+      visible: true
+    }
+  
+    toggleVisibility() {
+      this.setState({
+        visible: !this.state.visible
+      })
+    }
+
+    render(): React.ReactNode {
+      return (
+        <>
+          <a onClick={() => this.toggleVisibility()}>
+            <header className={SECTION_HEADER_CLASS}>
+              <caretRightIcon.react display={(this.state.visible ? 'none':'inline')}></caretRightIcon.react>
+              <caretDownIcon.react display={(this.state.visible ? 'inline':'none')}></caretDownIcon.react>
+              <h2>{this.props.title}</h2>
+            </header>
+          </a>
+          <div className={CONTAINER_CLASS + (this.state.visible? '': ' hidden')}>
+            {this.props.children}
+          </div>
+        </>
+      )
+    }
+  } 
+}

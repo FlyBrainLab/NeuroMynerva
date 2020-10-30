@@ -18,8 +18,8 @@ overflow: auto;
 
 .jp-FBL-Info-sectionHeader {
 flex: 0 0 auto;
-align-items: center;
-justify-content: space-between;
+align-items: baseline;
+justify-content: flex-start;
 height: 28px;
 display: flex;
 border-bottom: var(--jp-border-width) solid var(--jp-border-color2);

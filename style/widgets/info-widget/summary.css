@@ -32,3 +32,11 @@ color: var(--font-color-p);
     width: 100%;
     margin: 0;
 }
+
+.jp-FBL-Master-sectionContainer {
+    display: block;
+}
+
+.jp-FBL-Master-sectionContainer.hidden {
+    display: none;
+}
