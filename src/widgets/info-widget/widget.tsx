@@ -153,6 +153,9 @@ export class InfoWidget extends ReactWidget {
 
     this.dataChanged.connect((sender, {data, inWorkspace, neu3d})=> 
     {
+      this.data = data;
+      this.neu3d = neu3d;
+      this.inWorkspace = inWorkspace;
       let preData = this.parseConnData(data.connectivity?.pre || empty_data.connectivity.pre.details, neu3d);
       let postData = this.parseConnData(data.connectivity?.post || empty_data.connectivity.post.details, neu3d);
       this.tabConnPre.neu3d = neu3d;
@@ -202,11 +205,11 @@ export class InfoWidget extends ReactWidget {
 
 
   /** Reset Info to empty and re-render the table */
-  reset() {
+  reset(clear=false) {
     this.tabConnPost?.tabulator?.redraw();
     this.tabConnPre?.tabulator?.redraw();
     this.dataChanged.emit({
-      data: empty_data,
+      data: clear ? empty_data : this.data,
       inWorkspace: this.inWorkspace,
       neu3d: this.neu3d
     })
