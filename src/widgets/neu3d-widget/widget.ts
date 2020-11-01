@@ -13,7 +13,6 @@ import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import * as Icons from '../../icons';
 import '../../../style/widgets/neu3d-widget/neu3d.css';
-import { FFBOProcessor } from '../../ffboprocessor';
 
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
 
@@ -102,6 +101,28 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     //   searchInput.style.display ='none';
     //   searchButton.style.display ='none';
     // }
+    this.clientConnect.connect((has) => {
+      if (this.hasClient) {
+        searchInput.disabled = false;
+        switch (this.processor) {
+          case 'larva(l1em)':
+            searchInput.placeholder = "Write Query. (Example: Show 22c PN)";
+            break;
+          case 'adult(flycircuit)':
+            searchInput.placeholder = "Write Query. (Example: Show neurons in EB)";
+            break;
+          case 'adult(hemibrain)':
+            searchInput.placeholder = "Write Query. (Example: Show APL)";
+            break;
+          default:
+            searchInput.placeholder = "Write Query...";
+            break;
+        }
+      } else {
+        searchInput.placeholder = "Not Connected to Processor";
+        searchInput.disabled = true;
+      }
+    });
     this._neu3dSearchbar.appendChild(searchWrapper);
 
     window.neu3d_widget = this;
@@ -741,22 +762,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    *    if on startup, the dialog for removing neuron will not be shown
    */
   setProcessor(newProcessor: string, startUp: boolean = false) {
-    if (newProcessor === this._processor) {
-      return;
-    }
-
-    if (newProcessor === FFBOProcessor.NO_PROCESSOR){
-      (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to database.';
-      this._processorChanged.emit(newProcessor);
-      this._processor = newProcessor;
-      return;
-    }
-    if (!(newProcessor in this.ffboProcessors)){
-      return;
-    }
-  
-    this._processorChanged.emit(newProcessor);
-    this._processor = newProcessor;
+    super.setProcessor(newProcessor, startUp);
 
     let removeNeurons = false;
     this.neu3DReady.then(()=>{
@@ -804,12 +810,15 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
             // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
-            this.initClient().then((value) => {
-              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";  
-            }, (reason) => {
-              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
-            });
-            
+            this.initClient().then((res) => {
+              if (res) {
+                this.setHasClient(true);
+                (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";  
+              } else {
+                this.setHasClient(false);
+                (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
+              }
+            })
             break;
           case 'adult(flycircuit)':
             this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
@@ -819,11 +828,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
             // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
-            this.initClient().then((value) => {
-              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show neurons in ellipsoid body)";
-            }, (reason) => {
-              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
-            });
+            this.initClient().then((res) => {
+              if (res) {
+                this.setHasClient(true);
+              } else {
+                this.setHasClient(false);
+                (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
+              }
+            })
             
             break;
           case 'adult(hemibrain)':
@@ -835,14 +847,18 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             window.active_neu3d_widget = this;
             this.neu3d.resetView();
             // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
-            this.initClient().then((value) => {
-              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show APL)";
-            }, (reason) => {
-              (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
-            });
+            this.initClient().then((res) => {
+              if (res) {
+                this.setHasClient(true);
+              } else {
+                this.setHasClient(false);
+              }
+            })
+            
             break;
           default:
             (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to processor.';
+            this.setHasClient(false);
             console.error(`[Neu3D-Widget] Processor ${newProcessor} not recognized.`);
             break;
         }

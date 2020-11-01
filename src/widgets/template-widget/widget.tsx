@@ -108,9 +108,37 @@ export interface IFBLWidget extends Widget {
   info?: InfoWidget
 
 
+  /**
+   * The dirty state of the widget reflects whether there is unsaved changes 
+   * that is required to be manually saved to layout restorer for state-persistence.
+   * 
+   * The intended way of using the API is to call `setDirty` which will trigger an event
+   * `dirty` which can be used to handle changes in the dirty state.
+   * 
+   * setDirty to `true` (dirty) is typically emitted by the widget when the state changes.
+   * setDirty for `false` (clean) is typically emitted by the extension when the state changes
+   * have been saved by the user to the layout restorer's stateDB.
+   */
   isDirty: boolean
   dirty: ISignal<FBLWidget, boolean>;
   setDirty(state: boolean): void;
+
+  /**
+   * ClientConnection reflects if a widget has a running client connected to it.
+   * 
+   * A client can only be connected to a given widget when
+   * 1. there is a running kernel attached to the widget
+   * 2. there is a processor for the widget (that is not `no processor`)
+   * 3. flybrainlab is installed in the corresponding kernel
+   * The intended way of using the API is to use `checkForClient` to force a function
+   * call to the python kernel to check for if a client exists. 
+   * 
+   * The `clientConnect` signal can be used to trigger stateful rendering of 
+   * widgets based on the status of the client connection.
+   */
+  checkForClient(): Promise<boolean>;
+  hasClient: boolean;
+  clientConnect: ISignal<this, boolean>;
 }
 
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
@@ -217,6 +245,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
 
     // connect model changed signal to dirty state after initialization
     this.modelChanged.connect(() => {
+      this.setDirty(true);
+    })
+    // connect cient changed signal to dirty state after initialization
+    this.clientConnect.connect(() => {
       this.setDirty(true);
     })
   }
@@ -420,6 +452,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.comm?.dispose();
     }
     this.model?.dispose();
+    Signal.disconnectAll(this._clientConnect);
     Signal.disconnectAll(this._modelChanged);
     Signal.disconnectAll(this._gettingDisposed);
     super.dispose();
@@ -437,6 +470,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this.setDirty(true);
     if (newKernel === null){
       this.comm?.dispose();
+      this.setHasClient(false);
       return;
     }
     if (this.sessionContext.session) {
@@ -447,7 +481,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
-    } 
+      return;
+    } else {
+      this.setHasClient(false);
+    }
+   
   }
 
   /**
@@ -506,7 +544,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
    * Initialize FBL
    */
-  initFBL(): Promise<boolean> {
+  async initFBL(): Promise<boolean> {
     let code = this.initFBLCode();
     const model = new OutputAreaModel();
     const rendermime = new RenderMimeRegistry({ initialFactories });
@@ -522,11 +560,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
           title: `FBL Initialization Registration Failed`,
           body: outputArea,
         });
-        return Promise.reject('FBL Initialization Failed');
+        return Promise.resolve(false);
       }
     }, (failure) => {
       outputArea.dispose();
-      return Promise.reject(failure);
+      return Promise.resolve(false);
     });
   }
 
@@ -596,32 +634,54 @@ export class FBLWidget extends Widget implements IFBLWidget {
     const outputArea = new OutputArea({ model, rendermime });
     outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
     outputArea.node.style.display = 'block';
-    return outputArea.future.done.then((reply) => {
-      if (reply && reply.content.status === 'ok') {
-        outputArea.dispose();
-        return Promise.resolve(true);
-      } else {
-        showDialog({
-          title: `FBLClient Initialization Registration Failed`,
-          body: outputArea,
-        });
-        return Promise.reject('FBLClient Initialization Failed');
-      }
-    }, (failure) => {
-      outputArea.dispose();
-      return Promise.reject(failure);
-    });
-    
+    let reply = await this.sessionContext.session.kernel.requestExecute({ code: code }).done;
+    if (reply && reply.content.status === 'ok') {
+      // outputArea.dispose();
+      return Promise.resolve(true);
+    } else {
+      showDialog({
+        title: `FBLClient Initialization Registration Failed`,
+        body: outputArea,
+      });
+      return Promise.resolve(false);
+    }
   }
 
+  /**
+   * Check with backend to see if a client is connected
+   */
+  async checkForClient(): Promise<boolean> {
+    if (!this.sessionContext.session?.kernel){
+      return Promise.resolve(false); // no kernel
+    }
+    let code_to_send = `
+    try:
+        if not fbl.widget_manager.widgets['${this.id}'].client_id in fbl.client_manager.clients:
+            raise Exception('Client not found')
+    except:
+        raise Exception('Client not found')
+    `;
+    let reply = await this.sessionContext.session.kernel.requestExecute({ code: code_to_send }).done;
+    if (reply && reply.content.status === 'ok') {
+      this.setHasClient(true);
+      return Promise.resolve(true);
+    } else {
+      this.setHasClient(false);
+      return Promise.resolve(false);
+    }
+  }
 
   /**
   * Initialize FBLClient on associated kernel
+  * 
+  * Returns a promise that resolves to true only when 
+  * 1. kernel is connected, the comms is setup and the client is connected
+  * 2. kernel is connected, the comms is setup but initClient is false
   */
   async initFBLClient(initClient = true): Promise<boolean> {
-
-    if (!this.sessionContext.session?.kernel){
-      return Promise.resolve(void 0); // no kernel
+    if (!this.sessionContext.session?.kernel) {
+      this.setHasClient(false);
+      return Promise.resolve(false); // no kernel
     }
     await this.sessionContext.ready;
     const kernel = this.sessionContext.session.kernel;
@@ -631,15 +691,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       kernel.handleComms = true;
     }
 
-    // // Query comm by target_name
-    // const msg = await kernel.requestCommInfo({ target_name: this._commTarget });
-    // const existingComms = (msg.content as any).comms ?? {};
-    // const commExists = Object.keys(existingComms).length > 0;
-    // // kernel.registerCommTarget
-    // console.log('Existing Comms', existingComms, commExists);
-
-    // REMOVE: safeguard to ensure if this comm already exists
-    // if (!Object.keys(existingComms).length){
+    // register comm and callback
     kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
       if (commMsg.content.target_name !== this._commTarget) {
         return;
@@ -654,28 +706,42 @@ export class FBLWidget extends Widget implements IFBLWidget {
     });
     
     // import flybrainlab and add current widget to widget_manager in kernel
-    await this.initFBL().catch(() => {
+    let initFBLSuccess = await this.initFBL();
+    if (!initFBLSuccess){
       INotification.error(`
         FBL Initialization Failed. This is most likely because the flybrainlab python package
         cannot be found.
       `);
-      return;
-    });
-
-    if (initClient === false) {
-      return;
+      this.setHasClient(false);
+      return Promise.resolve(false);
     }
+
+    // on startup, initClient is false since there may already be a client in workspace
+    // that is connected to the current widget
+    if (initClient === false) {
+      let hasClient = await this.checkForClient();
+      this.setHasClient(hasClient);
+      return Promise.resolve(true);
+    }
+
     if (this.processor === FFBOProcessor.NO_PROCESSOR) {
-      return;
+      this.setHasClient(false);
+      return Promise.resolve(false);
     }
 
     // create fblclient instance with a processor connection.
-    await this.initClient().catch(() => {
+    let initClientSuccess = await this.initClient();
+    if (!initClientSuccess){
       INotification.error(`
         FBL Client Initialization Failed. See popup for more info
       `, { 'autoClose': 5000 });
-      return;
-    })
+      this.setHasClient(false);
+      return Promise.resolve(false);
+    };
+
+    this.setHasClient(true);
+    // resolves to true. Client connected
+    return Promise.resolve(true);
   }
 
   /**
@@ -705,6 +771,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (newProcessor === FFBOProcessor.NO_PROCESSOR){
       this._processorChanged.emit(newProcessor);
       this._processor = newProcessor;
+      this.setHasClient(false);
       this.setDirty(true);
       return;
     }
@@ -763,6 +830,19 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this._isDirty = state;
   }
 
+  get hasClient(): boolean {
+    return this._hasClient;
+  }
+
+  setHasClient(has: boolean) {
+    this._hasClient = has;
+    this._clientConnect.emit(has);
+  }
+
+  get clientConnect(): ISignal<this, boolean> {
+    return this._clientConnect;
+  }
+
   /**
   * The Elements associated with the widget.
   */
@@ -775,6 +855,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
   toolbar: Toolbar<Widget>;
   _commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   private _isDirty = false;
+  private _hasClient = false;
+  private _clientConnect = new Signal<this, boolean>(this);
   protected _dirty = new Signal<this, boolean>(this);
   comm: Kernel.IComm; // the actual comm object
   readonly name: string;
