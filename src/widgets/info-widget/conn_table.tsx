@@ -13,9 +13,13 @@ export class ConnTable {
     this.data = props.data;
     this.neu3d = props.neu3d;
     //instantiate Tabulator when element is mounted
+    let columns = this.columns;
+    if (!this.hasSynMorph(this.data)) {
+      columns = [this.columns[0], this.columns[2], this.columns[3]];
+    }
     this.tabulator = new Tabulator(props.container, {
       data: this.data, //link data to table
-      columns: this.columns, //define table columns
+      columns: columns, //define table columns
       tooltips: true,
       pagination: "local",
       paginationSize: 5,
@@ -52,10 +56,6 @@ export class ConnTable {
         this.neu3d.neu3d.highlight()
       }
     });
-
-    if (!this.hasSynMorph(this.data)) {
-      this.tabulator.deleteColumn("has_syn_morph");
-    }
   }
 
   /**
