@@ -139,6 +139,7 @@ export interface IFBLWidget extends Widget {
   checkForClient(): Promise<boolean>;
   hasClient: boolean;
   clientConnect: ISignal<this, boolean>;
+  setHasClient(has: boolean): void;
 }
 
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
@@ -834,6 +835,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return this._hasClient;
   }
 
+  /** Set the hasClient value and trigger a event */
   setHasClient(has: boolean) {
     this._hasClient = has;
     this._clientConnect.emit(has);
