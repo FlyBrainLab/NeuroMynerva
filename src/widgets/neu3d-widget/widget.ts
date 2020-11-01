@@ -2,7 +2,8 @@ import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
-import { ToolbarButton, showDialog, Dialog } from '@jupyterlab/apputils';
+import { Kernel } from '@jupyterlab/services';
+import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
 
@@ -209,6 +210,25 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   //   }
   //   super.onKernelChanged(context, args);
   // }
+
+  /**
+   * Block and unblock input field in neu3d when kernel is busy/not busy
+   * @param sess 
+   * @param status 
+   */
+  onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) {
+    super.onKernelStatusChanged(sess, status);
+
+    if (status === 'busy') {
+      (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).disabled = true;
+    } else {
+      if (this.hasClient) {
+        (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).disabled = false;
+      } else {
+        (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).disabled = true;
+      }
+    }
+  }
 
 
   /**
