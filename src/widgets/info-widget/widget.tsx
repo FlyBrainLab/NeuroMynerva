@@ -16,6 +16,8 @@ import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
 import '../../../style/widgets/info-widget/info.css';
 import { SessionDialogComponent } from '../template-widget';
+import { Neu3DWidget } from '../neu3d-widget';
+
 
 /**
  * The class of the extension
@@ -111,7 +113,7 @@ export class InfoWidget extends ReactWidget {
   constructor(props?: {
     data: IInfoData, 
     inWorkspace: (uname: string) => boolean,
-    neu3d: any
+    neu3d: Neu3DWidget
   }) {
     super();
     if (props?.data) {
@@ -153,11 +155,14 @@ export class InfoWidget extends ReactWidget {
 
     this.dataChanged.connect((sender, {data, inWorkspace, neu3d})=> 
     {
+      this.neu3d?.workspaceChanged.disconnect(this.onWorkspaceChanged, this);
+      neu3d?.workspaceChanged.connect(this.onWorkspaceChanged, this);
+
       this.data = data;
       this.neu3d = neu3d;
       this.inWorkspace = inWorkspace;
-      let preData = this.parseConnData(data.connectivity?.pre || empty_data.connectivity.pre.details, neu3d);
-      let postData = this.parseConnData(data.connectivity?.post || empty_data.connectivity.post.details, neu3d);
+      let preData = this._preData = this.parseConnData(data.connectivity?.pre || empty_data.connectivity.pre.details, neu3d);
+      let postData = this._postData = this.parseConnData(data.connectivity?.post || empty_data.connectivity.post.details, neu3d);
       this.tabConnPre.neu3d = neu3d;
       this.tabConnPost.neu3d = neu3d;
       this.tabConnPre.data = preData;
@@ -176,8 +181,63 @@ export class InfoWidget extends ReactWidget {
         this.tabConnPost.removeSynColumn();
       }
     }, this);
+
+    /**
+     * Sync up the display every second
+     */
+    setInterval(() => {
+      if (this._workspaceChanged) {
+        this.tabConnPre.tabulator.setData(this._preData);
+        this.tabConnPost.tabulator.setData(this._postData);
+        if (this.tabConnPre.hasSynMorph(this._preData)){
+          this.tabConnPre.addSynColumn();
+        } else {
+          this.tabConnPre.removeSynColumn();
+        }
+
+        if (this.tabConnPost.hasSynMorph(this._postData)){
+          this.tabConnPost.addSynColumn();
+        } else {
+          this.tabConnPost.removeSynColumn();
+        }
+        this.tabConnPost?.tabulator?.redraw();
+        this.tabConnPre?.tabulator?.redraw();
+        this._workspaceChanged = false;
+      }
+    }, 1000);
   }
-  
+
+  /**
+   * Whenver workspace changed in neu3d, we set workspacechanged flat to be true.
+   * The changes are gonig to be reflecfed in info widget when the info widget is clicked on.
+   * 
+   * @param sender 
+   * @param args 
+   */
+  onWorkspaceChanged(sender: Neu3DWidget, args: any) {
+    if (sender === this.neu3d) {
+      this.inWorkspace = sender.isInWorkspace;
+      this._workspaceChanged = true;
+    }
+  }
+
+  /**
+   * Update inWorkspace function
+   * used by neu3d to change the display status of the neurons
+   * the neu3d argument is used to check if the caller neu3d is the one currently being rendered
+   * @param inWorkspace 
+   * @param neu3d 
+   */
+  updateInWorkspace(inWorkspace: (rid: string) => boolean, neu3d: Neu3DWidget): void {
+    if (neu3d !== this.neu3d) {
+      return;
+    }
+    this.inWorkspace = inWorkspace;
+    // redraw
+
+    this.reset();
+  }
+
   /**
    * Parse Connectivity Data
    * @param connData connectivity data
@@ -205,7 +265,8 @@ export class InfoWidget extends ReactWidget {
 
 
   /** Reset Info to empty and re-render the table */
-  reset(clear=false) {
+  reset(clear = false) {
+    console.log('info reset called');
     this.tabConnPost?.tabulator?.redraw();
     this.tabConnPre?.tabulator?.redraw();
     this.dataChanged.emit({
@@ -334,10 +395,13 @@ export class InfoWidget extends ReactWidget {
   // dataConnPost: any;
   tabConnPre: ConnTable;
   tabConnPost: ConnTable;
+  private _workspaceChanged = false;
   data: IInfoData; // data to be displayed
-  neu3d: any;  // caller neu3d widget
+  neu3d: Neu3DWidget;  // caller neu3d widget
+  private _preData: any;
+  private _postData: any;
   dataChanged = new Signal<this, {
-    data: any; inWorkspace: any; neu3d: any, type?: 'neu3d' | 'data' | 'workspace'
+    data: any; inWorkspace: (rid: string)=>boolean; neu3d: Neu3DWidget, type?: 'neu3d' | 'data' | 'workspace'
   }>(this);
   inWorkspace: (rid: string)=>boolean;
 };
