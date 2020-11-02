@@ -96,4 +96,5 @@ Work in progress changes are tracked in the [V2 Milestone](https://github.com/Fl
 
 
 ## Getting Help
-The best way to get help right now is to [submit an issue](https://github.com/FlyBrainLab/NeuroMynerva/issues);
+The best way to get help right now is to [submit an issue](https://github.com/FlyBrainLab/NeuroMynerva/issues).
+You can also join our [Gitter](https://gitter.im/FlyBrainLab/community) and ask us questions there.
