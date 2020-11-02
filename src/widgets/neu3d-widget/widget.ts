@@ -481,11 +481,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    * 
    * @param uname -  uname of target object (neuron/synapse)
    */
-  async addByUname(uname: string): Promise<any> {
+  async addByUname(uname: string | Array<string>): Promise<any> {
     let code = `
     res = {}
     res['verb'] = 'add'
-    res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
+    res['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
     code = code + this.querySender();
@@ -500,11 +500,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    *
    * @param uname -  uname of target object (neuron/synapse)
    */
-  async removeByUname(uname: string): Promise<any> {
+  async removeByUname(uname: string | Array<string>): Promise<any> {
     let code = `
     res = {}
     res['verb'] = 'remove'
-    res['query']= [{'action': {'method': {'query': {'uname': '${uname}'}}},
+    res['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
     code = code + this.querySender();
@@ -519,12 +519,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    *
    * @param rid -  rid of target object (neuron/synapse)
    */
-  async addByRid(rid: string): Promise<any> {
+  async addByRid(rid: string | Array<string>): Promise<any> {
     let code = `
     res = {}
     res['verb'] = 'add'
-    res['query']= [{'action': {'method': {'query': {'rid': '${rid}'}}},
-                    'object': {'rid': '${rid}'}}]
+    res['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+                    'object': {'rid': ${JSON.stringify(rid)}}}]
     res['format'] = 'morphology'
     `;
     code = code + this.querySender();
@@ -539,12 +539,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    *
    * @param rid -  rid of target object (neuron/synapse)
    */
-  async removeByRid(rid: string): Promise<any> {
+  async removeByRid(rid: string | Array<string>): Promise<any> {
     let code = `
     res = {}
     res['verb'] = 'remove'
-    res['query']= [{'action': {'method': {'query': {'rid': '${rid}'}}},
-                    'object': {'rid': '${rid}'}}]
+    res['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+                    'object': {'rid': ${JSON.stringify(rid)}}}]
     `;
     code = code + this.querySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
