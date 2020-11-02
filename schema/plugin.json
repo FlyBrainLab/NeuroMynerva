@@ -135,6 +135,27 @@
                 "DEBUG": {
                     "debug": false
                 }
+            },
+            {
+                "NAME": "larva(l1em)",
+                "AUTH": {
+                    "ssl": true,
+                    "authentication": true,
+                    "ca_cert_file": "isrgrootx1.pem",
+                    "intermediate_cert_file": "letsencryptauthorityx3.pem"
+                },
+                "USER": {
+                    "user": "guest",
+                    "secret": "FENIjf983nFi9*12"
+                },
+                "SERVER": {
+                    "IP": "larva.neuronlp.fruitflybrain.org",
+                    "dataset": ["default"],
+                    "realm": "realm1"
+                },
+                "DEBUG": {
+                    "debug": false
+                }
             }
         ]
       }
