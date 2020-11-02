@@ -95,11 +95,11 @@ export class ConnTable {
    * Schema for the synapse column
    */
   readonly synColumn = {
-    title: "+/- Synapse",
+    title: "Synapse",
     field: "has_syn_morph",
     hozAlign: "center",
     headerSort:false,
-    width: 70,
+    width: 55,
     formatter: (cell: any, formatterParams: any) => {
       if (cell.getValue()) {
         if (this.neu3d?.isInWorkspace(cell.getData().syn_rid)) {
@@ -139,12 +139,12 @@ export class ConnTable {
    */
   readonly columns = [
     {
-      title: "+/- Neuron",
+      title: "Neuron",
       field: "has_morph",
       hozAlign: "center",
       headerFilter: false,
       headerSort:false,
-      width: 70,
+      width: 50,
       formatter: (cell: any, formatterParams: any) => {
         if (cell.getValue()) {
           if (this.neu3d?.isInWorkspace(cell.getData().rid)) {
@@ -193,9 +193,9 @@ export class ConnTable {
       hozAlign: "center",
       sorter:"number",
       headerFilter: "number",
-      headerFilterPlaceholder: "at least",
+      headerFilterPlaceholder: ">=",
       headerFilterFunc: ">=",
-      width: 70
+      width: 55
     }
   ];
 

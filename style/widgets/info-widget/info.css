@@ -75,14 +75,17 @@ justify-content: center;
 .jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="none"] .tabulator-col-title {
     font-weight: normal;
     font-style: normal;
+    text-decoration: none;
 }
 
 .jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="asc"] .tabulator-col-title {
     font-weight: bold;
     font-style: italic;
+    text-decoration: overline;
 }
 
 .jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="desc"] .tabulator-col-title {
     font-weight: bold;
     font-style: oblique;
+    text-decoration: underline;
 }

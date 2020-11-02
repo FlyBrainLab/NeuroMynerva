@@ -248,7 +248,7 @@ export class InfoWidget extends ReactWidget {
    * Parse Connectivity Data
    * @param connData connectivity data
    */
-  parseConnData(connData: any, neu3d: any) {
+  parseConnData(connData: any, neu3d: Neu3DWidget) {
     let new_data = [];
     for (let item of connData["details"]) {
       let neuron_data = {
