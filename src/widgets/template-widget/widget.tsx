@@ -633,6 +633,12 @@ export class FBLWidget extends Widget implements IFBLWidget {
     const model = new OutputAreaModel();
     const rendermime = new RenderMimeRegistry({ initialFactories });
     const outputArea = new OutputArea({ model, rendermime });
+    
+    // immediately resolve to false if no kernel is found
+    if (!this.sessionContext?.session?.kernel) {
+      return Promise.resolve(false);
+    }
+
     outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
     outputArea.node.style.display = 'block';
     let reply = await this.sessionContext.session.kernel.requestExecute({ code: code }).done;
