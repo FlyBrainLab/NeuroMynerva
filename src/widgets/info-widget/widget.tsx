@@ -6,7 +6,9 @@ import {
 import { 
   ReactWidget, 
   UseSignal,
-  ToolbarButtonComponent
+  ToolbarButtonComponent,
+  showDialog,
+  Dialog
  } from'@jupyterlab/apputils';
 
 import {
@@ -17,6 +19,7 @@ import { ConnSVG } from './conn_svg';
 import '../../../style/widgets/info-widget/info.css';
 import { SessionDialogComponent } from '../template-widget';
 import { Neu3DWidget } from '../neu3d-widget';
+
 
 
 /**
@@ -50,6 +53,10 @@ const CONTAINER_CLASS = 'jp-FBL-Info-sectionContainer';
  */
 const CONNTABLE_CLASS = 'jp-FBL-Info-Conn-Table';
 
+/**
+ * The class name added to a conn table toolbar for add/remove all neurons
+ */
+const CONNTABLE_TOOLBAR = 'jp-FBL-Info-Conn-Table-Toolbar'
 /**
  * An interface for data that is sent to info widget
  */
@@ -99,8 +106,8 @@ interface IInfoData {
  */
 const empty_data: IInfoData = {
   connectivity: {
-    pre: {details: [], summary: {profile: {}, number: -1}},
-    post: {details: [], summary: {profile: {}, number: -1}}
+    pre: {details: [], summary: {profile: {}, number: 0}},
+    post: {details: [], summary: {profile: {}, number: 0}}
   }, 
   summary: {}
 };
@@ -386,11 +393,47 @@ export class InfoWidget extends ReactWidget {
           }}
         </UseSignal>
       }></Components.CollapsibleSection>
-      <Components.CollapsibleSection title={'Presynaptic Partners'} children={
-        <div className={CONNTABLE_CLASS} id="info-connTable-pre"/>
+        <Components.CollapsibleSection title={'Presynaptic Partners'} children={
+          <>
+            <UseSignal
+              signal={this.dataChanged}
+              initialArgs={{
+                data: this.data,
+                inWorkspace: this.inWorkspace,
+                neu3d: undefined
+              }}
+            >
+              {(_, val) => {
+                if (val.data?.connectivity) {
+                  return <Components.ConnTableToolbar connData={val.data.connectivity.pre} neu3d={val.neu3d}/>
+                } else {
+                  return <Components.ConnTableToolbar connData={empty_data.connectivity.pre} neu3d={val.neu3d}/>
+                }
+              }}
+            </UseSignal>
+            <div className={CONNTABLE_CLASS} id="info-connTable-pre" />
+          </>
       }></Components.CollapsibleSection>
-      <Components.CollapsibleSection title={'Postsynaptic Partners'} children={
-        <div className={CONNTABLE_CLASS} id="info-connTable-post"/>
+        <Components.CollapsibleSection title={'Postsynaptic Partners'} children={
+          <>
+          <UseSignal
+              signal={this.dataChanged}
+              initialArgs={{
+                data: this.data,
+                inWorkspace: this.inWorkspace,
+                neu3d: undefined
+              }}
+            >
+              {(_, val) => {
+                if (val.data?.connectivity) {
+                  return <Components.ConnTableToolbar connData={val.data.connectivity.post} neu3d={val.neu3d}/>
+                } else {
+                  return <Components.ConnTableToolbar connData={empty_data.connectivity.post} neu3d={val.neu3d}/>
+                }
+              }}
+            </UseSignal>
+          <div className={CONNTABLE_CLASS} id="info-connTable-post" />
+          </>
       }></Components.CollapsibleSection>
     </div>
     );
@@ -444,5 +487,199 @@ namespace Components {
         </>
       )
     }
-  } 
+  }
+
+  export class ConnTableToolbar extends React.Component<{
+    connData: any,
+    neu3d: Neu3DWidget,
+  }>{
+
+    
+    get hasSyn(): boolean {
+      if (!this.props.connData?.details) {
+        return false;
+      }
+      return this.hasSynMorph(this.props.connData.details);
+    }
+
+    get hasNeu(): boolean {
+      if (!this.props.connData?.details) {
+        return false;
+      }
+      return (this.props.connData.details.length > 0);
+    }
+
+    get numNeu(): number {
+      if (this.props.connData?.details) {
+        return this.props.connData?.details.length;
+      }
+      return 0;
+    }
+
+    get numSyn(): number {
+      let count = 0;
+      if (this.props.connData?.details) {
+        for (let entry of this.props.connData.details) {
+          if (entry.has_syn_morph) {
+            count += 1;
+          }
+        }
+      }
+      return count;
+    }
+
+    hasSynMorph(connDataDetails: Array<any>) {
+      for (let entry of connDataDetails) {
+        if (entry.has_syn_morph) {
+          return true
+        }
+      }
+      return false;
+    }
+  
+    addAllNeurons() {
+      if (!this.hasNeu) {
+        return;
+      }
+      let rid_list: Array<string> = [];
+      for (let entry of this.props.connData.details) {
+        if (!this.props.neu3d.isInWorkspace(entry.rid)) {
+          rid_list.push(entry.n_rid);
+        }
+      }
+  
+      showDialog({
+        title: `Add all Neurons to Neu3D Widget?`,
+        body: `Total ${this.numNeu} neurons, ${rid_list.length} to be added.`,
+        buttons: [
+          Dialog.cancelButton(),
+          Dialog.okButton({label: 'ADD'})
+        ]
+      }).then(result =>{
+        if (result.button.accept) {
+
+          this.props.neu3d.addByRid(rid_list);
+        } 
+      });
+    }
+
+    removeAllNeurons() {
+      if (!this.hasNeu) {
+        return;
+      }
+      let rid_list: Array<string> = [];
+      for (let entry of this.props.connData.details) {
+        if (this.props.neu3d.isInWorkspace(entry.rid)) {
+          rid_list.push(entry.n_rid);
+        }
+      }
+  
+      showDialog({
+        title: `Remove all Neurons from Neu3D Widget?`,
+        body: `Total ${this.numNeu} neurons, ${rid_list.length} to be removed.`,
+        buttons: [
+          Dialog.cancelButton(),
+          Dialog.okButton({label: 'REMOVE'})
+        ]
+      }).then(result =>{
+        if (result.button.accept) {
+          this.props.neu3d.removeByRid(rid_list);
+        } 
+      });
+    }
+
+    addAllSynapses() {
+      if (!this.hasSyn) {
+        return;
+      }
+      let rid_list: Array<string> = [];
+      for (let entry of this.props.connData.details) {
+        if (entry.has_syn_morph) {
+          if (!this.props.neu3d.isInWorkspace(entry.syn_rid)) {
+            rid_list.push(entry.s_rid);
+          }
+        }
+      }
+  
+      showDialog({
+        title: `Add all synapse morphologies to Neu3D Widget?`,
+        body: `Total ${this.numSyn} connections to partner neurons have synapse morphologies, ${rid_list.length} to be added.`,
+        buttons: [
+          Dialog.cancelButton(),
+          Dialog.okButton({label: 'ADD'})
+        ]
+      }).then(result =>{
+        if (result.button.accept) {
+          this.props.neu3d.addByRid(rid_list);
+        } 
+      });
+    }
+
+    removeAllSynapses() {
+      if (!this.hasSyn) {
+        return;
+      }
+      let rid_list: Array<string> = [];
+      for (let entry of this.props.connData.details) {
+        if (entry.has_syn_morph) {
+          if (this.props.neu3d.isInWorkspace(entry.syn_rid)) {
+            rid_list.push(entry.s_rid);
+          } 
+        }
+      }
+      showDialog({
+        title: `Remove all synapse morphologies from Neu3D Widget?`,
+        body: `Total ${this.numSyn} connections to partner neruons have synapse morphologies, ${rid_list.length} to be removed.`,
+        buttons: [
+          Dialog.cancelButton(),
+          Dialog.okButton({label: 'REMOVE'})
+        ]
+      }).then(result =>{
+        if (result.button.accept) {
+          this.props.neu3d.removeByRid(rid_list);
+        } 
+      });
+    }
+
+    render(): React.ReactNode {
+      return (
+        <>
+          <div
+            className={`jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput ${CONNTABLE_TOOLBAR}`}
+            data-mime-type={"text/markdown"}
+          >
+            <table>
+              <tbody>
+                <tr>
+                  <td>{this.numNeu} Neurons</td>
+                  <td><a
+                    onClick={() => this.addAllNeurons()}
+                    style={{'display': this.hasNeu ? 'inline' : 'none'}}
+                  ><i className={'fa fa-plus-circle'}></i></a>
+                  <a
+                    onClick={() => this.removeAllNeurons()}
+                    style={{'display': this.hasNeu ? 'inline' : 'none'}}
+                  ><i className={'fa fa-minus-circle'}></i></a>
+                  </td>
+                  {/* <button onClick={()=>this.removeAllNeurons()}>-</button> */}
+                  <td>{this.numSyn} have Synapse Morphologies</td>
+                  <td><a
+                    onClick={() => this.addAllSynapses()}
+                    style={{'display': this.hasSyn ? 'inline' : 'none'}}
+                  ><i className={'fa fa-plus-circle'}></i></a>
+                  <a
+                    onClick={() => this.removeAllSynapses()}
+                    style={{'display': this.hasSyn ? 'inline' : 'none'}}
+                  ><i className={'fa fa-minus-circle'}></i></a>
+                  </td>
+                  {/* <button onClick={()=>this.addAllSynapses()}>+</button>
+                  <button onClick={()=>this.removeAllSynapses()}>-</button> */}
+                  </tr>
+              </tbody>
+            </table>
+          </div>
+        </>
+      )
+    }
+  }
 }
