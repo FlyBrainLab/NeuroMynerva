@@ -150,7 +150,7 @@
                 },
                 "SERVER": {
                     "IP": "larva.neuronlp.fruitflybrain.org",
-                    "dataset": ["default"],
+                    "dataset": ["l1em"],
                     "realm": "realm1"
                 },
                 "DEBUG": {

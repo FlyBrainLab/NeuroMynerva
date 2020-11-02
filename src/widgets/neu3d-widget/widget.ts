@@ -107,7 +107,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         searchInput.disabled = false;
         switch (this.processor) {
           case 'larva(l1em)':
-            searchInput.placeholder = "Write Query. (Example: Show 22c PN)";
+            searchInput.placeholder = "Write Query. (Example: Show OSNs)";
             break;
           case 'adult(flycircuit)':
             searchInput.placeholder = "Write Query. (Example: Show neurons in EB)";
@@ -187,29 +187,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       })
     }
   }
-
-  // /**
-  //  * When kernel does not exist, hide search bar
-  //  * @param contexts
-  //  * @param args 
-  //  */
-  // async onKernelChanged(
-  //   context: ISessionContext,
-  //   args: Session.ISessionConnection.IKernelChangedArgs
-  // ){
-  //   const newKernel: Kernel.IKernelConnection | null = args.newValue;
-  //   const inputWrapperDiv = this._neu3dSearchbar.children[0] as HTMLDivElement;
-  //   if (newKernel === null ){  
-  //     for (const el of inputWrapperDiv.children) {
-  //       (el as HTMLElement).style.display = "none";
-  //     }
-  //   } else {
-  //     for (const el of inputWrapperDiv.children) {
-  //       (el as HTMLElement).style.display = "inline-block";
-  //     }
-  //   }
-  //   super.onKernelChanged(context, args);
-  // }
 
   /**
    * Block and unblock input field in neu3d when kernel is busy/not busy
