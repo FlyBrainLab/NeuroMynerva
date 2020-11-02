@@ -22,8 +22,8 @@ export class ConnTable {
       columns: columns, //define table columns
       tooltips: true,
       pagination: "local",
-      paginationSize: 5,
-      page: 3,
+      paginationSize: 8,
+      // page: 3,
       initialSort: [{ column: "number", dir: "desc" }],
       layout: "fitColumns",
       cellMouseOver: (e: any, cell:any) => {
@@ -95,16 +95,10 @@ export class ConnTable {
    * Schema for the synapse column
    */
   readonly synColumn = {
-    title: "Synapse",
+    title: "+/- Synapse",
     field: "has_syn_morph",
     hozAlign: "center",
-    sorter: "boolean",
-    headerFilter: true,
-    headerFilterParams: {
-      true: "True",
-      false: "False"
-    },
-    headerFilterPlaceholder: "in workspace",
+    headerSort:false,
     width: 70,
     formatter: (cell: any, formatterParams: any) => {
       if (cell.getValue()) {
@@ -145,16 +139,11 @@ export class ConnTable {
    */
   readonly columns = [
     {
-      title: "Neuron",
+      title: "+/- Neuron",
       field: "has_morph",
       hozAlign: "center",
-      headerFilter: true,
-      headerFilterParams: {
-        true: "True",
-        false: "False"
-      },
-      sorter:"boolean",
-      headerFilterPlaceholder: "in workspace",
+      headerFilter: false,
+      headerSort:false,
       width: 70,
       formatter: (cell: any, formatterParams: any) => {
         if (cell.getValue()) {
@@ -204,7 +193,7 @@ export class ConnTable {
       hozAlign: "center",
       sorter:"number",
       headerFilter: "number",
-      headerFilterPlaceholder: "at least...",
+      headerFilterPlaceholder: "at least",
       headerFilterFunc: ">=",
       width: 70
     }

@@ -44,6 +44,12 @@ const SECTION_BTN_HEADER_CLASS = 'jp-FBL-Info-sectionHeader jp-FBL-Info-section-
  */
 const CONTAINER_CLASS = 'jp-FBL-Info-sectionContainer';
 
+
+/**
+ * The class name added to a conn table
+ */
+const CONNTABLE_CLASS = 'jp-FBL-Info-Conn-Table';
+
 /**
  * An interface for data that is sent to info widget
  */
@@ -266,7 +272,6 @@ export class InfoWidget extends ReactWidget {
 
   /** Reset Info to empty and re-render the table */
   reset(clear = false) {
-    console.log('info reset called');
     this.tabConnPost?.tabulator?.redraw();
     this.tabConnPre?.tabulator?.redraw();
     this.dataChanged.emit({
@@ -382,10 +387,10 @@ export class InfoWidget extends ReactWidget {
         </UseSignal>
       }></Components.CollapsibleSection>
       <Components.CollapsibleSection title={'Presynaptic Partners'} children={
-        <div id="info-connTable-pre"/>
+        <div className={CONNTABLE_CLASS} id="info-connTable-pre"/>
       }></Components.CollapsibleSection>
       <Components.CollapsibleSection title={'Postsynaptic Partners'} children={
-        <div id="info-connTable-post"/>
+        <div className={CONNTABLE_CLASS} id="info-connTable-post"/>
       }></Components.CollapsibleSection>
     </div>
     );
