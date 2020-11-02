@@ -28,14 +28,13 @@ NeuroMynerva front-end currently includes 4 key components:
 NeuroMynerva has the following requirements:
 
 - Python Version 3.6+
-- Jupyter: Developed on `JupyterLab 2.1.5`, Tested on `JupyterLab 2.2.8` (Oct. 23rd 2020)
-- Public packages (see `requirements.txt`)
-- Inhouse packages: 
-    * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git)
-    * [FBLClient](https://github.com/FlyBrainLab/FBLClient.git)
+- JupyterLab: Developed on `JupyterLab 2.1.5`, Tested on `JupyterLab 2.2.8` (Nov. 2nd 2020)
+- Packages: 
+    * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git) and packages required therein,
+    * [FBLClient](https://github.com/FlyBrainLab/FBLClient.git) and packages required therein.
 
 ### Installation of Full FlyBrainLab Eco-System 
-Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab/blob/master/README.md.
+Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab#readme.
 
 ### Installation of NeuroMynerva
 You can either install NeuroMynerva via command line as 
@@ -43,7 +42,7 @@ You can either install NeuroMynerva via command line as
 jupyter labextension install @flybrainlab/neuromynerva
 ```
 
-or via JupyterLab's extension panel:
+or via JupyterLab's extension panel within a runnig JupyterLab instance:
 <center><img src="img/neuromynerva_installation_menu.png" width="580"/></center>
 
 ### Develop NeuroMynerva
@@ -54,8 +53,9 @@ conda create -n fblv2 python=3.7 nodejs scipy pandas cookiecutter git yarn -c co
 conda activate fblv2
 pip install jupyter jupyterlab==2.2.8
 pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx msgpack
-# If on Windows, execute the following:
-pip install pypiwin32
+
+# if on Windows, execute the following:
+# pip install pypiwin32
 
 # install inhouse packages and NeuroMynerva
 git clone https://github.com/FlyBrainLab/NeuroMynerva.git
