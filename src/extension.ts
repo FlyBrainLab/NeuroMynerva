@@ -339,7 +339,12 @@ async function activateFBL(
       ffboProcessorSetting = setting;
 
       if (masterWidget === undefined){
-        masterWidget = new MasterWidget(labShell, fblWidgetTrackers, ffboProcessorSetting);
+        masterWidget = new MasterWidget(
+          app.serviceManager.sessions,
+          labShell,
+          fblWidgetTrackers,
+          ffboProcessorSetting
+        );
         masterWidget.id = 'FBL-Master';
         masterWidget.title.caption = 'FBL Widgets and Running Sessions';
         masterWidget.title.icon = masterIcon;
@@ -532,7 +537,6 @@ async function activateFBL(
       return FBL.hasRunningSession(current);
     }
   });
-
 
   // workspace
   commands.addCommand(CommandIDs.CreateWorkspace, {
