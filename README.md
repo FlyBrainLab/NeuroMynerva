@@ -1,4 +1,4 @@
-**[Get Start](#get-started)** |
+**[Get Started](#get-started)** |
 **[Installation](#installation)** |
 **[Develop](#develop-neuromynerva)** |
 **[Getting help](#getting-help)** 
@@ -12,9 +12,10 @@ NeuroMynerva V2 is currently in _alpha_, most main user-facing features have bee
 NeuroMynerva V2 is hosted on [NPM](https://www.npmjs.com/package/@flybrainlab/neuromynerva) 
 Please follow installation instruction detailed in [Installation](#installation) section.
 
-### Tutorials
+### Using NeuroMynerva and FlyBrainLab
+The best way to get started with NeuroMynerva is to look at the instructions on the [FlyBrainLab's page](https://github.com/FlyBrainLab/FlyBrainLab) and the [Wiki](https://github.com/FlyBrainLab/FlyBrainLab/wiki) therein.
 
-A set of tutorials are hosted at our [Tutorials](https://github.com/FlyBrainLab/Tutorials). We suggest starting with osn_ephys_tutorial at this stage as it contains pictures showing the steps that need to be taken to get started with the frontend.
+For developers interested in the technical aspects of the NeuroMynerva platform, you can refer to the [NeuroMynerva Wiki](https://github.com/FlyBrainLab/NeuroMynerva/wiki).
 
 ### Key Components
 NeuroMynerva front-end currently includes 4 key components:
@@ -46,11 +47,17 @@ or via JupyterLab's extension panel within a runnig JupyterLab instance:
 <center><img src="img/neuromynerva_installation_menu.png" width="580"/></center>
 
 ### Develop NeuroMynerva
-We use [Anaconda](https://www.anaconda.com/) to manage development environment, you can use the following script to setup the development environment. 
+We use [Anaconda](https://www.anaconda.com/) to manage development environment, you are encouraged to first create a Conda environment 
+
 ```bash
 # create conda environment and install python dependencies
-conda create -n fblv2 python=3.7 nodejs scipy pandas cookiecutter git yarn -c conda-forge -y
-conda activate fblv2
+conda create -n fbl python=3.7 nodejs scipy pandas cookiecutter git yarn -c conda-forge -y
+conda activate fbl
+```
+
+You can then use the following script to setup the development environment. 
+```bash
+# create conda environment and install python dependencies
 pip install jupyter jupyterlab==2.2.8
 pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx msgpack
 
@@ -68,11 +75,6 @@ python setup.py develop
 cd ../NeuroMynerva
 jlpm
 jlpm run build
-
-# if in installation mode
-jupyter labextension install .
-jupyter lab build
-jupyter lab
 
 # if in development mode
 jupyter labextension link .
