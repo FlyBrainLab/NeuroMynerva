@@ -436,8 +436,7 @@ async function activateFBL(
         icon:NEU3DICON,
         moduleArgs:{
           processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
-          info:infoWidget, 
-          _count: fblWidgetTrackers.trackers.Neu3D.size, 
+          info:infoWidget,
           ...args
         },
         fbltracker: fblWidgetTrackers,
@@ -457,7 +456,6 @@ async function activateFBL(
         moduleArgs: {
           processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
           info:infoWidget,
-          _count: fblWidgetTrackers.trackers.Neu3D.size,
           ...args
         },
         fbltracker: fblWidgetTrackers,
@@ -478,7 +476,6 @@ async function activateFBL(
           icon:NEUGFXICON,
           moduleArgs:{
             processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
-            _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
           fbltracker: fblWidgetTrackers,
@@ -499,7 +496,6 @@ async function activateFBL(
           icon:NEUGFXICON,
           moduleArgs:{
             processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
-            _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
           fbltracker: fblWidgetTrackers,
@@ -584,7 +580,6 @@ async function activateFBL(
             info: infoWidget, 
             processor: processor, 
             sessionContext: notebook_panel.sessionContext, 
-            _count: fblWidgetTrackers.trackers.Neu3D.size,
             ...args
           },
           fbltracker: fblWidgetTrackers,
@@ -603,7 +598,6 @@ async function activateFBL(
             clientId: neu3d_panel.content.clientId,
             processor: processor,
             sessionContext: notebook_panel.sessionContext, 
-            _count: fblWidgetTrackers.trackers.NeuGFX.size,
             ...args
           },
           fbltracker: fblWidgetTrackers,

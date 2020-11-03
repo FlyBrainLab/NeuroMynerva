@@ -62,7 +62,7 @@ declare global {
 export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions) {
     super({
-      name:options.name || `Neu3D-${options._count ? Private.count+=options._count : Private.count++}`,
+      name:options.name || `Neu3D-${Private.count++}`,
       icon: Icons.neu3DIcon,
       ...options});
 

@@ -159,13 +159,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
       sessionContext,
       icon,
       clientId,
-      ffboProcessors,
-      _count
+      ffboProcessors
     } = options;
     this.ffboProcessors = ffboProcessors;
     
     // keep track of number of instances
-    Private.count += _count ?? 0;
     const count = Private.count++;
 
     // specify name

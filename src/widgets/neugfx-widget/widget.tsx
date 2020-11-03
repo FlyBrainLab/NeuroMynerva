@@ -31,7 +31,7 @@ declare global {
 export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions, iFrameSrc?: string) {
     super({
-      name:options.name || `NeuGFX-${options._count ? Private.count+=options._count : Private.count++}`, 
+      name:options.name || `NeuGFX-${Private.count++}`, 
       icon: Icons.neuGFXIcon,
       ...options});
     this.addClass(NeuGFX_CLASS_JLab);
