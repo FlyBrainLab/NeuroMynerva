@@ -2,7 +2,8 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin,
   ILayoutRestorer,
-  ILabStatus
+  ILabStatus,
+  ILabShell
 } from '@jupyterlab/application';
 
 import {
@@ -245,7 +246,7 @@ namespace CommandIDs {
 const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
   id: '@flybrainlab/neuromynerva:plugin',
   autoStart: true,
-  requires: [ICommandPalette, ILauncher, ILayoutRestorer, ISettingRegistry, ILabStatus],
+  requires: [ICommandPalette, ILauncher, ILayoutRestorer, ISettingRegistry, ILabStatus, ILabShell],
   provides: IFBLWidgetTrackers,
   activate: activateFBL
 };
@@ -261,7 +262,8 @@ async function activateFBL(
   launcher: ILauncher,
   restorer: ILayoutRestorer,
   settings: ISettingRegistry,
-  status: ILabStatus
+  status: ILabStatus,
+  labShell: ILabShell
 ): Promise<IFBLWidgetTrackers> {
   console.log("FBL Extension Activated");
   const fblWidgetTrackers = new FBLWidgetTrackers({
@@ -337,7 +339,7 @@ async function activateFBL(
       ffboProcessorSetting = setting;
 
       if (masterWidget === undefined){
-        masterWidget = new MasterWidget(fblWidgetTrackers, ffboProcessorSetting);
+        masterWidget = new MasterWidget(labShell, fblWidgetTrackers, ffboProcessorSetting);
         masterWidget.id = 'FBL-Master';
         masterWidget.title.caption = 'FBL Widgets and Running Sessions';
         masterWidget.title.icon = masterIcon;

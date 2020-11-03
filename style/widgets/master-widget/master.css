@@ -112,6 +112,7 @@ background-color: rgba(153, 153, 153, 0.2);
 .jp-FBL-Master-itemDispose.jp-mod-styled {
     margin: 0px 4px;
     color: var(--jp-warn-color1);
+    font-size: var(--jp-ui-font-size0);
     font-weight: 500;
     background-color: transparent;
     height: var(--jp-private-running-shutdown-button-height);

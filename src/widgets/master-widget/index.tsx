@@ -6,7 +6,8 @@ import {
   ToolbarButtonComponent,
   UseSignal,
   Dialog, showDialog
-} from'@jupyterlab/apputils';
+} from '@jupyterlab/apputils';
+import { ILabShell } from '@jupyterlab/application';
 import {
   ISettingRegistry
 } from '@jupyterlab/settingregistry';
@@ -66,11 +67,13 @@ const DISPOSE_BUTTON_CLASS = 'jp-FBL-Master-itemDispose';
 */
 export class MasterWidget extends ReactWidget {
   constructor(
+    labShell: ILabShell,
     fbltrackers: IFBLWidgetTrackers,
     ffboProcessorSetting: ISettingRegistry.ISettings
   ) {
     console.log('Master Widget Created');
     super();
+    this.labShell = labShell;
     this.fbltrackers = fbltrackers;
     this.ffboProcessorSetting = ffboProcessorSetting;
     this.addClass(MASTER_CLASS_JLab);
@@ -78,13 +81,19 @@ export class MasterWidget extends ReactWidget {
   }
 
   protected render() {
-    return (<FBLWidgetReact.FBLWidgetTrackersComponent settings={this.ffboProcessorSetting} fbltrackers={this.fbltrackers}/>);
+    return (
+      <FBLWidgetReact.FBLWidgetTrackersComponent
+        settings={this.ffboProcessorSetting}
+        fbltrackers={this.fbltrackers}
+        labShell={this.labShell}
+      />);
   }
 
   /**
   * The Elements associated with the widget.
   */
   private fbltrackers: FBLWidgetTrackers;
+  readonly labShell: ILabShell;
   ffboProcessorSetting: ISettingRegistry.ISettings
 };
 
@@ -94,8 +103,9 @@ export class MasterWidget extends ReactWidget {
  */
 namespace FBLWidgetReact {
   export function FBLWidgetTrackersComponent(props: {
-    fbltrackers: FBLWidgetTrackers;
-    settings: ISettingRegistry.ISettings;
+    fbltrackers: FBLWidgetTrackers,
+    settings: ISettingRegistry.ISettings,
+    labShell: ILabShell
   }) {
     const trackers_arr = Object.values(props.fbltrackers.trackers);
     const trackers_names = Object.keys(props.fbltrackers.trackers);
@@ -105,7 +115,7 @@ namespace FBLWidgetReact {
           <FFBOProcessorButton settings={props.settings}></FFBOProcessorButton>
         </div>
         {trackers_arr.map((tracker, i) => (
-          <Section key={i} name={trackers_names[i]} tracker={tracker}/>
+          <Section key={i} name={trackers_names[i]} tracker={tracker} labShell={props.labShell}/>
         ))}
       </>
     );
@@ -117,7 +127,7 @@ namespace FBLWidgetReact {
    *
    * It is specialized for each based on its props.
    */
-  export function Section(props: {name: string; tracker: FBLTracker}) {
+  export function Section(props: {name: string; tracker: FBLTracker, labShell:ILabShell}) {
     function onClose() {
       void showDialog({
         title: `Close All ${props.name}?`,
@@ -147,22 +157,22 @@ namespace FBLWidgetReact {
             />
           </header>
           <div className={CONTAINER_CLASS}>
-            <List tracker={props.tracker} />
+            <List tracker={props.tracker} labShell={props.labShell} />
           </div>
         </>
       </div>
     );
   }
 
-  function List(props: { tracker: FBLTracker}) {
+  function List(props: { tracker: FBLTracker, labShell: ILabShell}) {
     return (
       <UseSignal signal={props.tracker.currentChanged}>
-        {() => <ListView tracker={props.tracker}/>}
+        {() => <ListView tracker={props.tracker} labShell={props.labShell}/>}
       </UseSignal>
     );
   }
   
-  function ListView(props: { tracker: FBLTracker }) {
+  function ListView(props: { tracker: FBLTracker, labShell: ILabShell }) {
     const panel_arr: Array<FBLPanel> = [];
     props.tracker.forEach((panel) => {
       panel_arr.push(panel);
@@ -170,7 +180,7 @@ namespace FBLWidgetReact {
     return (
       <ul className={LIST_CLASS}>
         {panel_arr.map((panel, i)=>(
-          <Item key={i} panel={panel}/>
+          <Item key={i} panel={panel} labShell={props.labShell}/>
         ))}
       </ul>
     );
@@ -180,7 +190,7 @@ namespace FBLWidgetReact {
    * Renderes a single panel as a list item with some buttons
    * @param props 
    */
-  function Item(props: { panel: FBLPanel }) {
+  function Item(props: { panel: FBLPanel, labShell: ILabShell }) {
     const {panel} = props;
     const widget = panel.content;
     let icon: LabIcon = fblIcon;
@@ -195,7 +205,7 @@ namespace FBLWidgetReact {
         <span
           className={ITEM_LABEL_CLASS}
           title={widget.title.caption}
-          onClick={() => panel.show()}
+          onClick={() => props.labShell.activateById(panel.id)}
         >
           { widget.name }
         </span>
@@ -205,7 +215,15 @@ namespace FBLWidgetReact {
         >
           CLOSE
         </button>
-        <ShutdownButton widget={widget} />
+        <UseSignal signal={widget.sessionContext.sessionChanged}>
+          {(_, args) => {
+            if (widget.sessionContext?.session?.kernel) {
+              return <ShutdownButton widget={widget} />;
+            } else {
+              return <></>;
+            }
+          }}
+        </UseSignal>
       </li>
     );
   }
@@ -229,17 +247,13 @@ namespace FBLWidgetReact {
         }
       });
     }
-
-    if (widget?.sessionContext?.session){
-      return (
+    return (
       <button
         className={`${DISPOSE_BUTTON_CLASS} jp-mod-styled`}
         onClick={onShutdown}
       >
         SHUTDOWN
       </button>);
-    } else{
-      return <></>
-    }
   }
+  
 }
