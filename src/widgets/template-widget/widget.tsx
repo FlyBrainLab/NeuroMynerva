@@ -27,7 +27,7 @@ import {
   createSessionDialogButton
 } from './session_dialog';
 
-import '../../../style/widgets/template-widget/template.css';
+import '../../../style/template-widget/template.css';
 import { InfoWidget } from '../info-widget';
 import { FFBOProcessor } from '../../ffboprocessor';
 

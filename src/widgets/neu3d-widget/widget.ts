@@ -13,7 +13,7 @@ import { LarvaMesh } from './larva_mesh';
 import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import * as Icons from '../../icons';
-import '../../../style/widgets/neu3d-widget/neu3d.css';
+import '../../../style/neu3d-widget/neu3d.css';
 
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
 

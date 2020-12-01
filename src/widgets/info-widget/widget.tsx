@@ -16,7 +16,7 @@ import {
 } from './summary_table';
 import { ConnTable } from './conn_table';
 import { ConnSVG } from './conn_svg';
-import '../../../style/widgets/info-widget/info.css';
+import '../../../style/info-widget/info.css';
 import { SessionDialogComponent } from '../template-widget';
 import { Neu3DWidget } from '../neu3d-widget';
 

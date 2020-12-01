@@ -21,7 +21,7 @@ import { fblIcon } from '../../icons';
 import { IFBLWidget } from '../template-widget/index';
 import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '../../index';
 import { FFBOProcessorButton } from '../../ffboprocessor';
-import '../../../style/widgets/master-widget/master.css';
+import '../../../style/master-widget/master.css';
 import { SessionManager } from '@jupyterlab/services';
 
 

@@ -1,7 +1,7 @@
 // Summary Table that renders the metadata of a given neuron 
 // in a table format
 import * as React from "react";
-import '../../../style/widgets/info-widget/summary.css';
+import '../../../style/info-widget/summary.css';
 
 const displayData: {[rawName: string]: string} = {
   uname: "Unique Name",

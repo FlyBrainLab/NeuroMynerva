@@ -57,7 +57,12 @@ import { Neu3DWidget } from './widgets/neu3d-widget/index';
 import { FBLWidget } from './widgets/template-widget/index';
 
 import '../style/index.css';
-
+import '../style/info-widget/info.css';
+import '../style/info-widget/summary.css';
+import '../style/master-widget/master.css';
+import '../style/neu3d-widget/neu3d.css';
+import '../style/neugfx-widget/neugfx.css';
+import '../style/template-widget/template.css';
 
 const FBL_CLASS_NAME = '.jp-FBL';
 const NEU3D_CLASS_NAME = '.jp-FBL-Neu3D';
