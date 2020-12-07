@@ -408,9 +408,9 @@ export class InfoWidget extends ReactWidget {
             >
               {(_, val) => {
                 if (val.data?.connectivity) {
-                  return <Components.ConnTableToolbar connData={val.data.connectivity.pre} neu3d={val.neu3d}/>
+                  return <Components.ConnTableToolbar connData={val.data.connectivity.pre} neu3d={val.neu3d} tabConn={this.tabConnPre}/>
                 } else {
-                  return <Components.ConnTableToolbar connData={empty_data.connectivity.pre} neu3d={val.neu3d}/>
+                  return <Components.ConnTableToolbar connData={empty_data.connectivity.pre} neu3d={val.neu3d} tabConn={this.tabConnPre}/>
                 }
               }}
             </UseSignal>
@@ -429,9 +429,9 @@ export class InfoWidget extends ReactWidget {
             >
               {(_, val) => {
                 if (val.data?.connectivity) {
-                  return <Components.ConnTableToolbar connData={val.data.connectivity.post} neu3d={val.neu3d}/>
+                  return <Components.ConnTableToolbar connData={val.data.connectivity.post} neu3d={val.neu3d} tabConn={this.tabConnPost}/>
                 } else {
-                  return <Components.ConnTableToolbar connData={empty_data.connectivity.post} neu3d={val.neu3d}/>
+                  return <Components.ConnTableToolbar connData={empty_data.connectivity.post} neu3d={val.neu3d} tabConn={this.tabConnPost}/>
                 }
               }}
             </UseSignal>
@@ -495,6 +495,7 @@ namespace Components {
   export class ConnTableToolbar extends React.Component<{
     connData: any,
     neu3d: Neu3DWidget,
+    tabConn: ConnTable
   }>{
 
     
@@ -531,6 +532,14 @@ namespace Components {
       return count;
     }
 
+    getActiveMorpho(field='rid'): Array<string> {
+      let activeNeuronRids: Array<string> = [];
+      if (this.props.tabConn?.tabulator) {
+        activeNeuronRids = this.props.tabConn.tabulator.getData('active').map((r: any) => r[field]);
+      }
+      return activeNeuronRids;
+    }
+
     hasSynMorph(connDataDetails: Array<any>) {
       for (let entry of connDataDetails) {
         if (entry.has_syn_morph) {
@@ -539,21 +548,37 @@ namespace Components {
       }
       return false;
     }
+
+    /**
+     * Take intersection between 2 string arrays
+     * @param list1 
+     * @param list2 
+     */
+    private _intersection(list1: Array<string>, list2: Array<string>): Array<string> {
+      return [...list1].filter(i => list2.includes(i));
+    }
   
     addAllNeurons() {
       if (!this.hasNeu) {
         return;
       }
+      let active_rid_list = this.getActiveMorpho('n_rid');
+        
       let rid_list: Array<string> = [];
       for (let entry of this.props.connData.details) {
         if (!this.props.neu3d.isInWorkspace(entry.rid)) {
           rid_list.push(entry.n_rid);
         }
       }
-  
+      rid_list = this._intersection(active_rid_list, rid_list);
+
       showDialog({
         title: `Add all Neurons to Neu3D Widget?`,
-        body: `Total ${this.numNeu} neurons, ${rid_list.length} to be added.`,
+        body: `
+        Total ${this.numNeu} neurons, 
+        ${active_rid_list.length} shown in the active table, 
+        ${rid_list.length} to be added from the active list.
+        `,
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'ADD'})
@@ -570,16 +595,21 @@ namespace Components {
       if (!this.hasNeu) {
         return;
       }
+      let active_rid_list = this.getActiveMorpho('n_rid');
       let rid_list: Array<string> = [];
       for (let entry of this.props.connData.details) {
         if (this.props.neu3d.isInWorkspace(entry.rid)) {
           rid_list.push(entry.n_rid);
         }
       }
-  
+      rid_list = this._intersection(active_rid_list, rid_list);
       showDialog({
         title: `Remove all Neurons from Neu3D Widget?`,
-        body: `Total ${this.numNeu} neurons, ${rid_list.length} to be removed.`,
+        body: `
+        Total ${this.numNeu} neurons, 
+        ${active_rid_list.length} shown in the active table,
+        ${rid_list.length} to be removed from the active list.
+        `,
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'REMOVE'})
@@ -595,6 +625,7 @@ namespace Components {
       if (!this.hasSyn) {
         return;
       }
+      let active_rid_list = this.getActiveMorpho('s_rid');
       let rid_list: Array<string> = [];
       for (let entry of this.props.connData.details) {
         if (entry.has_syn_morph) {
@@ -603,10 +634,14 @@ namespace Components {
           }
         }
       }
-  
+      rid_list = this._intersection(active_rid_list, rid_list);
       showDialog({
         title: `Add all synapse morphologies to Neu3D Widget?`,
-        body: `Total ${this.numSyn} connections to partner neurons have synapse morphologies, ${rid_list.length} to be added.`,
+        body: `
+          Total ${this.numSyn} connections to partner neurons have synapse morphologies, 
+          ${active_rid_list.length} in the active table,
+          ${rid_list.length} to be added.
+        `,
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'ADD'})
@@ -622,6 +657,7 @@ namespace Components {
       if (!this.hasSyn) {
         return;
       }
+      let active_rid_list = this.getActiveMorpho('s_rid');
       let rid_list: Array<string> = [];
       for (let entry of this.props.connData.details) {
         if (entry.has_syn_morph) {
@@ -630,9 +666,14 @@ namespace Components {
           } 
         }
       }
+      rid_list = this._intersection(active_rid_list, rid_list);
       showDialog({
         title: `Remove all synapse morphologies from Neu3D Widget?`,
-        body: `Total ${this.numSyn} connections to partner neruons have synapse morphologies, ${rid_list.length} to be removed.`,
+        body: `
+        Total ${this.numSyn} connections to partner neruons have synapse morphologies, 
+        ${active_rid_list.length} in the active table,
+        ${rid_list.length} to be removed.
+        `,
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'REMOVE'})
