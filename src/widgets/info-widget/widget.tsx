@@ -174,8 +174,8 @@ export class InfoWidget extends ReactWidget {
       this.data = data;
       this.neu3d = neu3d;
       this.inWorkspace = inWorkspace;
-      let preData = this._preData = this.parseConnData(data.connectivity?.pre || empty_data.connectivity.pre.details, neu3d);
-      let postData = this._postData = this.parseConnData(data.connectivity?.post || empty_data.connectivity.post.details, neu3d);
+      let preData = this._preData = this.parseConnData(data.connectivity?.pre ?? empty_data.connectivity.pre.details, neu3d);
+      let postData = this._postData = this.parseConnData(data.connectivity?.post ?? empty_data.connectivity.post.details, neu3d);
       this.tabConnPre.neu3d = neu3d;
       this.tabConnPost.neu3d = neu3d;
       this.tabConnPre.data = preData;
@@ -256,7 +256,10 @@ export class InfoWidget extends ReactWidget {
    * @param connData connectivity data
    */
   parseConnData(connData: any, neu3d: Neu3DWidget) {
-    let new_data = [];
+    let new_data: Array<any> = [];
+    if (!('details' in connData)) {
+      return new_data;
+    }
     for (let item of connData["details"]) {
       let neuron_data = {
         name: item.name ?? item.name ?? item.rid,
