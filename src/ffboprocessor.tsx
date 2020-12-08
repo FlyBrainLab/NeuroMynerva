@@ -165,6 +165,14 @@ export namespace FFBOProcessor {
         DEBUG: {
             debug: boolean
         };
+        PRESETS: {
+            preset: "" | "adult(flycircuit)" | "adult(hemibrain)" | "larva(l1em)" | string,
+            neu3dSettings?: {
+                resetPosition?: { x: number, y: number, z: number },
+                upVector?: { x: number, y: number, z: number },
+                cameraTarget?: { x: number, y: number, z: number },
+            }
+        }
     }
     
     export function JSON2INI(json: object | string): string {

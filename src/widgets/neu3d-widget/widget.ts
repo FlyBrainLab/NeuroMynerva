@@ -12,6 +12,8 @@ import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
 import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
+
+import { PRESETS } from './presets';
 import * as Icons from '../../icons';
 import '../../../style/neu3d-widget/neu3d.css';
 
@@ -108,22 +110,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.clientConnect.connect((has) => {
       if (this.hasClient) {
         searchInput.disabled = false;
-        switch (this.processor) {
-          case 'larva(l1em)':
-            searchInput.placeholder = "Write Query. (Example: Show OSNs)";
-            break;
-          case 'adult(flycircuit)':
-            searchInput.placeholder = "Write Query. (Example: Show neurons in EB)";
-            break;
-          case 'adult(hemibrain)':
-            searchInput.placeholder = "Write Query. (Example: Show APL)";
-            break;
-          default:
-            searchInput.placeholder = "Write Query...";
-            break;
+        if (this.processor in PRESETS) {
+          searchInput.placeholder = (PRESETS as any)[this.processor].searchPlaceholder;
+        } else {
+          searchInput.placeholder = PRESETS["default"].searchPlaceholder;
         }
       } else {
-        searchInput.placeholder = "Not Connected to Processor";
+        searchInput.placeholder = PRESETS["disconnected"].searchPlaceholder;
         searchInput.disabled = true;
       }
     });
@@ -146,16 +139,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this.neu3DReady.then(()=>{
         this._blockingDiv = document.createElement('div');
         this._blockingDiv.className = `jp-Dialog-header ${Neu3D_BLOCKING_DIV}`;
-        // this._blockingDiv.style.height= '80px';
-        // this._blockingDiv.style.top= 'calc(50% - 40px)';
-        // this._blockingDiv.style.position = 'absolute';
-        // this._blockingDiv.style.width= '100%';
-        // this._blockingDiv.style.backgroundColor = 'var(--jp-warn-color3)';
-        // this._blockingDiv.style.opacity = '.8';
-        // this._blockingDiv.style.display = 'flex';
-        // this._blockingDiv.style.alignItems = 'center';
-        // this._blockingDiv.style.justifyContent = 'center';
-        // this._blockingDiv.style.fontSize = '2rem';
         this._blockingDiv.innerText = `Reload previous visualization settings?`
         let acceptBtn = document.createElement('button');
         acceptBtn.innerText = "Yes"
@@ -800,68 +783,107 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             }
           }
         }
-        switch (this._processor) {
-          case 'larva(l1em)':
-            this.neu3d._metadata.resetPosition =  {x: 42.057169835814626, y: 18.465885594337543, z: -509.65272951348953};
-            this.neu3d._metadata.upVector = {x: 0.0022681554337180836, y: -0.9592325957384876, z: 0.2826087096034669};
-            this.neu3d._metadata.cameraTarget = {x: 42.11358557008077, y: 74.90946190543991, z: 58.654427921234685};
-            this.neu3d.updateControls();
-            this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
-            window.active_neu3d_widget = this;
-            this.neu3d.resetView();
-            // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
-            this.initClient().then((res) => {
-              if (res) {
-                this.setHasClient(true);
-                (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";  
-              } else {
-                this.setHasClient(false);
-                (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
-              }
-            })
-            break;
-          case 'adult(flycircuit)':
-            this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
-            this.neu3d._metadata.upVector = {x: 0., y: 1., z: 0.};
-            this.neu3d.updateControls();
-            this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
-            window.active_neu3d_widget = this;
-            this.neu3d.resetView();
-            // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
-            this.initClient().then((res) => {
-              if (res) {
-                this.setHasClient(true);
-              } else {
-                this.setHasClient(false);
-                (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
-              }
-            })
-            
-            break;
-          case 'adult(hemibrain)':
-            this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
-            this.neu3d._metadata.upVector = {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184};
-            this.neu3d._metadata.cameraTarget = {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273};
-            this.neu3d.updateControls();
-            this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
-            window.active_neu3d_widget = this;
-            this.neu3d.resetView();
-            // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
-            this.initClient().then((res) => {
-              if (res) {
-                this.setHasClient(true);
-              } else {
-                this.setHasClient(false);
-              }
-            })
-            
-            break;
-          default:
-            (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to processor.';
+
+        // set neu3d settings either based on preset or schema values or error out
+        if ((this._processor in PRESETS) || (this._processor in this.ffboProcessors)) {
+          let settings: any = {};
+          let meshes: any = undefined;
+          if (this._processor in PRESETS) {
+            settings = (PRESETS as any)[this._processor].neu3dSettings;
+            meshes = (PRESETS as any)[this._processor].meshes ?? undefined;
+          } else {
+            settings = this.ffboProcessors[this._processor].PRESETS.neu3dSettings;
+            // no meshes in schema for now
+          }
+          if ('resetPosition' in settings) { 
+            this.neu3d._metadata.resetPosition = settings.resetPosition;  
+          }
+          if ('upVector' in settings) {
+            this.neu3d._metadata.upVector = settings.upVector;
+          }
+          if ('cameraTarget' in settings) {
+            this.neu3d._metadata.cameraTarget = settings.cameraTarget;
+          }
+          if (meshes) {
+            this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
+          }
+          this.neu3d.updateControls();
+          this.neu3d.resetView();
+          window.active_neu3d_widget = this;
+          this.initClient().then((res) => {
+            if (res) {
+              this.setHasClient(true);
+            } else {
+              this.setHasClient(false);
+            }
+          })
+        } else {
+          (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = PRESETS.disconnected.searchPlaceholder;
             this.setHasClient(false);
             console.error(`[Neu3D-Widget] Processor ${newProcessor} not recognized.`);
-            break;
         }
+        // switch (this._processor) {
+        //   case 'larva(l1em)':
+            
+            
+            
+        //     this.neu3d.updateControls();
+        //     this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
+            
+        //     this.neu3d.resetView();
+        //     // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
+        //     this.initClient().then((res) => {
+        //       if (res) {
+        //         this.setHasClient(true);
+        //         (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";  
+        //       } else {
+        //         this.setHasClient(false);
+        //         (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
+        //       }
+        //     })
+        //     break;
+        //   case 'adult(flycircuit)':
+        //     this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
+        //     this.neu3d._metadata.upVector = {x: 0., y: 1., z: 0.};
+        //     this.neu3d.updateControls();
+        //     this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
+        //     window.active_neu3d_widget = this;
+        //     this.neu3d.resetView();
+        //     // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
+        //     this.initClient().then((res) => {
+        //       if (res) {
+        //         this.setHasClient(true);
+        //       } else {
+        //         this.setHasClient(false);
+        //         (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
+        //       }
+        //     })
+            
+        //     break;
+        //   case 'adult(hemibrain)':
+        //     this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
+        //     this.neu3d._metadata.upVector = {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184};
+        //     this.neu3d._metadata.cameraTarget = {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273};
+        //     this.neu3d.updateControls();
+        //     this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
+        //     window.active_neu3d_widget = this;
+        //     this.neu3d.resetView();
+        //     // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
+        //     this.initClient().then((res) => {
+        //       if (res) {
+        //         this.setHasClient(true);
+        //       } else {
+        //         this.setHasClient(false);
+        //       }
+        //     })
+            
+        //     break;
+        //   default:
+        //     (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to processor.';
+        //     this.setHasClient(false);
+        //     console.error(`[Neu3D-Widget] Processor ${newProcessor} not recognized.`);
+        //     break;
+        // }
 
         // reset info panel
         this.info.reset();
