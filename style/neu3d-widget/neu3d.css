@@ -37,4 +37,27 @@
     cursor: pointer;
     font-size: 20px;
     margin-top: 2px;
-  }
+}
+
+.jp-FBL-Neu3D-Blocking-Div {
+    height: 80px;
+    top: calc(50% - 40.5px);
+    position: absolute;
+    width: 100%;
+    background-color: var(--jp-warn-color3);
+    opacity: .8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.jp-FBL-Neu3D-Container {
+    height: calc(100% - 40px);
+    width: 100%;
+}
+
+.jp-FBL-Neu3D-Container .navbar {
+    height: 40px;
+    background: #333333;
+}

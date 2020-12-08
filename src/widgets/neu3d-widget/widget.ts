@@ -16,6 +16,8 @@ import * as Icons from '../../icons';
 import '../../../style/neu3d-widget/neu3d.css';
 
 const Neu3D_CLASS_JLab = "jp-FBL-Neu3D";
+const Neu3D_BLOCKING_DIV = "jp-FBL-Neu3D-Blocking-Div";
+const Neu3D_CONTAINER_DIV = "jp-FBL-Neu3D-Container";
 
 /**
  * Check if object is empty
@@ -74,13 +76,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
     this.addClass(Neu3D_CLASS_JLab);
     this._neu3dContainer = document.createElement('div');
-    this._neu3dContainer.style.height = 'calc(100% - 40px)';
-    this._neu3dContainer.style.width = '100%';
+    this._neu3dContainer.className = Neu3D_CONTAINER_DIV;
+    // this._neu3dContainer.style.height = 'calc(100% - 40px)';
+    // this._neu3dContainer.style.width = '100%';
     this.node.appendChild(this._neu3dContainer);
     this._neu3dSearchbar = document.createElement('div');
     this._neu3dSearchbar.classList.add("navbar");
-    this._neu3dSearchbar.style.height = '40px';
-    this._neu3dSearchbar.style.background = '#333333';
+    // this._neu3dSearchbar.style.height = '40px';
+    // this._neu3dSearchbar.style.background = '#333333';
     this.node.appendChild(this._neu3dSearchbar);
     var searchWrapper = document.createElement('div');
     searchWrapper.classList.add("neu3dSearchWrapper");
@@ -142,17 +145,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     if (options.model?.metadata || options.model?.states) {
       this.neu3DReady.then(()=>{
         this._blockingDiv = document.createElement('div');
-        this._blockingDiv.className = "jp-Dialog-header";
-        this._blockingDiv.style.height= '80px';
-        this._blockingDiv.style.top= 'calc(50% - 40px)';
-        this._blockingDiv.style.position = 'absolute';
-        this._blockingDiv.style.width= '100%';
-        this._blockingDiv.style.backgroundColor = 'var(--jp-warn-color3)';
-        this._blockingDiv.style.opacity = '.8';
-        this._blockingDiv.style.display = 'flex';
-        this._blockingDiv.style.alignItems = 'center';
-        this._blockingDiv.style.justifyContent = 'center';
-        this._blockingDiv.style.fontSize = '2rem';
+        this._blockingDiv.className = `jp-Dialog-header ${Neu3D_BLOCKING_DIV}`;
+        // this._blockingDiv.style.height= '80px';
+        // this._blockingDiv.style.top= 'calc(50% - 40px)';
+        // this._blockingDiv.style.position = 'absolute';
+        // this._blockingDiv.style.width= '100%';
+        // this._blockingDiv.style.backgroundColor = 'var(--jp-warn-color3)';
+        // this._blockingDiv.style.opacity = '.8';
+        // this._blockingDiv.style.display = 'flex';
+        // this._blockingDiv.style.alignItems = 'center';
+        // this._blockingDiv.style.justifyContent = 'center';
+        // this._blockingDiv.style.fontSize = '2rem';
         this._blockingDiv.innerText = `Reload previous visualization settings?`
         let acceptBtn = document.createElement('button');
         acceptBtn.innerText = "Yes"

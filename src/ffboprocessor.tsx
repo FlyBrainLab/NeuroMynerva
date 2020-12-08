@@ -49,7 +49,7 @@ export function FFBOProcessorButton( props:{settings: ISettingRegistry.ISettings
  * @param settings
  */
 export class FFBOProcessor extends Widget {
-    constructor(settings: ISettingRegistry.ISettings){
+    constructor(settings: ISettingRegistry.ISettings) {
         super();
         this.settings = settings; // keep a reference to the settings object
         this.load(settings);
@@ -69,17 +69,25 @@ export class FFBOProcessor extends Widget {
             this._updateDataSetClassList();
         })
         this.editor.on('addRow', (editor: any) => {
+            if (!editor) {
+                let all_processors: Array<any> = (this.editor.editors['root.fbl-processors'] as any).rows;
+                editor = all_processors[all_processors.length - 1]
+            }
             let buttons = editor.container.getElementsByTagName('button');
             let inputs = editor.container.getElementsByTagName('input');
+            let selects = editor.container.getElementsByTagName('select');
             for (let btn of buttons) {   
                 (btn as HTMLButtonElement).classList.add('jp-mod-styled');
             }
             for (let inp of inputs) {
                 (inp as HTMLInputElement).classList.add('jp-mod-styled');
             }
+            for (let sel of selects) {
+                (sel as HTMLSelectElement).classList.add('jp-mod-styled');
+            }
         });
-        
-        let table = this.editor.editors['root.fbl-processors'].container.getElementsByClassName("je-indented-panel")[0] as HTMLDivElement;
+
+        let table = (this.editor.editors['root.fbl-processors'] as any).panel as HTMLDivElement;
         this.node.appendChild(table);
         this.settings.changed.connect(() => {
             this.load(this.settings); // will exmit changed signal
