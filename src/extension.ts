@@ -909,7 +909,8 @@ export namespace FBL {
   export function createConsole(
     app:JupyterFrontEnd,
     panel:MainAreaWidget<IFBLWidget>,
-  args: any) {
+    args: any
+  ) {
     app.commands.execute(
       'console:create',
       {

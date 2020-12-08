@@ -597,7 +597,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       args += 'debug=False,';
     }
     if (currentProcessor?.AUTH?.authentication === false) {
-      args += 'authentication=False';
+      args += 'authentication=False,';
     }
     let websocket = currentProcessor?.AUTH?.ssl === true ? 'wss' : 'ws';
     if (currentProcessor?.SERVER?.IP) {

@@ -1,3 +1,4 @@
+import * as React from 'react';
 import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
@@ -13,7 +14,7 @@ import { LarvaMesh } from './larva_mesh';
 import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 
-import { PRESETS } from './presets';
+import { PRESETS, PRESETS_NAMES } from './presets';
 import * as Icons from '../../icons';
 import '../../../style/neu3d-widget/neu3d.css';
 
@@ -79,71 +80,20 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.addClass(Neu3D_CLASS_JLab);
     this._neu3dContainer = document.createElement('div');
     this._neu3dContainer.className = Neu3D_CONTAINER_DIV;
-    // this._neu3dContainer.style.height = 'calc(100% - 40px)';
-    // this._neu3dContainer.style.width = '100%';
     this.node.appendChild(this._neu3dContainer);
-    this._neu3dSearchbar = document.createElement('div');
-    this._neu3dSearchbar.classList.add("navbar");
-    // this._neu3dSearchbar.style.height = '40px';
-    // this._neu3dSearchbar.style.background = '#333333';
-    this.node.appendChild(this._neu3dSearchbar);
-    var searchWrapper = document.createElement('div');
-    searchWrapper.classList.add("neu3dSearchWrapper");
-    var searchInput = document.createElement('input');
-    searchInput.classList.add("neu3dSearchInput");
-    searchInput.type = "text";
-    searchInput.placeholder = "Write Query (Example: show neurons in ellipsoid body)";
-    var searchButton = document.createElement('button');
-    searchButton.classList.add("neu3dSearchButton");
-    searchButton.type = "submit";
-    var searchButtonIcon = document.createElement('i');
-    searchButtonIcon.classList.add("fa");
-    searchButtonIcon.classList.add("fa-search");
-    searchButton.appendChild(searchButtonIcon);
-    searchWrapper.appendChild(searchInput);
-    searchWrapper.appendChild(searchButton);
-    // initialized with no kernel
-    // if (this.sessionContext.session  === null) {
-    //   searchInput.style.display ='none';
-    //   searchButton.style.display ='none';
-    // }
-    this.clientConnect.connect((has) => {
-      if (this.hasClient) {
-        searchInput.disabled = false;
-        if (this.processor in PRESETS) {
-          searchInput.placeholder = (PRESETS as any)[this.processor].searchPlaceholder;
-        } else {
-          searchInput.placeholder = PRESETS["default"].searchPlaceholder;
-        }
-      } else {
-        searchInput.placeholder = PRESETS["disconnected"].searchPlaceholder;
-        searchInput.disabled = true;
-      }
-    });
-    this._neu3dSearchbar.appendChild(searchWrapper);
-
+    this._neu3dFooter = Private.createFooterBar(this);
+    this.node.appendChild(this._neu3dFooter);
     window.neu3d_widget = this;
-    var _this = this;
-    searchButton.onclick = function () {
-      _this.executeNLPquery(searchInput.value);
-      searchInput.value = "";
-    }
-    searchInput.addEventListener('keyup', ({key}) => {
-      if (key === "Enter") {
-        _this.executeNLPquery(searchInput.value);
-        searchInput.value = "";
-      }
-    });
 
     if (options.model?.metadata || options.model?.states) {
-      this.neu3DReady.then(()=>{
+      this.neu3DReady.then(() => {
         this._blockingDiv = document.createElement('div');
         this._blockingDiv.className = `jp-Dialog-header ${Neu3D_BLOCKING_DIV}`;
         this._blockingDiv.innerText = `Reload previous visualization settings?`
         let acceptBtn = document.createElement('button');
         acceptBtn.innerText = "Yes"
         acceptBtn.className = "jp-Dialog-button jp-mod-accept jp-mod-styled";
-        acceptBtn.onclick = ()=>{
+        acceptBtn.onclick = () => {
           try {
             if (!objEmpty(options.model?.metadata)) {
               this.neu3d.import_settings(options.model.metadata)
@@ -161,7 +111,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         let cancelBtn = document.createElement('button');
         cancelBtn.innerText = "No"
         cancelBtn.className = "jp-Dialog-button jp-mod-reject jp-mod-styled";
-        cancelBtn.onclick = ()=>{
+        cancelBtn.onclick = () => {
           this.model.metadata = this.neu3d.export_settings();
           this.model.states = this.neu3d.export_state();
           this._blockingDiv.remove();
@@ -170,7 +120,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this._blockingDiv.appendChild(acceptBtn);
 
         this.node.insertBefore(this._blockingDiv, this.node.childNodes[0]);
-      })
+      });
     }
   }
 
@@ -181,14 +131,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) {
     super.onKernelStatusChanged(sess, status);
-
+    let queryBar = this._neu3dFooter.getElementsByTagName('input')[0];
     if (status === 'busy') {
-      (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).disabled = true;
+      queryBar.disabled = true;
     } else {
       if (this.hasClient) {
-        (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).disabled = false;
+        queryBar.disabled = false;
       } else {
-        (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).disabled = true;
+        queryBar.disabled = true;
       }
     }
   }
@@ -732,6 +682,30 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   set processor(newProcessor: string) {
     this.setProcessor(newProcessor);
   }
+
+  // /**
+  //  * Return the preset of the current neu3d instance.
+  //  * The final return value is based on value in schema and what's avaiable in PRESETS.
+  //  * If processor cannot be found anywhere, will return disconnected.
+  //  */
+  // get preset(): PRESETS_NAMES {
+  //   // return the corresponding preset in schema if found
+  //   if (this.processor in this.ffboProcessors) { 
+  //     let preset = this.ffboProcessors[this._processor].PRESETS.preset as PRESETS_NAMES;
+  //     if (preset in PRESETS) {
+  //       return preset;
+  //     } 
+  //     // preset not found in available PRESETS
+  //     console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
+  //     return "default";
+  //   }
+
+  //   this.setHasClient(false);
+  //   console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
+  //   INotification.error(`Processor (${this.processor}) not recognized. Disconnected`);
+  //   return "disconnected";
+  // }
+
   /**
    * Change processor.
    * 
@@ -773,10 +747,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         selected.resolve(void 0);
       }
 
+      // once selection has been made
       selected.promise.then(()=>{
-        if (removeNeurons) {
-          this.neu3d.reset(true)
-        } else{
+        if (removeNeurons) { // remove everything
+          this.neu3d.reset(true);
+        } else{ // remove only meshes
           for (let mesh of Object.keys(this.neu3d.meshDict)){
             if (this.neu3d.meshDict[mesh].background) {
               this.neu3d.remove(mesh);
@@ -784,107 +759,54 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           }
         }
 
-        // set neu3d settings either based on preset or schema values or error out
-        if ((this._processor in PRESETS) || (this._processor in this.ffboProcessors)) {
-          let settings: any = {};
-          let meshes: any = undefined;
-          if (this._processor in PRESETS) {
-            settings = (PRESETS as any)[this._processor].neu3dSettings;
-            meshes = (PRESETS as any)[this._processor].meshes ?? undefined;
+        /**
+         * Return the preset of the current neu3d instance.
+         * The final return value is based on value in schema and what's avaiable in PRESETS.
+         * If processor cannot be found anywhere, will return disconnected.
+         */
+        let preset: PRESETS_NAMES = "default";
+        let settings: {[field: string]: {x:number, y:number, z:number}} = null;
+        let meshes: any = null;
+        let placeholder = PRESETS.disconnected.searchPlaceholder;
+        let inputQueryBar: HTMLInputElement = this._neu3dFooter.getElementsByTagName('input')[0];
+          // return the corresponding preset in schema if found
+        if (this.processor in this.ffboProcessors) {
+          let processorPreset = this.ffboProcessors[this._processor].PRESETS.preset;
+          if (!(processorPreset in PRESETS)) {
+            // preset not found in available PRESETS
+            console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
+            let schemaSettings = this.ffboProcessors[this.processor].PRESETS.neu3dSettings;
+            settings.resetPosition = schemaSettings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition;
+            settings.upVector = schemaSettings.upVector ?? PRESETS.default.neu3dSettings.upVector;
+            settings.cameraTarget = schemaSettings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
+            placeholder = PRESETS.default.searchPlaceholder;
           } else {
-            settings = this.ffboProcessors[this._processor].PRESETS.neu3dSettings;
-            // no meshes in schema for now
+            preset = processorPreset as PRESETS_NAMES;
+            settings = PRESETS[preset].neu3dSettings;  
+            meshes = PRESETS[preset].meshes;
+            placeholder = PRESETS[preset].searchPlaceholder;
           }
-          if ('resetPosition' in settings) { 
-            this.neu3d._metadata.resetPosition = settings.resetPosition;  
-          }
-          if ('upVector' in settings) {
-            this.neu3d._metadata.upVector = settings.upVector;
-          }
-          if ('cameraTarget' in settings) {
-            this.neu3d._metadata.cameraTarget = settings.cameraTarget;
-          }
-          if (meshes) {
-            this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
-          }
-          this.neu3d.updateControls();
-          this.neu3d.resetView();
-          window.active_neu3d_widget = this;
-          this.initClient().then((res) => {
-            if (res) {
-              this.setHasClient(true);
-            } else {
-              this.setHasClient(false);
-            }
-          })
+          this.initClient().then((success) => {
+            this.setHasClient(success); // can fail
+          });
         } else {
-          (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = PRESETS.disconnected.searchPlaceholder;
-            this.setHasClient(false);
-            console.error(`[Neu3D-Widget] Processor ${newProcessor} not recognized.`);
+          placeholder = PRESETS.disconnected.searchPlaceholder;
+          this.setHasClient(false);
+          console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
         }
-        // switch (this._processor) {
-        //   case 'larva(l1em)':
-            
-            
-            
-        //     this.neu3d.updateControls();
-        //     this.neu3d.addJson({ffbo_json: this._larvaMesh, showAfterLoadAll: true});
-            
-        //     this.neu3d.resetView();
-        //     // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "larva_config.ini"')});
-        //     this.initClient().then((res) => {
-        //       if (res) {
-        //         this.setHasClient(true);
-        //         (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Write Query (Example: show OSNs)";  
-        //       } else {
-        //         this.setHasClient(false);
-        //         (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
-        //       }
-        //     })
-        //     break;
-        //   case 'adult(flycircuit)':
-        //     this.neu3d._metadata.resetPosition = {x: 0, y: 0, z: 1800};
-        //     this.neu3d._metadata.upVector = {x: 0., y: 1., z: 0.};
-        //     this.neu3d.updateControls();
-        //     this.neu3d.addJson({ffbo_json: this._adultMesh, showAfterLoadAll: true});
-        //     window.active_neu3d_widget = this;
-        //     this.neu3d.resetView();
-        //     // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "flycircuit_config.ini"')});
-        //     this.initClient().then((res) => {
-        //       if (res) {
-        //         this.setHasClient(true);
-        //       } else {
-        //         this.setHasClient(false);
-        //         (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = "Not connected to processor.";  
-        //       }
-        //     })
-            
-        //     break;
-        //   case 'adult(hemibrain)':
-        //     this.neu3d._metadata.resetPosition = {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691};
-        //     this.neu3d._metadata.upVector = {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184};
-        //     this.neu3d._metadata.cameraTarget = {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273};
-        //     this.neu3d.updateControls();
-        //     this.neu3d.addJson({ffbo_json: this._hemibrainMesh, showAfterLoadAll: true});
-        //     window.active_neu3d_widget = this;
-        //     this.neu3d.resetView();
-        //     // this.sessionContext.session.kernel.requestExecute({code: super.initClientCode(', custom_config = "hemibrain_config.ini"')});
-        //     this.initClient().then((res) => {
-        //       if (res) {
-        //         this.setHasClient(true);
-        //       } else {
-        //         this.setHasClient(false);
-        //       }
-        //     })
-            
-        //     break;
-        //   default:
-        //     (this._neu3dSearchbar.children[0].children[0] as HTMLInputElement).placeholder = 'Not connected to processor.';
-        //     this.setHasClient(false);
-        //     console.error(`[Neu3D-Widget] Processor ${newProcessor} not recognized.`);
-        //     break;
-        // }
+        inputQueryBar.placeholder = placeholder;
 
+        if (settings) {
+          this.neu3d._metadata.resetPosition = settings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition;
+          this.neu3d._metadata.upVector = settings.upVector ?? PRESETS.default.neu3dSettings.upVector;
+          this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
+        }
+        if (meshes) {
+          this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
+        }
+        this.neu3d.updateControls();
+        this.neu3d.resetView();
+        window.active_neu3d_widget = this;
         // reset info panel
         this.info.reset();
       });
@@ -946,7 +868,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   readonly _hemibrainMesh: Object; // caching for dynamically import mesh
   private _neu3DReady = new PromiseDelegate<void>();
   private _neu3dContainer: HTMLDivElement;
-  private _neu3dSearchbar: HTMLDivElement;
+  private _neu3dFooter: HTMLDivElement;
   private _blockingDiv: HTMLDivElement; // On browser refresh, a blocking div is shown to prompt user
   private _workspaceChanged = new Signal<this, any>(this);
   model: Neu3DModel;
@@ -975,5 +897,116 @@ namespace Private {
       tooltip: tooltip
     } as any);
     return btn;
+  }
+
+
+  /**
+   * Creater Footer Bar with search and info as footer
+   */
+  export function createFooterBar(
+    neu3d: Neu3DWidget
+  ): HTMLDivElement {
+    let footer = document.createElement('div');
+    footer.classList.add("navbar");
+    
+    var searchWrapper = document.createElement('div');
+    searchWrapper.classList.add("neu3dSearchWrapper");
+
+    //create search input
+    var searchInput = document.createElement('input');
+    searchInput.classList.add("neu3dSearchInput");
+    searchInput.type = "text";
+    searchInput.placeholder = "Write Query (Example: show neurons in ellipsoid body)";
+
+    // create search button
+    var searchButton = document.createElement('button');
+    searchButton.classList.add("neu3dSearchButton");
+    searchButton.type = "submit";
+    var searchButtonIcon = document.createElement('i');
+    searchButtonIcon.classList.add("fa");
+    searchButtonIcon.classList.add("fa-search");
+    searchButton.appendChild(searchButtonIcon);
+
+    //create search hint
+    var hintButton = document.createElement('button');
+    hintButton.classList.add("neu3dHintButton");
+    var hintButtonIcon = document.createElement('i');
+    hintButtonIcon.classList.add("fa");
+    hintButtonIcon.classList.add("fa-info");
+    hintButton.appendChild(hintButtonIcon);
+
+    searchWrapper.appendChild(hintButton);
+    searchWrapper.appendChild(searchInput);
+    searchWrapper.appendChild(searchButton);
+    
+    neu3d.clientConnect.connect((_, hasClient) => {
+      if (hasClient) {
+        searchInput.disabled = false;
+        if (neu3d.processor in PRESETS) {
+          searchInput.placeholder = (PRESETS as any)[neu3d.processor].searchPlaceholder;
+        } else if ((neu3d.processor in neu3d.ffboProcessors) && (neu3d.ffboProcessors[neu3d.processor].PRESETS.preset in PRESETS)) {
+          let preset = neu3d.ffboProcessors[neu3d.processor].PRESETS.preset;
+          searchInput.placeholder = (PRESETS as any)[preset].searchPlaceholder;
+        } else {
+          searchInput.placeholder = PRESETS.default.searchPlaceholder;
+        }
+      } else {
+        searchInput.placeholder = PRESETS.disconnected.searchPlaceholder;
+        searchInput.disabled = true;
+      }
+    });
+
+    searchButton.onclick = () => {
+      if ((searchInput.value) && (neu3d.hasClient)) {
+        neu3d.executeNLPquery(searchInput.value);
+      }
+      searchInput.value = "";
+    }
+    searchInput.addEventListener('keyup', ({key}) => {
+      if (key === "Enter") {
+        if ((searchInput.value) && (neu3d.hasClient)) {
+          neu3d.executeNLPquery(searchInput.value);
+        }
+        searchInput.value = "";
+      }
+    });
+    hintButton.onclick = () => {
+      // show hint
+      let hints: Array<any> = [];
+      if (neu3d.processor in PRESETS) {
+        hints = (PRESETS as any)[neu3d.processor].hints;
+      } else if ((neu3d.processor in neu3d.ffboProcessors) && (neu3d.ffboProcessors[neu3d.processor].PRESETS.preset in PRESETS)) {
+        let preset = neu3d.ffboProcessors[neu3d.processor].PRESETS.preset;
+        hints = (PRESETS as any)[preset].hints;
+      } else {
+        if (neu3d.hasClient) {
+          hints = PRESETS.default.hints;
+        } else {
+          hints = PRESETS.disconnected.hints;
+        }
+      }
+      const hint_ul = hints.map((h, idx) => <li key={idx}><b>{h.query}</b>{h.effect}</li>);
+      let hint_header = <p>Connect to a Processor to see example queries.</p>;
+      if (hint_ul.length > 0) {
+        hint_header = <p>Here are a list of example queries you can try:</p>;
+      }
+      showDialog({
+        title: 'Quick Query Reference',
+        body:<>
+          <p>
+            The Search Bar is the central querying interface. It supports natural language queries of neurons, 
+            synaptic partners, etc. By combining various attributes of query targets, you can create some very 
+            powerful queries.
+          </p>
+          {hint_header}
+          <ul> {hint_ul}</ul>
+        </>,
+        buttons: [
+          Dialog.okButton()
+        ]
+      });
+    }
+    footer.appendChild(searchWrapper);
+    return footer;
   }
 }
