@@ -308,7 +308,7 @@ namespace Neu3DComponents {
   }, {
     rows: { [rid: string]: Partial<IMeshDictItem> }
     }> {  
-    delayedSetState: any;
+    delayedSetState: _.DebouncedFunc<(rows: any)=>any>;
       
     constructor(props: { panel: FBLPanel, labShell: ILabShell, sessionManager: SessionManager }) {
       super(props);
@@ -374,7 +374,11 @@ namespace Neu3DComponents {
         }
       })
     }
-    
+
+    componentWillUnmount() {
+      this.delayedSetState.cancel();
+    }
+
     render() { 
       const { panel, labShell } = this.props;
       const neu3d = panel.content as Neu3DWidget;
