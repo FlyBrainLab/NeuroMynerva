@@ -23,6 +23,7 @@ import eyeSlashStr from '../style/icons/eye-slash.svg';
 import syncStr from '../style/icons/sync.svg';
 import cameraStr from '../style/icons/camera.svg';
 import mapUpinStr from '../style/icons/map-unpin.svg';
+import mapPinStr from '../style/icons/map-pin.svg';
 import webStr from '../style/icons/web.svg';
 
 // svgstr is the raw contents of an icon's svg file
@@ -127,4 +128,9 @@ export const cameraIcon = new LabIcon({
 export const mapUpinIcon = new LabIcon({
   name: 'fbl:map-unpin',
   svgstr: mapUpinStr
+});
+
+export const mapPinIcon = new LabIcon({
+  name: 'fbl:map-pin',
+  svgstr: mapPinStr
 });

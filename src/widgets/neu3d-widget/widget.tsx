@@ -509,7 +509,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           "enablePositionReset": true
          },
         {
-          stats: true,
+          stats: false,
           datGUI: {
             createButtons: false,
             preset: "Low"

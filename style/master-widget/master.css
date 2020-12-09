@@ -7,6 +7,7 @@
     /* This is needed so that all font sizing of children done in ems is
      * relative to this base size */
     font-size: var(--jp-ui-font-size1);
+    overflow: scroll;
 }
 
 .jp-FBL-Master-header {
@@ -48,10 +49,11 @@ flex: 0 0 auto;
 }
 
 .jp-FBL-Master-sectionContainer {
-flex: 1 1 auto;
-margin: 0;
-padding: 0;
-overflow: auto;
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    display: block;
 }
 
 .jp-FBL-Master-sectionList {
@@ -63,6 +65,7 @@ list-style-type: none;
 .jp-FBL-Master-item {
 display: flex;
 flex-direction: row;
+justify-content: flex-start;
 color: var(--jp-ui-font-color1);
 height: var(--jp-private-running-item-height);
 line-height: var(--jp-private-running-item-height);
@@ -129,4 +132,30 @@ background-color: rgba(153, 153, 153, 0.2);
     border: none;
     box-shadow: none;
     background-color: rgba(153, 153, 153, 0.2);
+}
+
+table.neuron-list-table {
+    width: 100%;
+}
+
+td.Neuron-Table-Buttons {
+    max-width:100% !important;
+    white-space:nowrap !important;
+}
+
+.jp-FBL-Master-Neu3D-Table-Container {
+    display:block;
+}
+.jp-FBL-Master-Neu3D-Table-Container.hidden {
+    display: none;
+}
+
+.jp-FBL-Master-Neu3D-Table-Button.hidden {
+    display: none;
+}
+
+td.Neuron-Table-Buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
 }

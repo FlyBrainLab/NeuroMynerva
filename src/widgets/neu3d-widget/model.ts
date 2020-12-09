@@ -1,10 +1,19 @@
 import { ISignal, Signal } from '@lumino/signaling';
 import { FBLWidgetModel, IFBLWidgetModel } from '../template-widget/index';
 
+export interface IDataChangeArgs {
+  event: string,
+  source: any,
+  oldValue: any,
+  newValue: any,
+  key?: string,
+  rid?: string
+}
+
 /**
 * ID and a few selected attributes of the associated mesh dict items
 */
-interface IMeshDictItem {
+export interface IMeshDictItem {
   label?: String,
   highlight?: Boolean,
   opacity?: Number,
@@ -74,6 +83,7 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
       event: (oldValue) ? 'change' : 'add',
       source: this.data,
       key: rid,
+      rid: rid,
       oldValue: oldValue,
       newValue: this.data[rid]
     });
@@ -95,6 +105,7 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
         event: 'remove',
         source: this.data,
         key: rid,
+        rid: rid,
         oldValue: oldValue,
         newValue: undefined
       });
@@ -119,6 +130,7 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
           event: 'change',
           source: this.data[rid],
           key: 'pinned',
+          rid: rid,
           oldValue: oldValue,
           newValue: newValue
         });
@@ -144,6 +156,7 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
           event: 'change',
           source: this.data[rid],
           key: 'pinned',
+          rid: rid,
           oldValue: oldValue,
           newValue: newValue
         });
@@ -170,7 +183,8 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
           source: this.data[rid],
           key: 'visibility',
           oldValue: oldValue,
-          newValue: false
+          newValue: false,
+          rid: rid
         });
       }
     }
@@ -195,7 +209,8 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
             source: this.data[rid],
             key: 'visibility',
             oldValue: oldValue,
-            newValue: newValue
+            newValue: newValue,
+            rid: rid
           });
         }
       }
@@ -213,7 +228,7 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     return this._statesChanged;
   }
 
-  _dataChanged = new Signal<this, any>(this);
+  _dataChanged = new Signal<this, IDataChangeArgs>(this);
   _metadataChanged = new Signal<this, any>(this);
   _statesChanged = new Signal<this, any>(this);
   data: object | any;
