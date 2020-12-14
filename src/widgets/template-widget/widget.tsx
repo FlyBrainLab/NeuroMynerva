@@ -232,9 +232,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this._connected = new Date();  
       await this.initFBLClient(false);
       // register Comm only when kernel is changed
-      this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
+      this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       // set processor after session is avaible, in case the setter needs the session
       this.setProcessor(processor ?? FFBOProcessor.NO_PROCESSOR, true);
       Private.updateTitle(this, this._connected);
@@ -464,9 +464,16 @@ export class FBLWidget extends Widget implements IFBLWidget {
  async onKernelChanged(
     context: ISessionContext,
     args: Session.ISessionConnection.IKernelChangedArgs
-  ) {
+ ) {
+   console.log('KERNEL Changed', args, context);
+   if (args.oldValue === null && args.newValue === null) {
+     // this is called by the restart routine by default
+     return; // no op
+   }
+
     const newKernel: Kernel.IKernelConnection | null = args.newValue;
     this.setDirty(true);
+    Private.updateTitle(this, this._connected);
     if (newKernel === null){
       this.comm?.dispose();
       this.setHasClient(false);
@@ -477,37 +484,33 @@ export class FBLWidget extends Widget implements IFBLWidget {
       this.initFBLClient();
       this.onPathChanged();
 
-      this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
+      this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
       return;
     } else {
       this.setHasClient(false);
+      return
     }
-   
   }
 
   /**
-   * Kernel Status Changed. Register Comm on restart
-   * @param sess 
-   * @param status 
+   * Handle Change in Kernel Status
+   * 
+   * Note: re-registering client and comms should be handled by the `onKernelChanged` callback
+   * since the statuschanged eventually call the onKernelChanged. 
+   * 
+   * This function call is mainly for the purpose of detecting busy state of the kernel.
    */
-  onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) {
-    if (status === 'restarting') {
-      this.sessionContext.ready.then(() => {
-        this.initFBLClient();
-        // re-register callbacks
-        this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
-        this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
-        this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
-      });
-    }
+  onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) { 
+    return;
   }
 
   /**
   * A method that handles changing session Context
   */
   onPathChanged(msg?: any): void {
+    console.log('PATH Changed', msg);
     this.setDirty(true);
     if (this.sessionContext.session) {
       Private.updateTitle(this, this._connected);
@@ -545,6 +548,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   async initFBL(): Promise<boolean> {
     let code = this.initFBLCode();
+    console.debug('initFBL Called', code);
     const model = new OutputAreaModel();
     const rendermime = new RenderMimeRegistry({ initialFactories });
     const outputArea = new OutputArea({ model, rendermime });
@@ -576,48 +580,82 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if (processor !== this.processor && processor in this.ffboProcessors){
       currentProcessor = this.ffboProcessors[processor];
     }
-    let args = '';
-    if (currentProcessor?.USER?.user) {
-      args += `user='${currentProcessor.USER.user}',`;
-    }
-    if (currentProcessor?.USER?.secret) {
-      args += `secret='${currentProcessor.USER.secret}',`;
-    }
+    const websocket = currentProcessor.AUTH.ssl === true ? 'wss' : 'ws';
+    const url = `${websocket}://${currentProcessor.SERVER.IP}/ws`;
+    
     // DEBUG: ssl=True won't work for now, force to be False (default)
-    // if (currentProcessor?.AUTH?.ssl === true) {
-    //   args += 'ssl=True,';
-    // }
+    let args = `
+    user='${currentProcessor.USER.user}',
+    secret='${currentProcessor.USER.secret}',
+    ssl=False,
+    debug=${currentProcessor.DEBUG.debug ? 'True': 'False'},
+    authentication='${currentProcessor.AUTH.authentication ? 'True': 'False'}',
+    url=u'${url}',
+    dataset='${currentProcessor.SERVER.dataset[0] as string}',
+    realm=u'${currentProcessor.SERVER.realm}',`;
     if (currentProcessor?.AUTH?.ca_cert_file) {
-      args += `ca_cert_file="${currentProcessor.AUTH.ca_cert_file}",`;
+      args += `
+      ca_cert_file="${currentProcessor.AUTH.ca_cert_file}",`;
     }
     if (currentProcessor?.AUTH?.intermediate_cer_file) {
-      args += `intermediate_cer_file="${currentProcessor.AUTH.intermediate_cer_file}",`;
+      args += `
+      intermediate_cer_file='${currentProcessor.AUTH.intermediate_cer_file}',`;
     }
-    if (currentProcessor?.DEBUG?.debug === false) {
-      args += 'debug=False,';
-    }
-    if (currentProcessor?.AUTH?.authentication === false) {
-      args += 'authentication=False,';
-    }
-    let websocket = currentProcessor?.AUTH?.ssl === true ? 'wss' : 'ws';
-    if (currentProcessor?.SERVER?.IP) {
-      args += `url=u"${websocket}://${currentProcessor.SERVER.IP}/ws",`;
-    }
-    if (currentProcessor?.SERVER?.dataset) {
-      args += `dataset="${currentProcessor.SERVER.dataset[0] as string}",`;
-    }
-    if (currentProcessor?.SERVER?.realm) {
-      args += `realm=u"${currentProcessor.SERVER.realm}",`;
-    }
+    // if (currentProcessor?.USER?.user) {
+    //   args += `user='${currentProcessor.USER.user}',`;
+    // }
+    // if (currentProcessor?.USER?.secret) {
+    //   args += `secret='${currentProcessor.USER.secret}',`;
+    // }
+    // // DEBUG: ssl=True won't work for now, force to be False (default)
+    // // if (currentProcessor?.AUTH?.ssl === true) {
+    // //   args += 'ssl=True,';
+    // // }
+    // if (currentProcessor?.AUTH?.ca_cert_file) {
+    //   args += `ca_cert_file="${currentProcessor.AUTH.ca_cert_file}",`;
+    // }
+    // if (currentProcessor?.AUTH?.intermediate_cer_file) {
+    //   args += `intermediate_cer_file="${currentProcessor.AUTH.intermediate_cer_file}",`;
+    // }
+    // if (currentProcessor?.DEBUG?.debug === false) {
+    //   args += 'debug=False,';
+    // }
+    // if (currentProcessor?.AUTH?.authentication === false) {
+    //   args += 'authentication=False,';
+    // }
+    
+    // if (currentProcessor?.SERVER?.IP) {
+    //   args += `url=u"${websocket}://${currentProcessor.SERVER.IP}/ws",`;
+    // }
+    // if (currentProcessor?.SERVER?.dataset) {
+    //   args += `dataset="${currentProcessor.SERVER.dataset[0] as string}",`;
+    // }
+    // if (currentProcessor?.SERVER?.realm) {
+    //   args += `realm=u"${currentProcessor.SERVER.realm}",`;
+    // }
 
     let code = `
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
-    # if '${this.clientId}' not in fbl.client_manager.clients:
-    _comm = fbl.MetaComm('${this.clientId}', fbl)
-    _client = fbl.Client(FFBOLabcomm=_comm, ${args})
-    fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
+    if '${this.clientId}' not in fbl.client_manager.clients or fbl.client_manager.get_client('${this.clientId}') is None:
+      _comm = fbl.MetaComm('${this.clientId}', fbl)
+      _client = fbl.Client(FFBOLabcomm=_comm, ${args})
+      fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
+    else:
+      _client =fbl.client_manager.get_client('${this.clientId}') 
+      if _client.url != '${url}' or not _client.connected:
+        try:
+          _client.client._async_session.disconnect()
+          fbl.client_manager.delete_client('${this.clientId}')
+        except Exception as e:
+          print('Disconnecting client ${this.clientId} Failed', e)
+          pass
+        _client = fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
+        fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
+      if '${this.id}' not in fbl.client_manager.clients['${this.clientId}']['widgets']:
+        fbl.client_manager.clients['${this.clientId}']['widgets'] += ['${this.id}']
+      _comm = _client.FBLcomm
     `
     return code;
   }
@@ -628,6 +666,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   async initClient(processor?: string): Promise<boolean> {
     let code = this.initClientCode(processor);
+    console.debug('initClient Called', code);
     const model = new OutputAreaModel();
     const rendermime = new RenderMimeRegistry({ initialFactories });
     const outputArea = new OutputArea({ model, rendermime });
@@ -663,6 +702,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     try:
         if not fbl.widget_manager.widgets['${this.id}'].client_id in fbl.client_manager.clients:
             raise Exception('Client not found')
+        if fbl.client_manager.get_client('${this.clientId}') is None:
+            raise Exception('Client not found')
+        if not fbl.client_manager.get_client('${this.clientId}').connected:
+            raise Exception('Client not connected')
     except:
         raise Exception('Client not found')
     `;

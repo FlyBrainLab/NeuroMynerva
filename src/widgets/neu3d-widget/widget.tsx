@@ -3,11 +3,10 @@ import Neu3D from 'neu3d';
 import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
-import { Kernel } from '@jupyterlab/services';
 import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
-
+import { Kernel } from '@jupyterlab/services';
 import { Neu3DModel, INeu3DModel } from './model';
 import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
@@ -118,7 +117,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         };
         this._blockingDiv.appendChild(cancelBtn);
         this._blockingDiv.appendChild(acceptBtn);
-
         this.node.insertBefore(this._blockingDiv, this.node.childNodes[0]);
       });
     }
