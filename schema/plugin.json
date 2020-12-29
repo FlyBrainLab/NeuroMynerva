@@ -152,7 +152,7 @@
             "secret": "guestpass"
           },
           "SERVER": {
-            "IP": "flycircuitdev.neuronlp.fruitflybrain.org",
+            "IP": "neuronlp.fruitflybrain.org",
             "dataset": ["default"],
             "realm": "realm1"
           },
