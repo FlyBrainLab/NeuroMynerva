@@ -14,7 +14,7 @@ export interface IDataChangeArgs {
 * ID and a few selected attributes of the associated mesh dict items
 */
 export interface IMeshDictItem {
-  label?: String,
+  label?: string,
   highlight?: Boolean,
   opacity?: Number,
   visibility?: Boolean,
@@ -228,6 +228,16 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     return this._statesChanged;
   }
 
+  /** Return Array of Rid of all pinned objects*/
+  get pinned(): {[rid: string]: IMeshDictItem} {
+    return Private.filter(this.data, (mesh: IMeshDictItem) => mesh.pinned);
+  }
+
+  /** Return Array of Rid of all unpinned objects*/
+  get unpinned(): {[rid: string]: IMeshDictItem} {
+    return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.pinned);
+  }
+
   _dataChanged = new Signal<this, IDataChangeArgs>(this);
   _metadataChanged = new Signal<this, any>(this);
   _statesChanged = new Signal<this, any>(this);
@@ -238,6 +248,12 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
 
 
 namespace Private {
+  export function filter(obj: Object, predicate: CallableFunction): Object | any {
+    return Object.keys(obj)
+      .filter((key: string) => predicate((obj as any)[key ]))
+      .reduce((res: Object, key: string) => ((res as any)[key] = (obj as any)[key], res), {});
+  }
+
   /**
    * Convert Neu3D's raw meshDict object to what we have
    * @param meshDict Neu3D's raw meshDict object

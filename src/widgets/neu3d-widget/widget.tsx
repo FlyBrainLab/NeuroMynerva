@@ -846,7 +846,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.toolbar.addItem(
       'removeUnpinned', 
       Private.createButton(Icons.trashIcon, "Remove Unpinned Neurons", 'jp-Neu3D-Btn jp-SearBar-remove-unpinned', 
-      ()=> {this.neu3d.removeUnpinned();}));
+        () => {
+          let unames: string[] = Object.values(this.model.unpinned).map((mesh) => mesh.label);
+          this.removeByUname(unames);
+          // this.neu3d.removeUnpinned();
+        }));
     this.toolbar.addItem(
       'toggleControlPanel', 
       Private.createButton(settingsIcon, "Toggle Control Panel", 'jp-Neu3D-Btn jp-SearBar-showAll', 

@@ -459,7 +459,7 @@ namespace Neu3DComponents {
   }
 
   // function MorphRow(props: {
-  //   neu3d: Neu3DWidget, name: String, rid: string,
+  //   neu3d: Neu3DWidget, name: string, rid: string,
   //   visibility: Boolean, pinned: Boolean,
   //   showPanel: Function
   // }) {
@@ -495,7 +495,7 @@ namespace Neu3DComponents {
   // }
 
   // function MorphRow(props: {
-  //   neu3d: Neu3DWidget, name: String, rid: string,
+  //   neu3d: Neu3DWidget, name: string, rid: string,
   //   visibility: Boolean, pinned: Boolean,
   //   showPanel: Function
   // }) {
