@@ -360,7 +360,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   querySender(): string {
     let code = `
-    fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(res)
+    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(res)
     `;
     return code;
   }
@@ -371,7 +371,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   NLPquerySender(): string {
     let code = `
-    fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(res)
+    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(res)
     `;
     return code;
   }
