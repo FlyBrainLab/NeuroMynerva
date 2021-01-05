@@ -408,9 +408,9 @@ export class InfoWidget extends ReactWidget {
             >
               {(_, val) => {
                 if (val.data?.connectivity) {
-                  return <Components.ConnTableToolbar connData={val.data.connectivity.pre} neu3d={val.neu3d} tabConn={this.tabConnPre}/>
+                  return <Components.ConnTableToolbar side={'pre'} connData={val.data.connectivity.pre} neu3d={val.neu3d} tabConn={this.tabConnPre}/>
                 } else {
-                  return <Components.ConnTableToolbar connData={empty_data.connectivity.pre} neu3d={val.neu3d} tabConn={this.tabConnPre}/>
+                  return <Components.ConnTableToolbar side={'pre'} connData={empty_data.connectivity.pre} neu3d={val.neu3d} tabConn={this.tabConnPre}/>
                 }
               }}
             </UseSignal>
@@ -429,9 +429,9 @@ export class InfoWidget extends ReactWidget {
             >
               {(_, val) => {
                 if (val.data?.connectivity) {
-                  return <Components.ConnTableToolbar connData={val.data.connectivity.post} neu3d={val.neu3d} tabConn={this.tabConnPost}/>
+                  return <Components.ConnTableToolbar side={'post'} connData={val.data.connectivity.post} neu3d={val.neu3d} tabConn={this.tabConnPost}/>
                 } else {
-                  return <Components.ConnTableToolbar connData={empty_data.connectivity.post} neu3d={val.neu3d} tabConn={this.tabConnPost}/>
+                  return <Components.ConnTableToolbar side={'post'} connData={empty_data.connectivity.post} neu3d={val.neu3d} tabConn={this.tabConnPost}/>
                 }
               }}
             </UseSignal>
@@ -493,6 +493,7 @@ namespace Components {
   }
 
   export class ConnTableToolbar extends React.Component<{
+    side: 'pre' | 'post',
     connData: any,
     neu3d: Neu3DWidget,
     tabConn: ConnTable
@@ -532,10 +533,18 @@ namespace Components {
       return count;
     }
 
-    getActiveMorpho(field='rid'): Array<string> {
-      let activeNeuronRids: Array<string> = [];
-      if (this.props.tabConn?.tabulator) {
-        activeNeuronRids = this.props.tabConn.tabulator.getData('active').map((r: any) => r[field]);
+    getActiveMorpho(fields: string | string[]='rid'): Array<{[field:string]: string}> {
+      if (!Array.isArray(fields)){
+        fields = [fields];
+      }
+      let tmp: Array<string[]> = this.props.tabConn.tabulator.getData('active').map((r: any) => (fields as string[]).map(f=>r[f]));
+      let activeNeuronRids: Array<{[field:string]: string}> = [];
+      for (let ids of tmp){
+        let active:{[field:string]: string}  = {};
+        for (let idx in fields){
+          active[fields[idx]] = ids[idx];
+        }
+        activeNeuronRids.push(active);
       }
       return activeNeuronRids;
     }
@@ -550,43 +559,45 @@ namespace Components {
     }
 
     /**
-     * Take intersection between 2 string arrays
-     * @param list1 
-     * @param list2 
+     * Return React Component of the Neuron information to be added
      */
-    private _intersection(list1: Array<string>, list2: Array<string>): Array<string> {
-      return [...list1].filter(i => list2.includes(i));
+    private _neuronNumberTemplate(pre_post: 'pre'|'post', add_remove: 'add'|'remove', total: number, active: number, inWorkspace: number, change: number): any {
+      return <>
+        <div 
+        className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+        data-mime-type={"text/markdown"}
+        >
+          <table>
+            <tbody>
+            <tr><th>Type</th><th>Number</th></tr>
+            <tr><td>Total {pre_post == 'pre' ? 'Presynaptic' : 'PostSynaptic'} Partners</td><td>{total}</td></tr>
+            <tr><td>Active in Connectivity Table</td><td>{active}</td></tr>
+            <tr><td>Currently in Workspace</td><td>{inWorkspace}</td></tr>
+            <tr><td>To be {add_remove == 'add' ? 'Added' : 'Removed'}</td><td><b>{change}</b></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </>;
     }
-  
+
     addAllNeurons() {
       if (!this.hasNeu) {
         return;
       }
-      let active_rid_list = this.getActiveMorpho('n_rid');
-        
-      let rid_list: Array<string> = [];
-      for (let entry of this.props.connData.details) {
-        if (!this.props.neu3d.isInWorkspace(entry.rid)) {
-          rid_list.push(entry.n_rid);
-        }
-      }
-      rid_list = this._intersection(active_rid_list, rid_list);
+      let filtered_ids = this.getActiveMorpho(['rid', 'n_rid']);
+      let inworkspace_ids = [...filtered_ids].filter(ids => this.props.neu3d.isInWorkspace(ids.rid));
+      let change_ids = [...filtered_ids].filter(ids => !inworkspace_ids.includes(ids));
 
       showDialog({
-        title: `Add all Neurons to Neu3D Widget?`,
-        body: `
-        Total ${this.numNeu} neurons, 
-        ${active_rid_list.length} shown in the active table, 
-        ${rid_list.length} to be added from the active list.
-        `,
+        title: `Add all filtered neurons to Neu3D widget?`,
+        body: this._neuronNumberTemplate(this.props.side, 'add', this.numNeu, filtered_ids.length, inworkspace_ids.length, change_ids.length),
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'ADD'})
         ]
       }).then(result =>{
         if (result.button.accept) {
-
-          this.props.neu3d.addByRid(rid_list);
+          this.props.neu3d.addByRid(change_ids.map(ids => ids.n_rid));
         } 
       });
     }
@@ -595,28 +606,20 @@ namespace Components {
       if (!this.hasNeu) {
         return;
       }
-      let active_rid_list = this.getActiveMorpho('n_rid');
-      let rid_list: Array<string> = [];
-      for (let entry of this.props.connData.details) {
-        if (this.props.neu3d.isInWorkspace(entry.rid)) {
-          rid_list.push(entry.n_rid);
-        }
-      }
-      rid_list = this._intersection(active_rid_list, rid_list);
+      let filtered_ids = this.getActiveMorpho(['rid', 'n_rid']);
+      let inworkspace_ids = [...filtered_ids].filter(ids => this.props.neu3d.isInWorkspace(ids.rid));
+      let change_ids = [...filtered_ids].filter(ids => inworkspace_ids.includes(ids));
+
       showDialog({
-        title: `Remove all Neurons from Neu3D Widget?`,
-        body: `
-        Total ${this.numNeu} neurons, 
-        ${active_rid_list.length} shown in the active table,
-        ${rid_list.length} to be removed from the active list.
-        `,
+        title: `Remove all filtered neurons from Neu3D widget?`,
+        body: this._neuronNumberTemplate(this.props.side, 'remove', this.numNeu, filtered_ids.length, inworkspace_ids.length, change_ids.length),
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'REMOVE'})
         ]
       }).then(result =>{
         if (result.button.accept) {
-          this.props.neu3d.removeByRid(rid_list);
+          this.props.neu3d.removeByRid(change_ids.map(ids => ids.n_rid));
         } 
       });
     }
@@ -625,30 +628,20 @@ namespace Components {
       if (!this.hasSyn) {
         return;
       }
-      let active_rid_list = this.getActiveMorpho('s_rid');
-      let rid_list: Array<string> = [];
-      for (let entry of this.props.connData.details) {
-        if (entry.has_syn_morph) {
-          if (!this.props.neu3d.isInWorkspace(entry.syn_rid)) {
-            rid_list.push(entry.s_rid);
-          }
-        }
-      }
-      rid_list = this._intersection(active_rid_list, rid_list);
+      let filtered_ids = this.getActiveMorpho(['syn_rid', 's_rid']);
+      let inworkspace_ids = [...filtered_ids].filter(ids => this.props.neu3d.isInWorkspace(ids.syn_rid));
+      let change_ids = [...filtered_ids].filter(ids => !inworkspace_ids.includes(ids));
+
       showDialog({
-        title: `Add all synapse morphologies to Neu3D Widget?`,
-        body: `
-          Total ${this.numSyn} connections to partner neurons have synapse morphologies, 
-          ${active_rid_list.length} in the active table,
-          ${rid_list.length} to be added.
-        `,
+        title: `Add all filtered synapse morphologies to Neu3D widget?`,
+        body: this._neuronNumberTemplate(this.props.side, 'add', this.numNeu, filtered_ids.length, inworkspace_ids.length, change_ids.length),
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'ADD'})
         ]
       }).then(result =>{
         if (result.button.accept) {
-          this.props.neu3d.addByRid(rid_list);
+          this.props.neu3d.addByRid(change_ids.map(ids => ids.s_rid));
         } 
       });
     }
@@ -657,30 +650,20 @@ namespace Components {
       if (!this.hasSyn) {
         return;
       }
-      let active_rid_list = this.getActiveMorpho('s_rid');
-      let rid_list: Array<string> = [];
-      for (let entry of this.props.connData.details) {
-        if (entry.has_syn_morph) {
-          if (this.props.neu3d.isInWorkspace(entry.syn_rid)) {
-            rid_list.push(entry.s_rid);
-          } 
-        }
-      }
-      rid_list = this._intersection(active_rid_list, rid_list);
+      let filtered_ids = this.getActiveMorpho(['syn_rid', 's_rid']);
+      let inworkspace_ids = [...filtered_ids].filter(ids => this.props.neu3d.isInWorkspace(ids.syn_rid));
+      let change_ids = [...filtered_ids].filter(ids => inworkspace_ids.includes(ids));
+
       showDialog({
-        title: `Remove all synapse morphologies from Neu3D Widget?`,
-        body: `
-        Total ${this.numSyn} connections to partner neruons have synapse morphologies, 
-        ${active_rid_list.length} in the active table,
-        ${rid_list.length} to be removed.
-        `,
+        title: `Remove all filtered synapse morphologies from Neu3D widget?`,
+        body: this._neuronNumberTemplate(this.props.side, 'add', this.numNeu, filtered_ids.length, inworkspace_ids.length, change_ids.length),
         buttons: [
           Dialog.cancelButton(),
           Dialog.okButton({label: 'REMOVE'})
         ]
       }).then(result =>{
         if (result.button.accept) {
-          this.props.neu3d.removeByRid(rid_list);
+          this.props.neu3d.removeByRid(change_ids.map(ids => ids.s_rid));
         } 
       });
     }
