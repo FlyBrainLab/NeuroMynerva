@@ -12,7 +12,6 @@ import {
   ISettingRegistry
 } from '@jupyterlab/settingregistry';
 
-
 import { 
   LabIcon, closeIcon,//, fileIcon 
   caretRightIcon,
@@ -393,6 +392,7 @@ namespace Neu3DComponents {
       const toggleVis = (rid: string) => { neu3d.neu3d.toggleVis(rid);}
       const togglePin = (rid: string) => { neu3d.neu3d.togglePin(rid); }
       const onHover = (rid: string) => { neu3d.neu3d.highlight(rid); }
+      const showInfo = (rid: string) => { neu3d.executeInfoQuery(rid);}
       const onLeave = () => { neu3d.neu3d.highlight(); }
       const onClick = () => { showPanel(); }
 
@@ -404,6 +404,7 @@ namespace Neu3DComponents {
             <div key={1} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Hide"}></ToolbarButtonComponent></div>
             <div key={2} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.mapPinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Pin"}></ToolbarButtonComponent></div>
             <div key={3} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.mapUpinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Unpin"}></ToolbarButtonComponent></div>
+            <div key={4} className={`${MORPH_ACTION_BUTTON}`} > <ToolbarButtonComponent icon={Icons.neuInfoIcon} onClick={() => { showInfo(row[0]);}} tooltip={"Get Info"}></ToolbarButtonComponent></div>
           </td>
         </tr>
       ));
