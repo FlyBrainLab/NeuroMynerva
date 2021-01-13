@@ -774,9 +774,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             // preset not found in available PRESETS
             console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
             let schemaSettings = this.ffboProcessors[this.processor].PRESETS.neu3dSettings;
-            settings.resetPosition = schemaSettings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition;
-            settings.upVector = schemaSettings.upVector ?? PRESETS.default.neu3dSettings.upVector;
-            settings.cameraTarget = schemaSettings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
+            settings = {
+              resetPosition: schemaSettings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition,
+              upVector: schemaSettings.upVector ?? PRESETS.default.neu3dSettings.upVector,
+              cameraTarget: schemaSettings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget,
+            };
             placeholder = PRESETS.default.searchPlaceholder;
           } else {
             preset = processorPreset as PRESETS_NAMES;
