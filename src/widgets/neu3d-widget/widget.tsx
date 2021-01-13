@@ -6,13 +6,13 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
-import { Kernel } from '@jupyterlab/services';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Neu3DModel, INeu3DModel } from './model';
 import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
 import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
-
+import { InfoWidget } from '../info-widget/index';
 import { PRESETS, PRESETS_NAMES } from './presets';
 import * as Icons from '../../icons';
 import '../../../style/neu3d-widget/neu3d.css';
@@ -482,7 +482,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    * Get Info of a given neuron
    * @return a promise that resolves to the reply message when done 
    */
-  executeInfoQuery(uname: string): any {
+  executeInfoQuery(uname: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
     let code_to_send = `
     fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${uname}')
     `
@@ -612,15 +612,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this.model._statesChanged.emit(states);
       this._modelChanged.emit(e);
     });
-
-    /** State Setting */
-    this.neu3d.states.on('change',
-    (e: any) => {
-      let states = this.neu3d.export_state();
-      this.model.states = states;
-      this.model._statesChanged.emit(states);
-      this._modelChanged.emit(e);
-    }, 'highlight');
 
     if (!objEmpty(this.model.metadata)) {
       this.neu3d.import_settings(this.model.metadata);
@@ -876,7 +867,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   private _blockingDiv: HTMLDivElement; // On browser refresh, a blocking div is shown to prompt user
   private _workspaceChanged = new Signal<this, any>(this);
   model: Neu3DModel;
-  info: any; // info panel widget that this extension is connected to
+  info: InfoWidget; // info panel widget that this extension is connected to
 };
 
 

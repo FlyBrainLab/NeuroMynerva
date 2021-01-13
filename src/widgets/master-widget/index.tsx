@@ -392,7 +392,11 @@ namespace Neu3DComponents {
       const toggleVis = (rid: string) => { neu3d.neu3d.toggleVis(rid);}
       const togglePin = (rid: string) => { neu3d.neu3d.togglePin(rid); }
       const onHover = (rid: string) => { neu3d.neu3d.highlight(rid); }
-      const showInfo = (rid: string) => { neu3d.executeInfoQuery(rid);}
+      const showInfo = (rid: string) => { 
+        neu3d.executeInfoQuery(rid).done.then(()=>{
+          labShell.activateById(neu3d.info.id);
+        })
+      };
       const onLeave = () => { neu3d.neu3d.highlight(); }
       const onClick = () => { showPanel(); }
 

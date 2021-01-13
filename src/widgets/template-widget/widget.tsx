@@ -987,7 +987,7 @@ export namespace FBLWidget {
     /**
      * Info panel widget
      */
-    info?: any;
+    info?: InfoWidget;
 
     /**
      * All available processor settings
