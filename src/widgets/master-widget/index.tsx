@@ -92,7 +92,7 @@ export class MasterWidget extends ReactWidget {
     fbltrackers: IFBLWidgetTrackers,
     ffboProcessorSetting: ISettingRegistry.ISettings
   ) {
-    console.log('Master Widget Created');
+    console.debug('Master Widget Created');
     super();
     this.sessionManager = sessionManager;
     this.labShell = labShell;

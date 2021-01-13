@@ -273,7 +273,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   onCommMsg(msg: any) {
     super.onCommMsg(msg);
     let thisMsg = msg.content.data as any;
-    console.log('NLP received message:', thisMsg)
+    console.debug('NLP received message:', thisMsg)
     if (!['NLP', 'INFO'].includes(thisMsg.widget)) {
       return;
     }
@@ -286,7 +286,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           } else if (thisMsg.data.info.error) {
             INotification.error(thisMsg.data.info.error, {'autoClose': 5000});  
           }
-          console.log('[NEU3D] Message received.', thisMsg.data);
+          console.debug('[NEU3D] Message received.', thisMsg.data);
           break;
         }
         case "Data": {
@@ -320,7 +320,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           break;
         }*/
         default: {
-          console.log('[NEU3D] RESET', thisMsg.data);
+          console.debug('[NEU3D] RESET', thisMsg.data);
           // this.n3dlog = [];
           this._receiveCommand(thisMsg.data);
           break;
@@ -401,7 +401,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     `;
     code = code + this.querySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('addByUname', uname, result);
+    console.debug('addByUname', uname, result);
     return result;
   }
 
@@ -420,7 +420,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     `;
     code = code + this.querySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('removeByUname', uname, result);
+    console.debug('removeByUname', uname, result);
     return result;
   }
 
@@ -440,7 +440,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     `;
     code = code + this.querySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('addByRid', rid, result);
+    console.debug('addByRid', rid, result);
     return result;
   }
 
@@ -459,7 +459,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     `;
     code = code + this.querySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('removeByRid', rid, result);
+    console.debug('removeByRid', rid, result);
     return result;
   }
 
@@ -474,7 +474,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     `;
     code = code + this.NLPquerySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.log('NLPquery', result);
+    console.debug('NLPquery', result);
     return Promise.resolve(result);
   }
 

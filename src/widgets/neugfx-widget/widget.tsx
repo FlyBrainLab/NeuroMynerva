@@ -60,14 +60,13 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     Event.prototype.stopPropagation = function(){  };
     var _this = this;
     let event_func = function(event: any) {
-      // console.log(event.data);
-      console.log("[NeuGFX] Input:", event.data);
+      console.debug("[NeuGFX] Input:", event.data);
       if (event.data.messageType == 'text') {
-        console.log("[NeuGFX] message:", event.data.data);
+        console.debug("[NeuGFX] message:", event.data.data);
       }
       if (event.data.messageType == 'alert') {
         if (event.data.alertType == 'success') {
-          console.log('[NeuGFX] Error!', event.data.data);
+          console.debug('[NeuGFX] Error!', event.data.data);
           /*(izi as any).success({
             id: "success",
             message: event.data.data,
@@ -76,7 +75,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
           });*/
         }
         else if (event.data.alertType == 'error') {
-          console.log('[NeuGFX] Success!', event.data.data);
+          console.debug('[NeuGFX] Success!', event.data.data);
           /*(izi as any).error({
             id: "success",
             message: event.data.data,
@@ -86,7 +85,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         }
       }
       if (event.data.messageType == 'NLPquery') {
-        console.log('NLPquery');
+        console.debug('NLPquery');
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].executeNLPquery(query="${event.data.query}")
         `;
@@ -94,7 +93,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.executeNLPquery(query="' + event.data.query + '"); _FFBOLabcomm.send(data=_FFBOLABres)' } });
       }
       if (event.data.messageType == 'NLPloadTag') {
-        console.log('loadTag');
+        console.debug('loadTag');
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].loadTag("${event.data.tag}")
         `;
@@ -102,44 +101,44 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.loadTag("' + event.data.tag + '"); _FFBOLabcomm.send(data=_FFBOLABres)' } });
       }
       if (event.data.messageType == 'NLPaddByUname') {
-        console.log('Adding by uname');
+        console.debug('Adding by uname');
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].addByUname([${event.data.uname}])
         `;
-        console.log(code_to_send); 
+        console.debug(code_to_send); 
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
       if (event.data.messageType == 'NLPremoveByUname') {
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + '], verb="remove");' } });
-        console.log('Removing by uname');
+        console.debug('Removing by uname');
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].addByUname([${event.data.uname}], verb='remove')
         `;
-        console.log(code_to_send); 
+        console.debug(code_to_send); 
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
       if (event.data.messageType == 'loadExperimentConfig') {
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.loadExperimentConfig("""' + event.data.config + '""");' } });
-        console.log('Loading experiment configuration.');
+        console.debug('Loading experiment configuration.');
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].loadExperimentConfig("""${event.data.config}""")
         `;
-        console.log(code_to_send); 
+        console.debug(code_to_send); 
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
       if (event.data.messageType == 'Execute') {
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: event.data.content } });
-        console.log('Executing code directly.');
+        console.debug('Executing code directly.');
         let code_to_send = `
         ${event.data.content}
         `;
         code_to_send = code_to_send.replace('$CLIENT', `
         fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client']
         `);
-        console.log(code_to_send); 
+        console.debug(code_to_send); 
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
@@ -165,7 +164,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
   
 
   onCommMsg(msg: any) {
-    console.log(msg);
+    console.debug(msg);
     this._neugfxContainer.contentWindow.postMessage({ messageType: msg.content.data.messageType, data: msg.content.data.data }, '*');
   }
 

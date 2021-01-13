@@ -465,7 +465,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     context: ISessionContext,
     args: Session.ISessionConnection.IKernelChangedArgs
  ) {
-   console.log('KERNEL Changed', args, context);
+   console.debug('KERNEL Changed', args, context);
    if (args.oldValue === null && args.newValue === null) {
      // this is called by the restart routine by default
      return; // no op
@@ -510,7 +510,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   * A method that handles changing session Context
   */
   onPathChanged(msg?: any): void {
-    console.log('PATH Changed', msg);
+    console.debug('PATH Changed', msg);
     this.setDirty(true);
     if (this.sessionContext.session) {
       Private.updateTitle(this, this._connected);

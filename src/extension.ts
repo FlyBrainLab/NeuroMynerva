@@ -270,7 +270,7 @@ async function activateFBL(
   status: ILabStatus,
   labShell: ILabShell
 ): Promise<IFBLWidgetTrackers> {
-  console.log("FBL Extension Activated");
+  console.debug("FBL Extension Activated");
   const fblWidgetTrackers = new FBLWidgetTrackers({
     "Neu3D": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'}),
     "NeuGFX": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'})
