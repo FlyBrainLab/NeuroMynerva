@@ -74,9 +74,9 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
    * @param value 
    */
   addMesh(rid:string, value:IMeshDictItem){
-    if (value.background) {
-      return;
-    }
+    // if (value.background) {
+    //   return;
+    // }
     let oldValue = this.data[rid];
     this.data[rid] = Private.convertRawMesh(value);
     this._dataChanged.emit({
