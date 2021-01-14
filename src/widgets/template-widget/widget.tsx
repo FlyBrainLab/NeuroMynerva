@@ -13,14 +13,15 @@ import {
 } from '@jupyterlab/rendermime';
 import {
   ISessionContext, SessionContext, 
-  sessionContextDialogs, showDialog
+  sessionContextDialogs, showDialog,
+  ToolbarButton
 } from '@jupyterlab/apputils';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Toolbar } from '@jupyterlab/apputils';
 import { INotification } from "jupyterlab_toastify";
 import { LabIcon } from '@jupyterlab/ui-components';
 
-import { fblIcon } from '../../icons';
+import { fblIcon, syncConsoleIcon } from '../../icons';
 import { FBLWidgetModel, IFBLWidgetModel } from './model';
 import { 
   createProcessorButton, 
@@ -311,9 +312,12 @@ export class FBLWidget extends Widget implements IFBLWidget {
    */
   sendModel(change?: Partial<IFBLWidgetModel>) {
     this.comm.send({
-      data: change?.data ?? this.model.data,
-      metadata: change?.metadata ?? this.model.metadata,
-      states: change?.states ?? this.model.states,
+      messageType: 'model',
+      data: {
+        data: change?.data ?? this.model.data,
+        metadata: change?.metadata ?? this.model.metadata,
+        states: change?.states ?? this.model.states,
+      }
     })
   }
 
@@ -800,6 +804,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this.toolbar.addItem('spacer', Toolbar.createSpacerItem());
     this.toolbar.addItem('Processor Changer', createProcessorButton(this));
     this.toolbar.addItem('Session Dialog', createSessionDialogButton(this));
+    this.toolbar.addItem('Send Data to Kernel', new ToolbarButton({
+      icon: syncConsoleIcon, 
+      onClick: this.sendModel.bind(this)
+    }));
     this.toolbar.addItem('restart', Toolbar.createRestartButton(this.sessionContext));
     this.toolbar.addItem('stop', Toolbar.createInterruptButton(this.sessionContext));
     this.toolbar.addItem('kernelName', Toolbar.createKernelNameItem(this.sessionContext));

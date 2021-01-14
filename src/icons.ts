@@ -25,6 +25,7 @@ import cameraStr from '../style/icons/camera.svg';
 import mapUpinStr from '../style/icons/map-unpin.svg';
 import mapPinStr from '../style/icons/map-pin.svg';
 import webStr from '../style/icons/web.svg';
+import syncToConsoleStr from '../style/icons/sync_to_console.svg';
 
 // svgstr is the raw contents of an icon's svg file
 export const fblIcon = new LabIcon({
@@ -51,6 +52,11 @@ export const ffboProcessorIcon = new LabIcon({
   name: 'fbl:processor',
   svgstr: ffboProcessorIconStr
 });
+export const syncConsoleIcon = new LabIcon({
+  name: 'fbl:sync-console',
+  svgstr: syncToConsoleStr
+});
+
 // export const workspaceIcon = new LabIcon({
 //   name: 'fbl:workspace',
 //   svgstr: workspaceIconStr
