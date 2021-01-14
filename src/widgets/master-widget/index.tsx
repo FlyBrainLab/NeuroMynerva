@@ -83,6 +83,16 @@ const MORPH_ACTION_BUTTON = 'jp-FBL-Master-Neu3D-Table-Button';
 const MORPH_ROW = 'jp-FBL-Master-Neu3D-Table-Row';
 
 /**
+ * The class name added to buttons in header of each collapsible section
+ */
+const COLLAPSIBLE_SECTION_HEADER = 'jp-FBL-Master-Collapsible-Section-Header';
+
+/**
+ * The class name added to buttons in header of each collapsible section
+ */
+const COLLAPSIBLE_SECTION_HEADER_BUTTONS = 'jp-FBL-Master-Collapsible-Section-Header-Buttons';
+
+/**
 * An FBL Master Widget
 */
 export class MasterWidget extends ReactWidget {
@@ -238,7 +248,7 @@ namespace FBLWidgetReact {
       )
     } else {
       return (
-        <li className={ITEM_CLASS}>
+        <>
           <icon.react tag="span" stylesheet="runningItem" />
           <span
             className={ITEM_LABEL_CLASS}
@@ -262,7 +272,7 @@ namespace FBLWidgetReact {
               }
             }}
           </UseSignal>
-        </li>
+        </>
       );
     }
   }
@@ -315,11 +325,12 @@ namespace Neu3DComponents {
       const neu3d = this.props.panel.content as Neu3DWidget;
       for (let row of Object.entries(neu3d.model.data)) {
         const rid = row[0];
-        const { label, visibility, pinned } = row[1] as IMeshDictItem;
+        const { label, visibility, pinned, background } = row[1] as IMeshDictItem;
         rows[rid] = {
           label: label ?? rid,
           visibility: visibility,
-          pinned: pinned
+          pinned: pinned,
+          background: background ?? false
         }
       }
       this.state = {
@@ -339,7 +350,8 @@ namespace Neu3DComponents {
               rows[rid] = {
                 label: source[rid].label ?? rid,
                 visibility: source[rid].visibility,
-                pinned: source[rid].pinned
+                pinned: source[rid].pinned,
+                background: source[rid].background ?? false
               }
               this.delayedSetState(rows);
             }
@@ -391,7 +403,7 @@ namespace Neu3DComponents {
     
       const toggleVis = (rid: string) => { neu3d.neu3d.toggleVis(rid);}
       const togglePin = (rid: string) => { neu3d.neu3d.togglePin(rid); }
-      const onHover = (rid: string) => { neu3d.neu3d.highlight(rid); }
+      const onHover = (rid: string) => { neu3d.neu3d.highlight(rid, true); }
       const showInfo = (rid: string) => { 
         neu3d.executeInfoQuery(rid).done.then(()=>{
           labShell.activateById(neu3d.info.id);
@@ -400,31 +412,40 @@ namespace Neu3DComponents {
       const onLeave = () => { neu3d.neu3d.highlight(); }
       const onClick = () => { showPanel(); }
 
-      let neuronRows = Object.entries(this.state.rows).map((row: [string, Partial<IMeshDictItem>], idx: number) => (
-        <tr className={MORPH_ROW} key={row[0]} onMouseOver={() => { onHover(row[0]) }} onMouseLeave={onLeave} onClick={onClick}>
-          <td>{row[1].label}</td>
-          <td className={"Neuron-Table-Buttons"}>
-            <div key={0} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.eyeIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Show"}></ToolbarButtonComponent></div>
-            <div key={1} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Hide"}></ToolbarButtonComponent></div>
-            <div key={2} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.mapPinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Pin"}></ToolbarButtonComponent></div>
-            <div key={3} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.mapUpinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Unpin"}></ToolbarButtonComponent></div>
-            <div key={4} className={`${MORPH_ACTION_BUTTON}`} > <ToolbarButtonComponent icon={Icons.neuInfoIcon} onClick={() => { showInfo(row[0]);}} tooltip={"Get Info"}></ToolbarButtonComponent></div>
-          </td>
-        </tr>
-      ));
+      let neuronRows: React.ReactElement[] = [];
+      let neuropilRows: React.ReactElement[] = [];
+      Object.entries(this.state.rows).forEach((row: [string, Partial<IMeshDictItem>], idx: number) => {
+        if (row[1].background){
+          neuropilRows.push(
+            <tr className={MORPH_ROW} key={row[0]} onMouseOver={() => { onHover(row[0]) }} onMouseLeave={onLeave} onClick={onClick}>
+              <td>{row[1].label}</td>
+              <td className={"Neuron-Table-Buttons"}>
+                <div key={5} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.eyeIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Show"}></ToolbarButtonComponent></div>
+                <div key={6} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Hide"}></ToolbarButtonComponent></div>
+              </td>
+            </tr>
+          )
+        } else{
+          neuronRows.push(
+            <tr className={MORPH_ROW} key={row[0]} onMouseOver={() => { onHover(row[0]) }} onMouseLeave={onLeave} onClick={onClick}>
+              <td>{row[1].label}</td>
+              <td className={"Neuron-Table-Buttons"}>
+                <div key={0} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.eyeIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Show"}></ToolbarButtonComponent></div>
+                <div key={1} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Hide"}></ToolbarButtonComponent></div>
+                <div key={2} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.mapPinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Pin"}></ToolbarButtonComponent></div>
+                <div key={3} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.mapUpinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Unpin"}></ToolbarButtonComponent></div>
+                <div key={4} className={`${MORPH_ACTION_BUTTON}`} > <ToolbarButtonComponent icon={Icons.neuInfoIcon} onClick={() => { showInfo(row[0]);}} tooltip={"Get Info"}></ToolbarButtonComponent></div>
+              </td>
+            </tr>
+          )
+        }
+      });
 
-      let neuronTable = (
-        <table data-neu3d-id={neu3d.id} className={"neuron-list-table"}>
-          <tbody>
-            {neuronRows}
-          </tbody>
-        </table>
-      );
       return (
         <CollapsibleSection
           title={
             <>
-              <li className={ITEM_CLASS}>
+              <div className={ITEM_CLASS}>
                 <icon.react tag="span" stylesheet="runningItem" />
                 <span
                   className={ITEM_LABEL_CLASS}
@@ -448,93 +469,59 @@ namespace Neu3DComponents {
                     }
                   }}
                 </UseSignal>
-              </li>
+              </div>
             </>
           }
           children={
-            <div className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
-              data-mime-type={"text/markdown"}
-            >
-              {neuronTable}
-            </div>
+            <>
+            <CollapsibleSection 
+              title={
+                <>
+                  <span className={ITEM_LABEL_CLASS}>Neurons & Synapses</span>
+                  <div className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`}>
+                    <ToolbarButtonComponent key={0} icon={Icons.eyeIcon} onClick={() => {neu3d.neu3d.showFrontAll()}}tooltip={"Show All Neurons & Synapses"}/>
+                    <ToolbarButtonComponent key={1} icon={Icons.eyeSlashIcon} onClick={() => {neu3d.neu3d.hideFrontAll()}} tooltip={"Hide All Neurons & Synapses"}/>
+                  </div>
+                </>
+              } 
+              children={
+                <div className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+                  data-mime-type={"text/markdown"}
+                >
+                  <table data-neu3d-id={neu3d.id} className={"neuron-list-table"}>
+                    <tbody>
+                      {neuronRows}
+                    </tbody>
+                  </table>
+                </div>
+              }></CollapsibleSection>
+            <CollapsibleSection 
+              title={
+                <>
+                  <span className={ITEM_LABEL_CLASS}>Neuropils</span>
+                  <div className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`} > 
+                    <ToolbarButtonComponent key={0} icon={Icons.eyeIcon} onClick={() => {neu3d.neu3d.showBackAll()}}tooltip={"Show All Neuropils"}/>
+                    <ToolbarButtonComponent key={1} icon={Icons.eyeSlashIcon} onClick={() => {neu3d.neu3d.hideBackAll()}} tooltip={"Hide All Neuropils"}/>
+                  </div>
+                </>
+              }
+              children={
+                <div className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
+                  data-mime-type={"text/markdown"}
+                >
+                  <table data-neu3d-id={neu3d.id} className={"neuron-list-table"}>
+                    <tbody>
+                      {neuropilRows}
+                    </tbody>
+                  </table>
+                </div>
+              }></CollapsibleSection>
+            </>
           }
         ></CollapsibleSection>
       );
     }
   }
-
-  // function MorphRow(props: {
-  //   neu3d: Neu3DWidget, name: string, rid: string,
-  //   visibility: Boolean, pinned: Boolean,
-  //   showPanel: Function
-  // }) {
-  //   let toggleVis = () => {
-  //     props.neu3d.neu3d.toggleVis(props.rid);
-  //   }
-  //   let togglePin = () => {
-  //     props.neu3d.neu3d.togglePin(props.rid);
-  //   }
-  //   let Buttons = [ // TODO: add Pin Icon
-  //     <div key={0} className={`${MORPH_ACTION_BUTTON} ${props.visibility ? 'hidden': ''}`} data-btn-rid={props.rid} data-vis={false}> <ToolbarButtonComponent icon={Icons.eyeIcon} onClick={toggleVis} tooltip={"Show"}></ToolbarButtonComponent></div>,
-  //     <div key={1} className={`${MORPH_ACTION_BUTTON} ${props.visibility ? '': 'hidden'}`} data-btn-rid={props.rid} data-vis={true}> <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={toggleVis} tooltip={"Hide"}></ToolbarButtonComponent></div>,
-  //     <div key={2} className={`${MORPH_ACTION_BUTTON} ${props.pinned ? 'hidden': ''}`} data-btn-rid={props.rid} data-pin={false}> <ToolbarButtonComponent icon={Icons.mapPinIcon} onClick={togglePin} tooltip={"Pin"}></ToolbarButtonComponent></div>,
-  //     <div key={3} className={`${MORPH_ACTION_BUTTON} ${props.pinned ? '': 'hidden'}`} data-btn-rid={props.rid} data-pin={true}> <ToolbarButtonComponent icon={Icons.mapUpinIcon} onClick={togglePin} tooltip={"Unpin"}></ToolbarButtonComponent></div>
-  //   ];
-
-  //   let onHover = () => {
-  //     props.neu3d.neu3d.highlight(props.rid);
-  //   }
-  //   let onLeave = () => {
-  //     props.neu3d.neu3d.highlight();
-  //   }
-  //   let onClick = () => {
-  //     props.showPanel();
-  //   }
-
-  //   return (
-  //     <tr className={MORPH_ROW} data-rid={props.rid} key={props.rid} onMouseOver={onHover} onMouseLeave={onLeave} onClick={onClick}>
-  //       <td>{props.name}</td>
-  //       <td className={"Neuron-Table-Buttons"}>{Buttons}</td>
-  //     </tr>
-  //   )
-  // }
-
-  // function MorphRow(props: {
-  //   neu3d: Neu3DWidget, name: string, rid: string,
-  //   visibility: Boolean, pinned: Boolean,
-  //   showPanel: Function
-  // }) {
-  //   let toggleVis = () => {
-  //     props.neu3d.neu3d.toggleVis(props.rid);
-  //   }
-  //   let togglePin = () => {
-  //     props.neu3d.neu3d.togglePin(props.rid);
-  //   }
-  //   let onHover = () => {
-  //     props.neu3d.neu3d.highlight(props.rid);
-  //   }
-  //   let onLeave = () => {
-  //     props.neu3d.neu3d.highlight();
-  //   }
-  //   let onClick = () => {
-  //     props.showPanel();
-  //   }
-  //   let Buttons = [ // TODO: add Pin Icon
-  //     <div key={0} className={`${MORPH_ACTION_BUTTON} ${props.visibility ? 'hidden': ''}`} data-btn-rid={props.rid} data-vis={false}> <ToolbarButtonComponent icon={Icons.eyeIcon} onClick={toggleVis} tooltip={"Show"}></ToolbarButtonComponent></div>,
-  //     <div key={1} className={`${MORPH_ACTION_BUTTON} ${props.visibility ? '': 'hidden'}`} data-btn-rid={props.rid} data-vis={true}> <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={toggleVis} tooltip={"Hide"}></ToolbarButtonComponent></div>,
-  //     <div key={2} className={`${MORPH_ACTION_BUTTON} ${props.pinned ? 'hidden': ''}`} data-btn-rid={props.rid} data-pin={false}> <ToolbarButtonComponent icon={Icons.mapPinIcon} onClick={togglePin} tooltip={"Pin"}></ToolbarButtonComponent></div>,
-  //     <div key={3} className={`${MORPH_ACTION_BUTTON} ${props.pinned ? '': 'hidden'}`} data-btn-rid={props.rid} data-pin={true}> <ToolbarButtonComponent icon={Icons.mapUpinIcon} onClick={togglePin} tooltip={"Unpin"}></ToolbarButtonComponent></div>
-  //   ];
-
-    
-
-  //   return (
-  //     <tr className={MORPH_ROW} data-rid={props.rid} key={props.rid} onMouseOver={onHover} onMouseLeave={onLeave} onClick={onClick}>
-  //       <td>{props.name}</td>
-  //       <td className={"Neuron-Table-Buttons"}>{Buttons}</td>
-  //     </tr>
-  //   )
-  // }
 
   /**
    * Generic Collapsible Section Wrapper
@@ -556,8 +543,8 @@ namespace Neu3DComponents {
 
     render(): React.ReactNode {
       return (
-        <>
-          <header className={ITEM_CLASS}>
+        <div>
+          <header className={`${ITEM_CLASS} ${COLLAPSIBLE_SECTION_HEADER}`}>
             <a onClick={() => this.toggleVisibility()}>
               <caretRightIcon.react display={(this.state.visible ? 'none':'inline')}></caretRightIcon.react>
               <caretDownIcon.react display={(this.state.visible ? 'inline':'none')}></caretDownIcon.react>
@@ -567,7 +554,7 @@ namespace Neu3DComponents {
           <div className={TABLE_CONTAINER_CLASS + (this.state.visible? '': ' hidden')}>
             {this.props.children}
           </div>
-        </>
+        </div>
       )
     }
   }
