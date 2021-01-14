@@ -14,6 +14,12 @@ import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import { InfoWidget } from '../info-widget/index';
 import { PRESETS, PRESETS_NAMES } from './presets';
+import { OutputArea, OutputAreaModel } from '@jupyterlab/outputarea';
+import {
+  RenderMimeRegistry,
+  standardRendererFactories as initialFactories
+} from '@jupyterlab/rendermime';
+
 import * as Icons from '../../icons';
 import '../../../style/neu3d-widget/neu3d.css';
 
@@ -468,14 +474,38 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    *
    * @param query -  query to send(text)
    */
-  async executeNLPquery(query: string): Promise<any> {
+  async executeNLPquery(query: string): Promise<boolean> {
     let code = `
     res = '${query}'
     `;
     code = code + this.NLPquerySender();
-    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.debug('NLPquery', result);
-    return Promise.resolve(result);
+    const model = new OutputAreaModel();
+    const rendermime = new RenderMimeRegistry({ initialFactories });
+    const outputArea = new OutputArea({ model, rendermime });
+    outputArea.future = this.sessionContext.session.kernel.requestExecute({ code: code });
+    outputArea.node.style.display = 'block';
+    return outputArea.future.done.then((reply) => {
+      if (reply && reply.content.status === 'ok') {
+        outputArea.dispose();
+        return Promise.resolve(true);
+      } else {
+        showDialog({
+          title: `NLP Query Failed`,
+          body: outputArea,
+        });
+        return Promise.resolve(false);
+      }
+    }, (failure) => {
+      outputArea.dispose();
+      return Promise.resolve(false);
+    });
+
+    // let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    // if (result.content.status == 'error'){
+    //   result.content.traceback;
+    // }
+    // console.debug('NLPquery', result);
+    // return Promise.resolve(result);
   }
 
   /**
