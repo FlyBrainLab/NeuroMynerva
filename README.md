@@ -29,7 +29,7 @@ NeuroMynerva front-end currently includes 4 key components:
 NeuroMynerva has the following requirements:
 
 - Python Version 3.6+
-- JupyterLab: Developed on `JupyterLab 2.1.5`, Tested on `JupyterLab 2.2.8` (Nov. 2nd 2020)
+- JupyterLab: Developed on `JupyterLab 2.1.5`, Tested on `JupyterLab 2.2.9` (Nov. 2nd 2020)
 - Packages: 
     * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git) and packages required therein,
     * [FBLClient](https://github.com/FlyBrainLab/FBLClient.git) and packages required therein.
@@ -45,6 +45,11 @@ jupyter labextension install @flybrainlab/neuromynerva
 
 or via JupyterLab's extension panel within a runnig JupyterLab instance:
 <center><img src="img/neuromynerva_installation_menu.png" width="580"/></center>
+
+### Upgrade NeuroMynerva
+```
+jupyter labextension update @flybrainlab/neuromynerva
+```
 
 ### Develop NeuroMynerva
 We use [Anaconda](https://www.anaconda.com/) to manage development environment, you are encouraged to first create a Conda environment 
