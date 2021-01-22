@@ -164,3 +164,38 @@ td.Neuron-Table-Buttons {
     flex-direction: row;
     justify-content: flex-end;
 }
+
+.tabulator-col .tabulator-col-title {
+    font-size: 10px;
+    padding-right: 0px !important;
+}
+
+.tabulator-header-filter input {
+    font-size: 10px;
+}
+
+.jp-FBL-Master-Neu3D-Table .tabulator-col-sorter {
+    visibility: hidden;
+}
+
+.jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="none"] .tabulator-col-title {
+    font-weight: normal;
+    font-style: normal;
+    text-decoration: none;
+}
+
+.jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="asc"] .tabulator-col-title {
+    font-weight: bold;
+    font-style: italic;
+    text-decoration: overline;
+}
+
+.jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="desc"] .tabulator-col-title {
+    font-weight: bold;
+    font-style: oblique;
+    text-decoration: underline;
+}
+
+.jp-FBL-Master-Neu3D-Table .tabulator-row .tabulator-cell {
+    font-size: 0.8em;
+}

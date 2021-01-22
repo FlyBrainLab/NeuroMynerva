@@ -7,26 +7,24 @@ import {
   UseSignal,
   Dialog, showDialog
 } from '@jupyterlab/apputils';
-import { ILabShell } from '@jupyterlab/application';
+import { ILabShell, LabShell } from '@jupyterlab/application';
 import {
   ISettingRegistry
 } from '@jupyterlab/settingregistry';
 
 import { 
   LabIcon, closeIcon,//, fileIcon 
-  caretRightIcon,
-  caretDownIcon
+  caretRightIcon, caretDownIcon
 } from '@jupyterlab/ui-components';
 
-import { fblIcon } from '../../icons';
-import { IFBLWidget } from '../template-widget/index';
-import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers, Icons } from '../../index';
+import * as Icons from '../../icons';
+import { FBLWidget, IFBLWidget } from '../template-widget/index';
+import { IFBLWidgetTrackers, FBLPanel, FBLTracker, FBLWidgetTrackers } from '../../index';
 import { FFBOProcessorButton } from '../../ffboprocessor';
 import '../../../style/master-widget/master.css';
 import { SessionManager } from '@jupyterlab/services';
 import { Neu3DWidget } from '../neu3d-widget';
-import { IDataChangeArgs, IMeshDictItem } from '../neu3d-widget/model';
-
+import { Neu3DModelTable } from './neuron_table';
 
 const MASTER_CLASS_JLab = 'jp-FBL-Master';
 
@@ -51,15 +49,9 @@ const CONTAINER_CLASS = 'jp-FBL-Master-sectionContainer';
 const LIST_CLASS = 'jp-FBL-Master-sectionList';
 
 /**
- * The class name added to the running sessions items.
- */
-const ITEM_CLASS = 'jp-FBL-Master-item';
-
-/**
  * The class name added to a running session item label.
  */
 const ITEM_LABEL_CLASS = 'jp-FBL-Master-itemLabel';
-
 
 /**
  * The class name added to a Dispose button for disposing fbl widget
@@ -67,20 +59,15 @@ const ITEM_LABEL_CLASS = 'jp-FBL-Master-itemLabel';
 const DISPOSE_BUTTON_CLASS = 'jp-FBL-Master-itemDispose';
 
 /**
+ * The class name added to the running sessions items.
+ */
+const ITEM_CLASS = 'jp-FBL-Master-item';
+
+/**
  * The class name added to the Div element containing the list of neurons
  * for each neu3d instance
  */
 const TABLE_CONTAINER_CLASS = 'jp-FBL-Master-Neu3D-Table-Container';
-
-/**
- * The class name added to buttons that show/hide pin/unpin neurons
- */
-const MORPH_ACTION_BUTTON = 'jp-FBL-Master-Neu3D-Table-Button';
-
-/**
- * The class name added to each row for a given morphology
- */
-const MORPH_ROW = 'jp-FBL-Master-Neu3D-Table-Row';
 
 /**
  * The class name added to buttons in header of each collapsible section
@@ -90,7 +77,13 @@ const COLLAPSIBLE_SECTION_HEADER = 'jp-FBL-Master-Collapsible-Section-Header';
 /**
  * The class name added to buttons in header of each collapsible section
  */
+const NEU3D_TABLE = 'jp-FBL-Master-Neu3D-Table';
+
+/**
+ * The class name added to buttons in header of each collapsible section
+ */
 const COLLAPSIBLE_SECTION_HEADER_BUTTONS = 'jp-FBL-Master-Collapsible-Section-Header-Buttons';
+
 
 /**
 * An FBL Master Widget
@@ -231,49 +224,178 @@ namespace FBLWidgetReact {
    * Renderes a single panel as a list item with some buttons
    * @param props 
    */
-  function Item(props: {
-    panel: FBLPanel, labShell: ILabShell, sessionManager: SessionManager
-  }) {
-    const {panel} = props;
-    const widget = panel.content;
-    let icon: LabIcon = fblIcon;
-    
-    if (widget.icon?.react){
-      icon = widget.icon;
+  class Item extends React.Component<{
+    panel: FBLPanel, 
+    labShell: ILabShell, 
+    sessionManager: SessionManager
+  }> {
+    constructor(props: {
+      panel: FBLPanel, 
+      labShell: ILabShell, 
+      sessionManager: SessionManager
+    }) {
+      super(props);
+      this.panel = props.panel;
+      this.widget = this.panel.content as FBLWidget;
+      this.labShell = props.labShell;
+      this.sessionManager = props.sessionManager;
+      if (this.widget instanceof Neu3DWidget) {
+        this._neuronTableId = `Neu3D-Neuron-Table-${this.widget.id}`;
+        this._neuropilTableId = `Neu3D-Neuropil-Table-${this.widget.id}`;
+      }
     }
 
-    if (widget instanceof  Neu3DWidget) {
+    componentDidMount() {
+      if (this.widget instanceof Neu3DWidget) {
+        this.neu3dTables = new Neu3DModelTable({
+          neuronContainer: this._neuronTableId, 
+          neuropilContainer: this._neuropilTableId, 
+          neu3d: this.widget as Neu3DWidget, 
+          labShell: this.labShell
+        })
+        this.neu3dTables.neuronTabulator.redraw();
+        this.neu3dTables.neuronTabulator.setPage(1);
+        this.neu3dTables.neuropilTabulator.redraw();
+        this.neu3dTables.neuropilTabulator.setPage(1);
+      }
+      
+    }
+
+    render() {
+      let icon: LabIcon = this.widget.icon ?? Icons.fblIcon;
+      if (this.widget instanceof  Neu3DWidget) {
+        return (
+          <>
+          <CollapsibleSection
+            title={
+              <>
+                <icon.react tag="span" stylesheet="runningItem" />
+                <span
+                  className={ITEM_LABEL_CLASS}
+                  title={this.widget.title.caption}
+                  onClick={() => this.labShell.activateById(this.panel.id)}
+                >
+                  {this.widget.name}
+                </span>
+                <button
+                  className={`${DISPOSE_BUTTON_CLASS} jp-mod-styled`}
+                  onClick={() => this.panel.dispose()}
+                >
+                  CLOSE
+                </button>
+                <UseSignal signal={this.widget.sessionContext.sessionChanged}>
+                {(_, args) => {
+                  if (this.widget.sessionContext?.session?.kernel) {
+                    return <ShutdownButton widget={this.widget} sessionManager={this.sessionManager} />;
+                  } else {
+                    return <></>;
+                  }
+                }}
+              </UseSignal>
+              </>
+            }
+            children={
+              <>
+              <CollapsibleSection 
+                title={
+                  <>
+                    <span className={ITEM_LABEL_CLASS}>Neurons & Synapses</span>
+                    <div className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`}>
+                      <ToolbarButtonComponent key={0} icon={Icons.eyeIcon} onClick={() => {(this.widget as Neu3DWidget).neu3d.showFrontAll()}}tooltip={"Show All Neurons & Synapses"}/>
+                      <ToolbarButtonComponent key={1} icon={Icons.eyeSlashIcon} onClick={() => {(this.widget as Neu3DWidget).neu3d.hideFrontAll()}} tooltip={"Hide All Neurons & Synapses"}/>
+                    </div>
+                  </>
+                } 
+                children={
+                  <div className={NEU3D_TABLE} id={this._neuronTableId}></div>
+                }></CollapsibleSection>
+              <CollapsibleSection 
+                title={
+                  <>
+                    <span className={ITEM_LABEL_CLASS}>Neuropils</span>
+                    <div className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`} > 
+                      <ToolbarButtonComponent key={0} icon={Icons.eyeIcon} onClick={() => {(this.widget as Neu3DWidget).neu3d.showBackAll()}}tooltip={"Show All Neuropils"}/>
+                      <ToolbarButtonComponent key={1} icon={Icons.eyeSlashIcon} onClick={() => {(this.widget as Neu3DWidget).neu3d.hideBackAll()}} tooltip={"Hide All Neuropils"}/>
+                    </div>
+                  </>
+                }
+                children={
+                  <div className={NEU3D_TABLE} id={this._neuropilTableId}></div>
+                }></CollapsibleSection>
+              </>
+            }
+          ></CollapsibleSection>
+          </>
+        )
+      } else {
+        return (
+          <header className={ITEM_CLASS}>
+            <icon.react tag="span" stylesheet="runningItem" />
+            <span
+              className={ITEM_LABEL_CLASS}
+              title={this.widget.title.caption}
+              onClick={() => this.labShell.activateById(this.panel.id)}
+            >
+              {this.widget.name}
+            </span>
+            <button
+              className={`${DISPOSE_BUTTON_CLASS} jp-mod-styled`}
+              onClick={() => this.panel.dispose()}
+            >
+              CLOSE
+            </button>
+            <UseSignal signal={this.widget.sessionContext.sessionChanged}>
+              {(_, args) => {
+                if (this.widget.sessionContext?.session?.kernel) {
+                  return <ShutdownButton widget={this.widget} sessionManager={this.sessionManager} />;
+                } else {
+                  return <></>;
+                }
+              }}
+            </UseSignal>
+          </header>
+        );
+      }
+    }
+    readonly panel: FBLPanel;
+    readonly widget: FBLWidget;
+    readonly labShell: LabShell;
+    readonly sessionManager: SessionManager
+    private _neuronTableId: string = '';
+    private _neuropilTableId: string = '';
+    neu3dTables: Neu3DModelTable = null;
+  }
+
+  export class CollapsibleSection extends React.Component<{
+    title: React.ReactElement,
+    children: React.Component | any
+  }, { visible: boolean }>{
+  
+    state: Readonly<{ visible: boolean }> = {
+      visible: false
+    }
+  
+    toggleVisibility() {
+      this.setState({
+        visible: !this.state.visible
+      })
+    }
+  
+    render(): React.ReactNode {
       return (
-        <Neu3DComponents.Item panel={panel} labShell={props.labShell} sessionManager={props.sessionManager}></Neu3DComponents.Item>
+        <div>
+          <header className={`${ITEM_CLASS} ${COLLAPSIBLE_SECTION_HEADER}`}>
+            <a onClick={() => this.toggleVisibility()}>
+              <caretRightIcon.react display={(this.state.visible ? 'none':'inline')}></caretRightIcon.react>
+              <caretDownIcon.react display={(this.state.visible ? 'inline':'none')}></caretDownIcon.react>
+            </a>
+            {this.props.title}
+          </header>
+          <div className={TABLE_CONTAINER_CLASS + (this.state.visible? '': ' hidden')}>
+            {this.props.children}
+          </div>
+        </div>
       )
-    } else {
-      return (
-        <>
-          <icon.react tag="span" stylesheet="runningItem" />
-          <span
-            className={ITEM_LABEL_CLASS}
-            title={widget.title.caption}
-            onClick={() => props.labShell.activateById(panel.id)}
-          >
-            {widget.name}
-          </span>
-          <button
-            className={`${DISPOSE_BUTTON_CLASS} jp-mod-styled`}
-            onClick={() => panel.dispose()}
-          >
-            CLOSE
-        </button>
-          <UseSignal signal={widget.sessionContext.sessionChanged}>
-            {(_, args) => {
-              if (widget.sessionContext?.session?.kernel) {
-                return <ShutdownButton widget={widget} sessionManager={props.sessionManager} />;
-              } else {
-                return <></>;
-              }
-            }}
-          </UseSignal>
-        </>
-      );
     }
   }
 
@@ -305,257 +427,4 @@ namespace FBLWidgetReact {
       </button>);
   }
 
-}
-
-namespace Neu3DComponents {
-  /**
-   * Renderes a single Neu3D panel as a list item with buttons and dropdown
-   * @param props 
-   */
-  export class Item extends React.Component<{
-    panel: FBLPanel, labShell: ILabShell, sessionManager: SessionManager
-  }, {
-    rows: { [rid: string]: Partial<IMeshDictItem> }
-    }> {  
-    delayedSetState: _.DebouncedFunc<(rows: any)=>any>;
-      
-    constructor(props: { panel: FBLPanel, labShell: ILabShell, sessionManager: SessionManager }) {
-      super(props);
-      let rows: {[rid:string]: Partial<IMeshDictItem>} = {};
-      const neu3d = this.props.panel.content as Neu3DWidget;
-      for (let row of Object.entries(neu3d.model.data)) {
-        const rid = row[0];
-        const { label, visibility, pinned, background } = row[1] as IMeshDictItem;
-        rows[rid] = {
-          label: label ?? rid,
-          visibility: visibility,
-          pinned: pinned,
-          background: background ?? false
-        }
-      }
-      this.state = {
-        rows: rows
-      };
-
-      this.delayedSetState = _.debounce(rows => this.setState({ rows: rows }), 500);
-
-      neu3d.model.dataChanged.connect((caller, change) => {
-        const { event, newValue, key, rid, source } = change as IDataChangeArgs;
-        if (!(['add', 'change', 'remove'].includes(event))) { return; }
-        if (key === 'highlight') { return; }  // skip highlight
-        let rows = this.state.rows;
-        switch (event) {
-          case 'add':
-            if (!(rid in rows)) {
-              rows[rid] = {
-                label: source[rid].label ?? rid,
-                visibility: source[rid].visibility,
-                pinned: source[rid].pinned,
-                background: source[rid].background ?? false
-              }
-              this.delayedSetState(rows);
-            }
-            break;
-          case 'remove':
-            if (rid in rows) {
-              delete rows[rid];
-              this.delayedSetState(rows);
-            }
-            break;
-          case 'change':
-            switch (key) {
-              case 'visibility':
-                if (rid in rows){
-                  rows[rid].visibility = newValue;
-                  this.delayedSetState(rows);
-                }
-                break;
-              case 'pinned':
-                if (rid in rows){
-                  rows[rid].pinned = newValue;
-                  this.delayedSetState(rows);
-                }
-                break;
-              default:
-                return
-            }
-            break;
-          default:
-            break;
-        }
-      })
-    }
-
-    componentWillUnmount() {
-      this.delayedSetState.cancel();
-    }
-
-    render() { 
-      const { panel, labShell } = this.props;
-      const neu3d = panel.content as Neu3DWidget;
-      const showPanel = () => {
-        labShell.activateById(panel.id);
-      }
-      let icon: LabIcon = fblIcon;  
-      if (neu3d.icon?.react) {
-        icon = neu3d.icon;
-      }
-    
-      const toggleVis = (rid: string) => { neu3d.neu3d.toggleVis(rid);}
-      const togglePin = (rid: string) => { neu3d.neu3d.togglePin(rid); }
-      const onHover = (rid: string) => { neu3d.neu3d.highlight(rid, true); }
-      const showInfo = (rid: string) => { 
-        neu3d.executeInfoQuery(rid).done.then(()=>{
-          labShell.activateById(neu3d.info.id);
-        })
-      };
-      const onLeave = () => { neu3d.neu3d.highlight(); }
-      const onClick = () => { showPanel(); }
-
-      let neuronRows: React.ReactElement[] = [];
-      let neuropilRows: React.ReactElement[] = [];
-      Object.entries(this.state.rows).forEach((row: [string, Partial<IMeshDictItem>], idx: number) => {
-        if (row[1].background){
-          neuropilRows.push(
-            <tr className={MORPH_ROW} key={row[0]} onMouseOver={() => { onHover(row[0]) }} onMouseLeave={onLeave} onClick={onClick}>
-              <td>{row[1].label}</td>
-              <td className={"Neuron-Table-Buttons"}>
-                <div key={5} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.eyeIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Show"}></ToolbarButtonComponent></div>
-                <div key={6} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Hide"}></ToolbarButtonComponent></div>
-              </td>
-            </tr>
-          )
-        } else{
-          neuronRows.push(
-            <tr className={MORPH_ROW} key={row[0]} onMouseOver={() => { onHover(row[0]) }} onMouseLeave={onLeave} onClick={onClick}>
-              <td>{row[1].label}</td>
-              <td className={"Neuron-Table-Buttons"}>
-                <div key={0} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.eyeIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Show"}></ToolbarButtonComponent></div>
-                <div key={1} className={`${MORPH_ACTION_BUTTON} ${row[1].visibility ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.eyeSlashIcon} onClick={() => { toggleVis(row[0]);}} tooltip={"Hide"}></ToolbarButtonComponent></div>
-                <div key={2} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? 'hidden': ''}`} > <ToolbarButtonComponent icon={Icons.mapPinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Pin"}></ToolbarButtonComponent></div>
-                <div key={3} className={`${MORPH_ACTION_BUTTON} ${row[1].pinned ? '': 'hidden'}`} > <ToolbarButtonComponent icon={Icons.mapUpinIcon} onClick={() => { togglePin(row[0]);}} tooltip={"Unpin"}></ToolbarButtonComponent></div>
-                <div key={4} className={`${MORPH_ACTION_BUTTON}`} > <ToolbarButtonComponent icon={Icons.neuInfoIcon} onClick={() => { showInfo(row[0]);}} tooltip={"Get Info"}></ToolbarButtonComponent></div>
-              </td>
-            </tr>
-          )
-        }
-      });
-
-      return (
-        <CollapsibleSection
-          title={
-            <>
-              <div className={ITEM_CLASS}>
-                <icon.react tag="span" stylesheet="runningItem" />
-                <span
-                  className={ITEM_LABEL_CLASS}
-                  title={neu3d.title.caption}
-                  onClick={showPanel}
-                >
-                  {neu3d.name}
-                </span>
-                <button
-                  className={`${DISPOSE_BUTTON_CLASS} jp-mod-styled`}
-                  onClick={() => panel.dispose()}
-                >
-                  CLOSE
-                </button>
-                <UseSignal signal={neu3d.sessionContext.sessionChanged}>
-                  {(_, args) => {
-                    if (neu3d.sessionContext?.session?.kernel) {
-                      return <FBLWidgetReact.ShutdownButton widget={neu3d} sessionManager={this.props.sessionManager} />;
-                    } else {
-                      return <></>;
-                    }
-                  }}
-                </UseSignal>
-              </div>
-            </>
-          }
-          children={
-            <>
-            <CollapsibleSection 
-              title={
-                <>
-                  <span className={ITEM_LABEL_CLASS}>Neurons & Synapses</span>
-                  <div className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`}>
-                    <ToolbarButtonComponent key={0} icon={Icons.eyeIcon} onClick={() => {neu3d.neu3d.showFrontAll()}}tooltip={"Show All Neurons & Synapses"}/>
-                    <ToolbarButtonComponent key={1} icon={Icons.eyeSlashIcon} onClick={() => {neu3d.neu3d.hideFrontAll()}} tooltip={"Hide All Neurons & Synapses"}/>
-                  </div>
-                </>
-              } 
-              children={
-                <div className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
-                  data-mime-type={"text/markdown"}
-                >
-                  <table data-neu3d-id={neu3d.id} className={"neuron-list-table"}>
-                    <tbody>
-                      {neuronRows}
-                    </tbody>
-                  </table>
-                </div>
-              }></CollapsibleSection>
-            <CollapsibleSection 
-              title={
-                <>
-                  <span className={ITEM_LABEL_CLASS}>Neuropils</span>
-                  <div className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`} > 
-                    <ToolbarButtonComponent key={0} icon={Icons.eyeIcon} onClick={() => {neu3d.neu3d.showBackAll()}}tooltip={"Show All Neuropils"}/>
-                    <ToolbarButtonComponent key={1} icon={Icons.eyeSlashIcon} onClick={() => {neu3d.neu3d.hideBackAll()}} tooltip={"Hide All Neuropils"}/>
-                  </div>
-                </>
-              }
-              children={
-                <div className={"jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput"}
-                  data-mime-type={"text/markdown"}
-                >
-                  <table data-neu3d-id={neu3d.id} className={"neuron-list-table"}>
-                    <tbody>
-                      {neuropilRows}
-                    </tbody>
-                  </table>
-                </div>
-              }></CollapsibleSection>
-            </>
-          }
-        ></CollapsibleSection>
-      );
-    }
-  }
-
-  /**
-   * Generic Collapsible Section Wrapper
-   */
-  export class CollapsibleSection extends React.Component<{
-    title: React.ReactElement,
-    children: React.Component | any
-  }, { visible: boolean }>{
-
-    state: Readonly<{ visible: boolean }> = {
-      visible: false
-    }
-  
-    toggleVisibility() {
-      this.setState({
-        visible: !this.state.visible
-      })
-    }
-
-    render(): React.ReactNode {
-      return (
-        <div>
-          <header className={`${ITEM_CLASS} ${COLLAPSIBLE_SECTION_HEADER}`}>
-            <a onClick={() => this.toggleVisibility()}>
-              <caretRightIcon.react display={(this.state.visible ? 'none':'inline')}></caretRightIcon.react>
-              <caretDownIcon.react display={(this.state.visible ? 'inline':'none')}></caretDownIcon.react>
-            </a>
-            {this.props.title}
-          </header>
-          <div className={TABLE_CONTAINER_CLASS + (this.state.visible? '': ' hidden')}>
-            {this.props.children}
-          </div>
-        </div>
-      )
-    }
-  }
 }
