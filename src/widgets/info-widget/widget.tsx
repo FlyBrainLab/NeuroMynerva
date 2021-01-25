@@ -183,15 +183,15 @@ export class InfoWidget extends ReactWidget {
       this.tabConnPre.tabulator.setData(preData);
       this.tabConnPost.tabulator.setData(postData);
       if (this.tabConnPre.hasSynMorph(preData)){
-        this.tabConnPre.addSynColumn();
+        this.tabConnPre.showSynColumn();
       } else {
-        this.tabConnPre.removeSynColumn();
+        this.tabConnPre.hideSynColumn();
       }
 
       if (this.tabConnPost.hasSynMorph(postData)){
-        this.tabConnPost.addSynColumn();
+        this.tabConnPost.showSynColumn();
       } else {
-        this.tabConnPost.removeSynColumn();
+        this.tabConnPost.hideSynColumn();
       }
     }, this);
 
@@ -203,15 +203,15 @@ export class InfoWidget extends ReactWidget {
         this.tabConnPre.tabulator.setData(this._preData);
         this.tabConnPost.tabulator.setData(this._postData);
         if (this.tabConnPre.hasSynMorph(this._preData)){
-          this.tabConnPre.addSynColumn();
+          this.tabConnPre.showSynColumn();
         } else {
-          this.tabConnPre.removeSynColumn();
+          this.tabConnPre.hideSynColumn();
         }
 
         if (this.tabConnPost.hasSynMorph(this._postData)){
-          this.tabConnPost.addSynColumn();
+          this.tabConnPost.showSynColumn();
         } else {
-          this.tabConnPost.removeSynColumn();
+          this.tabConnPost.hideSynColumn();
         }
         this.tabConnPost?.tabulator?.redraw();
         this.tabConnPre?.tabulator?.redraw();

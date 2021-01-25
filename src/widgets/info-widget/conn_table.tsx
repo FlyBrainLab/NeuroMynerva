@@ -13,13 +13,9 @@ export class ConnTable {
     this.data = props.data;
     this.neu3d = props.neu3d;
     //instantiate Tabulator when element is mounted
-    let columns = this.columns;
-    if (!this.hasSynMorph(this.data)) {
-      columns = [this.columns[0], this.columns[2], this.columns[3]];
-    }
     this.tabulator = new Tabulator(props.container, {
       data: this.data, //link data to table
-      columns: columns, //define table columns
+      columns: this.columns, //define table columns
       tooltips: true,
       pagination: "local",
       paginationSize: 8,
@@ -56,6 +52,9 @@ export class ConnTable {
         this.neu3d.neu3d.highlight()
       }
     });
+    if (!this.hasSynMorph(this.data)) {
+      this.tabulator.hideColumn('has_sym_morph');
+    }
   }
 
   /**
@@ -74,65 +73,23 @@ export class ConnTable {
   /**
    * Remove the synapse colummn if no synapse morphology
    */
-  removeSynColumn(){
-    if (this.tabulator.getColumn("has_syn_morph")) {
-      this.tabulator.deleteColumn("has_syn_morph");
-      this.tabulator.redraw();
+  hideSynColumn(){
+    let column = this.tabulator.getColumn("has_syn_morph");
+    if (column.isVisible()){
+      column.hide();
     }
   }
 
   /**
    * Add the synapse colummn if has synapse morphology
    */
-  addSynColumn(){
-    if (!this.tabulator.getColumn("has_syn_morph")) {
-      this.tabulator.addColumn(this.synColumn, true, "uname");
-      this.tabulator.redraw();
+  showSynColumn(){
+    let column = this.tabulator.getColumn("has_syn_morph");
+    if (!column.isVisible()){
+      column.show();
     }
   }
 
-  /**
-   * Schema for the synapse column
-   */
-  readonly synColumn = {
-    title: "Synapse",
-    field: "has_syn_morph",
-    hozAlign: "center",
-    headerSort:false,
-    width: 55,
-    formatter: (cell: any, formatterParams: any) => {
-      if (cell.getValue()) {
-        if (this.neu3d?.isInWorkspace(cell.getData().syn_rid)) {
-          return "<i class='fa fa-minus-circle' > </i>";
-        } else {
-          return "<i class='fa fa-plus-circle' > </i>";
-        }
-      }
-      return;
-    },
-    cellClick: (e: any, cell: any) => {
-      // let { syn_uname, syn_rid } = cell.getData();
-      //   if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
-      //     this.neu3d?.addByUname(syn_uname).then(()=>{
-      //       cell.getRow().reformat();
-      //     })
-      //   } else {
-      //     this.neu3d?.removeByUname(syn_uname).then(()=>{
-      //       cell.getRow().reformat();
-      //     })
-      //   }
-      let { s_rid, syn_rid } = cell.getData();
-      if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
-        this.neu3d?.addByRid(s_rid).then(()=>{
-          cell.getRow().reformat();
-        })
-      } else {
-        this.neu3d?.removeByRid(s_rid).then(()=>{
-          cell.getRow().reformat();
-        })
-      }
-    }
-  };
 
   /**
    * Schema for all columns.
@@ -178,7 +135,45 @@ export class ConnTable {
         }
       }
     },
-    this.synColumn,
+    {
+      title: "Synapse",
+      field: "has_syn_morph",
+      hozAlign: "center",
+      headerSort:false,
+      width: 55,
+      formatter: (cell: any, formatterParams: any) => {
+        if (cell.getValue()) {
+          if (this.neu3d?.isInWorkspace(cell.getData().syn_rid)) {
+            return "<i class='fa fa-minus-circle' > </i>";
+          } else {
+            return "<i class='fa fa-plus-circle' > </i>";
+          }
+        }
+        return;
+      },
+      cellClick: (e: any, cell: any) => {
+        // let { syn_uname, syn_rid } = cell.getData();
+        //   if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
+        //     this.neu3d?.addByUname(syn_uname).then(()=>{
+        //       cell.getRow().reformat();
+        //     })
+        //   } else {
+        //     this.neu3d?.removeByUname(syn_uname).then(()=>{
+        //       cell.getRow().reformat();
+        //     })
+        //   }
+        let { s_rid, syn_rid } = cell.getData();
+        if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
+          this.neu3d?.addByRid(s_rid).then(()=>{
+            cell.getRow().reformat();
+          })
+        } else {
+          this.neu3d?.removeByRid(s_rid).then(()=>{
+            cell.getRow().reformat();
+          })
+        }
+      }
+    },
     {
       title: "Name",
       field: "uname",
