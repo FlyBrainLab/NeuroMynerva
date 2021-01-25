@@ -673,28 +673,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.setProcessor(newProcessor);
   }
 
-  // /**
-  //  * Return the preset of the current neu3d instance.
-  //  * The final return value is based on value in schema and what's avaiable in PRESETS.
-  //  * If processor cannot be found anywhere, will return disconnected.
-  //  */
-  // get preset(): PRESETS_NAMES {
-  //   // return the corresponding preset in schema if found
-  //   if (this.processor in this.ffboProcessors) { 
-  //     let preset = this.ffboProcessors[this._processor].PRESETS.preset as PRESETS_NAMES;
-  //     if (preset in PRESETS) {
-  //       return preset;
-  //     } 
-  //     // preset not found in available PRESETS
-  //     console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
-  //     return "default";
-  //   }
-
-  //   this.setHasClient(false);
-  //   console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
-  //   INotification.error(`Processor (${this.processor}) not recognized. Disconnected`);
-  //   return "disconnected";
-  // }
 
   /**
    * Change processor.
@@ -711,97 +689,69 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   setProcessor(newProcessor: string, startUp: boolean = false) {
     super.setProcessor(newProcessor, startUp);
 
-    let removeNeurons = false;
     this.neu3DReady.then(()=>{
-      let selected = new PromiseDelegate();
-      if ((!startUp) && ((this.neu3d as any).groups.front.children.length > 0)){
-        showDialog({
-          title: 'Remove Neurons/Synapses?',
-          body: `
-            Current Neu3D contains neurons/synapses, do you want to 
-            keep the neurons or remove them after changing processor?
-          `,
-          buttons: [
-              Dialog.cancelButton({ label: 'Keep' }),
-              Dialog.warnButton({ label: 'Remove' })
-          ]
-        }).then(result => {
-            if (result.button.accept) {
-                if (result.button.displayType === 'warn') {
-                  removeNeurons = true
-                }
-            }
-            selected.resolve(void 0);
-        });
-      } else {
-        selected.resolve(void 0);
+      if (startUp) { // only remove meshes on startup
+        for (let mesh of Object.keys(this.neu3d.meshDict)){
+          if (this.neu3d.meshDict[mesh].background) {
+            this.neu3d.remove(mesh);
+          }
+        }
+      } else{ // Remove everything
+        this.neu3d.reset(true);
       }
 
-      // once selection has been made
-      selected.promise.then(()=>{
-        if (removeNeurons) { // remove everything
-          this.neu3d.reset(true);
-        } else{ // remove only meshes
-          for (let mesh of Object.keys(this.neu3d.meshDict)){
-            if (this.neu3d.meshDict[mesh].background) {
-              this.neu3d.remove(mesh);
-            }
-          }
-        }
-
-        /**
-         * Return the preset of the current neu3d instance.
-         * The final return value is based on value in schema and what's avaiable in PRESETS.
-         * If processor cannot be found anywhere, will return disconnected.
-         */
-        let preset: PRESETS_NAMES = "default";
-        let settings: {[field: string]: {x:number, y:number, z:number}} = null;
-        let meshes: any = null;
-        let placeholder = PRESETS.disconnected.searchPlaceholder;
-        let inputQueryBar: HTMLInputElement = this._neu3dFooter.getElementsByTagName('input')[0];
-          // return the corresponding preset in schema if found
-        if (this.processor in this.ffboProcessors) {
-          let processorPreset = this.ffboProcessors[this._processor].PRESETS.preset;
-          if (!(processorPreset in PRESETS)) {
-            // preset not found in available PRESETS
-            console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
-            let schemaSettings = this.ffboProcessors[this.processor].PRESETS.neu3dSettings;
-            settings = {
-              resetPosition: schemaSettings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition,
-              upVector: schemaSettings.upVector ?? PRESETS.default.neu3dSettings.upVector,
-              cameraTarget: schemaSettings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget,
-            };
-            placeholder = PRESETS.default.searchPlaceholder;
-          } else {
-            preset = processorPreset as PRESETS_NAMES;
-            settings = PRESETS[preset].neu3dSettings;  
-            meshes = PRESETS[preset].meshes;
-            placeholder = PRESETS[preset].searchPlaceholder;
-          }
-          this.initClient().then((success) => {
-            this.setHasClient(success); // can fail
-          });
+      /**
+       * Return the preset of the current neu3d instance.
+       * The final return value is based on value in schema and what's avaiable in PRESETS.
+       * If processor cannot be found anywhere, will return disconnected.
+       */
+      let preset: PRESETS_NAMES = "default";
+      let settings: {[field: string]: {x:number, y:number, z:number}} = null;
+      let meshes: any = null;
+      let placeholder = PRESETS.disconnected.searchPlaceholder;
+      let inputQueryBar: HTMLInputElement = this._neu3dFooter.getElementsByTagName('input')[0];
+        // return the corresponding preset in schema if found
+      if (this.processor in this.ffboProcessors) {
+        let processorPreset = this.ffboProcessors[this._processor].PRESETS.preset;
+        if (!(processorPreset in PRESETS)) {
+          // preset not found in available PRESETS
+          console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
+          let schemaSettings = this.ffboProcessors[this.processor].PRESETS.neu3dSettings;
+          settings = {
+            resetPosition: schemaSettings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition,
+            upVector: schemaSettings.upVector ?? PRESETS.default.neu3dSettings.upVector,
+            cameraTarget: schemaSettings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget,
+          };
+          placeholder = PRESETS.default.searchPlaceholder;
         } else {
-          placeholder = PRESETS.disconnected.searchPlaceholder;
-          this.setHasClient(false);
-          console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
+          preset = processorPreset as PRESETS_NAMES;
+          settings = PRESETS[preset].neu3dSettings;  
+          meshes = PRESETS[preset].meshes;
+          placeholder = PRESETS[preset].searchPlaceholder;
         }
-        inputQueryBar.placeholder = placeholder;
+        this.initClient().then((success) => {
+          this.setHasClient(success); // can fail
+        });
+      } else {
+        placeholder = PRESETS.disconnected.searchPlaceholder;
+        this.setHasClient(false);
+        console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
+      }
+      inputQueryBar.placeholder = placeholder;
 
-        if (settings) {
-          this.neu3d._metadata.resetPosition = settings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition;
-          this.neu3d._metadata.upVector = settings.upVector ?? PRESETS.default.neu3dSettings.upVector;
-          this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
-        }
-        if (meshes) {
-          this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
-        }
-        this.neu3d.updateControls();
-        this.neu3d.resetView();
-        window.active_neu3d_widget = this;
-        // reset info panel - clear evrerything
-        this.info.reset(true);
-      });
+      if (settings) {
+        this.neu3d._metadata.resetPosition = settings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition;
+        this.neu3d._metadata.upVector = settings.upVector ?? PRESETS.default.neu3dSettings.upVector;
+        this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
+      }
+      if (meshes) {
+        this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
+      }
+      this.neu3d.updateControls();
+      this.neu3d.resetView();
+      window.active_neu3d_widget = this;
+      // reset info panel - clear evrerything
+      this.info.reset(true);
     });
   }
 
