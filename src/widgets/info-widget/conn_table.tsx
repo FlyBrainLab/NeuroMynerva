@@ -31,7 +31,7 @@ export class ConnTable {
       cellMouseOver: (e: any, cell:any) => {
         const { rid, syn_rid } = cell.getData();
         switch (cell.getColumn().getField()) {
-          case 'has_syn_morph':
+          case 'synapse_in_workspace':
             if (this.neu3d?.isInWorkspace(syn_rid)){
               this.neu3d.neu3d.highlight(syn_rid);
             }
@@ -49,7 +49,7 @@ export class ConnTable {
       }
     });
     if (!this.hasSynMorph(this.data)) {
-      this.tabulator.hideColumn('has_syn_morph');
+      this.tabulator.hideColumn('synapse_in_workspace');
     }
     this.neu3d?.model.dataChanged.connect(this.handleDataChanged.bind(this));
   }
@@ -97,6 +97,11 @@ export class ConnTable {
     this.data = this.parseConnData(connData, neu3d);
     this.tabulator.setData(this.data);
     this.setNeu3D(neu3d);
+    if (!this.hasSynMorph(this.data)) {
+      this.tabulator.hideColumn('synapse_in_workspace');
+    } else{
+      this.tabulator.showColumn('synapse_in_workspace');
+    }
   }
 
   /**
@@ -161,7 +166,7 @@ export class ConnTable {
    * Remove the synapse colummn if no synapse morphology
    */
   hideSynColumn(){
-    let column = this.tabulator.getColumn("has_syn_morph");
+    let column = this.tabulator.getColumn("synapse_in_workspace");
     if (column.isVisible()){
       column.hide();
     }
@@ -171,7 +176,7 @@ export class ConnTable {
    * Add the synapse colummn if has synapse morphology
    */
   showSynColumn(){
-    let column = this.tabulator.getColumn("has_syn_morph");
+    let column = this.tabulator.getColumn("synapse_in_workspace");
     if (!column.isVisible()){
       column.show();
     }
