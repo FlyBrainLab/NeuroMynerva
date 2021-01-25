@@ -361,7 +361,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   querySender(): string {
     let code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(res)
+    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(_fbl_query)
     `;
     return code;
   }
@@ -372,7 +372,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   NLPquerySender(): string {
     let code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(res)
+    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(_fbl_query)
     `;
     return code;
   }
@@ -395,9 +395,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async addByUname(uname: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'add'
-    res['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'add'
+    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
     code = code + this.querySender();
@@ -414,9 +414,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async removeByUname(uname: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'remove'
-    res['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'remove'
+    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
     code = code + this.querySender();
@@ -433,11 +433,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async addByRid(rid: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'add'
-    res['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'add'
+    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
-    res['format'] = 'morphology'
+    _fbl_query['format'] = 'morphology'
     `;
     code = code + this.querySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
@@ -453,9 +453,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async removeByRid(rid: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'remove'
-    res['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'remove'
+    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
     `;
     code = code + this.querySender();
@@ -471,7 +471,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async executeNLPquery(query: string): Promise<boolean> {
     let code = `
-    res = '${query}'
+    _fbl_query = '${query}'
     `;
     code = code + this.NLPquerySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
@@ -484,11 +484,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
   /**
    * Get Info of a given neuron
+   * @param rid - rid of the neuron/synapse to query info about
    * @return a promise that resolves to the reply message when done 
    */
-  executeInfoQuery(uname: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+  executeInfoQuery(rid: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
     let code_to_send = `
-    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${uname}')
+    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${rid}')
     `
     return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
   }
