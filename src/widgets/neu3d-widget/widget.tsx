@@ -333,11 +333,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         return;
       }
       // trigger datachanged event for info panel, will cause re-rendering of data
-      this.info?.dataChanged.emit({
-        data: thisMsg.data.data.data,
-        inWorkspace: this.isInWorkspace,
-        neu3d: this
-      });
+      this.info?.setData(this, thisMsg.data.data.data)
     }
   }
 
@@ -803,8 +799,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.updateControls();
         this.neu3d.resetView();
         window.active_neu3d_widget = this;
-        // reset info panel
-        this.info.reset();
+        // reset info panel - clear evrerything
+        this.info.reset(true);
       });
     });
   }
