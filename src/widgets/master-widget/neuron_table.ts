@@ -162,14 +162,15 @@ export class Neu3DModelTable {
     this.neu3d.removeByUname(unames);
   }
 
-  // /**
-  //  * Remove all neuropils
-  //  * @param active if true, only remove active neurons in the tabulator
-  //  */
-  // removeAllNeuropils(active?: boolean) {
-  //   let unames: string[] = this.neuropilTabulator.getData(active ? 'active': '').map((r: any) => r.uname);
-  //   this.neu3d.removeByUname(unames);
-  // }
+  /**
+   * Remove all neuropils
+   * @param active if true, only remove active neurons in the tabulator
+   */
+  removeAllNeuropils(active?: boolean) {
+    let unames: string[] = this.neuropilTabulator.getData(active ? 'active': '').map((r: any) => r.uname);
+    // this.neu3d.removeByUname(unames);
+    this.neu3d.neu3d.remove(unames as any);
+  }
 
   /**
    * Parse data from neu3d widget

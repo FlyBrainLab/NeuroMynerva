@@ -317,7 +317,7 @@ namespace FBLWidgetReact {
                     <div className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`} > 
                       <ToolbarButtonComponent key={0} icon={Icons.eyeIcon} onClick={() => {(this.widget as Neu3DWidget).neu3d.showBackAll()}}tooltip={"Show All Neuropils"}/>
                       <ToolbarButtonComponent key={1} icon={Icons.eyeSlashIcon} onClick={() => {(this.widget as Neu3DWidget).neu3d.hideBackAll()}} tooltip={"Hide All Neuropils"}/>
-                      {/* <ToolbarButtonComponent key={2} icon={Icons.trashIcon} onClick={() => {this.neu3dTables.removeAllNeuropils(true)}} tooltip={"Remove All Active Neuropils"}/>                     */}
+                      <ToolbarButtonComponent key={2} icon={Icons.trashIcon} onClick={() => {this.neu3dTables.removeAllNeuropils(true)}} tooltip={"Remove All Active Neuropils"}/>                    
                     </div>
                   </>
                 }
