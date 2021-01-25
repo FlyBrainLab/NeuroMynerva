@@ -14,6 +14,8 @@ export interface IDataChangeArgs {
 * ID and a few selected attributes of the associated mesh dict items
 */
 export interface IMeshDictItem {
+  name?: string,
+  uname?: string,
   label?: string,
   highlight?: Boolean,
   opacity?: Number,
@@ -276,6 +278,8 @@ namespace Private {
   export function convertRawMesh(mesh: any): IMeshDictItem {
     if (mesh.filename){
       return {
+        uname: mesh['uname'], 
+        name: mesh['name'] ?? mesh['uname'],
         label: mesh['label'],
         highlight: mesh['highlight'],
         opacity: mesh['opacity'],
@@ -288,6 +292,8 @@ namespace Private {
       }
     } else if (mesh.dataStr){
       return {
+        uname: mesh['uname'],
+        name: mesh['name'] ?? mesh['uname'],
         label: mesh['label'],
         highlight: mesh['highlight'],
         opacity: mesh['opacity'],
@@ -300,6 +306,8 @@ namespace Private {
       }
     } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })) { // raw data
       return {
+        uname: mesh['uname'],
+        name: mesh['name'] ?? mesh['uname'],
         label: mesh['label'],
         highlight: mesh['highlight'],
         opacity: mesh['opacity'],
