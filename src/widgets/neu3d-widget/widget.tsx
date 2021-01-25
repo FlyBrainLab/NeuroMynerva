@@ -931,7 +931,7 @@ namespace Private {
           hints = PRESETS.disconnected.hints;
         }
       }
-      const hint_ul = hints.map((h, idx) => <li key={idx}><b>{h.query}</b>{h.effect}</li>);
+      const hint_ul = hints.map((h, idx) => <li key={idx}><b>{h.query}</b>{`: ${h.effect}`}</li>);
       let hint_header = <p>Connect to a Processor to see example queries.</p>;
       if (hint_ul.length > 0) {
         hint_header = <p>Here are a list of example queries you can try:</p>;
