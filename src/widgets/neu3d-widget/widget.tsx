@@ -413,7 +413,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
   /**
    * Remove an object into the workspace using Uname by Kernel Call.
-   *
+   * 
+   * WARNING: Deprecated! Do not use addByUname since uname may no longer be unique.
+   *  Use addByRid instead 
+   * 
    * @param uname -  uname of target object (neuron/synapse)
    */
   async removeByUname(uname: string | Array<string>): Promise<any> {
@@ -818,9 +821,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       'removeUnpinned', 
       Private.createButton(Icons.trashIcon, "Remove Unpinned Neurons", 'jp-Neu3D-Btn jp-SearBar-remove-unpinned', 
         () => {
-          let unames: string[] = Object.values(this.model.unpinned).map((mesh) => mesh.label);
+          let orids: string[] = Object.values(this.model.unpinned).map((mesh) => mesh.orid);
           if (this.sessionContext?.session?.kernel){
-            this.removeByUname(unames);
+            this.removeByRid(orids);
           } else{
             this.neu3d.removeUnpinned();
           } 

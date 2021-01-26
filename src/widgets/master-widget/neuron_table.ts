@@ -103,6 +103,7 @@ export class Neu3DModelTable {
             if (background){
               this.meshes.push({
                 rid: rid,
+                orid: source[rid].orid,
                 class: source[rid].class ?? 'Neuropil',
                 uname: source[rid].uname,
                 label: source[rid].label ?? rid,
@@ -114,6 +115,7 @@ export class Neu3DModelTable {
             } else{
               this.neurons.push({
                 rid: rid,
+                orid: source[rid].orid,
                 class: source[rid].class ?? 'Neuron',
                 uname: source[rid].uname,
                 label: source[rid].label ?? rid,
@@ -168,8 +170,8 @@ export class Neu3DModelTable {
    * @param active if true, only remove active neurons in the tabulator
    */
   removeAllNeurons(active: boolean=true) {    
-    let unames: string[] = this.neuronTabulator.getData(active ? 'active': '').filter((r:any) => !r.pinned).map((r: any) => r.uname);
-    this.neu3d.removeByUname(unames);
+    let orids: string[] = this.neuronTabulator.getData(active ? 'active': '').filter((r:any) => !r.pinned).map((r: any) => r.orid);
+    this.neu3d.removeByRid(orids);
   }
 
   /**
@@ -177,8 +179,8 @@ export class Neu3DModelTable {
    * @param active if true, only remove active neurons in the tabulator
    */
   removeAllMeshes(active: boolean=true) {
-    let rids: string[] = this.meshTabulator.getData(active ? 'active': '').map((r: any) => r.rid);
-    this.neu3d.neu3d.remove(rids);
+    let orids: string[] = this.meshTabulator.getData(active ? 'active': '').map((r: any) => r.orid);
+    this.neu3d.removeByRid(orids);
   }
 
   /**
@@ -249,6 +251,7 @@ export class Neu3DModelTable {
       if (background){
         meshes.push({
           rid: rid,
+          orid: mesh.orid ?? rid,
           class: mesh.class ?? 'Neuropil',
           uname: uname,
           label: label ?? rid,
@@ -258,6 +261,7 @@ export class Neu3DModelTable {
       }else{
         neurons.push({
           rid: rid,
+          orid: mesh.orid ?? rid,
           class: mesh.class ?? 'Neuron',
           uname: uname,
           label: label ?? rid,
@@ -327,7 +331,7 @@ export class Neu3DModelTable {
         return "<i class='fa fa-trash' > </i>";
       },
       cellClick: (e: any, cell: any) => {
-        this.neu3d.removeByUname(cell.getData().uname)
+        this.neu3d.removeByRid(cell.getData().orid)
       }
     },
     {
@@ -378,8 +382,7 @@ export class Neu3DModelTable {
         return "<i class='fa fa-trash' > </i>";
       },
       cellClick: (e: any, cell: any) => {
-        // this.neu3d.removeByUname(cell.getData().uname)
-        this.neu3d.neu3d.remove(cell.getData().rid)
+        this.neu3d.removeByRid(cell.getData().orid)
       }
     },
     {

@@ -59,34 +59,6 @@ function reformatField(id: string, value: any) {
   }
 }
 
-
-// /**
-//  * Toggle button add/remove on click. Button stateful to if neuron in workspace
-//  * @param rid 
-//  * @param uname 
-//  * @param neu3d 
-//  */
-// function onAddRemoveClick(rid:string, uname: string, neu3d: any) {
-//   let button = document.getElementById("info-summarytable-addremove-neuron");
-//   if (neu3d.isInWorkspace(rid)) {
-//     neu3d.removeByUname(uname).then(()=>{
-//       if (neu3d.isInWorkspace(rid)) {
-//         button.innerHTML = '-';
-//       } else {
-//         button.innerHTML = '+';
-//       }
-//     })
-//   } else {
-//     neu3d.addByUname(uname).then(()=>{
-//       if (neu3d.isInWorkspace(rid)) {
-//         button.innerHTML = '-';
-//       } else {
-//         button.innerHTML = '+';
-//       }
-//     })
-//   }
-// }
-
 /**
  * Display Summary Table in table format
  * @param props 

@@ -14,6 +14,7 @@ export interface IDataChangeArgs {
 * ID and a few selected attributes of the associated mesh dict items
 */
 export interface IMeshDictBaseItem {
+  orid?: string,  // neuron/synapse/mesh node rid. used to removeByRid
   uname?: string,
   name?: string,
   label?: string,
@@ -253,14 +254,14 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     return this._statesChanged;
   }
 
-  /** Return Array of Rid of all pinned objects*/
+  /** Return Array of Rid of all pinned neurons & synapses*/
   get pinned(): {[rid: string]: IMeshDictItem} {
-    return Private.filter(this.data, (mesh: IMeshDictItem) => mesh.pinned);
+    return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.background && mesh.pinned);
   }
 
-  /** Return Array of Rid of all unpinned objects*/
+  /** Return Array of Rid of all unpinned neurons & synapses*/
   get unpinned(): {[rid: string]: IMeshDictItem} {
-    return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.pinned);
+    return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.background && !mesh.pinned);
   }
 
   _dataChanged = new Signal<this, IDataChangeArgs>(this);
@@ -273,6 +274,11 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
 
 
 namespace Private {
+  /**
+   * Filter Object based on predicate on each obj
+   * @param obj 
+   * @param predicate 
+   */
   export function filter(obj: Object, predicate: CallableFunction): Object | any {
     return Object.keys(obj)
       .filter((key: string) => predicate((obj as any)[key ]))
@@ -300,6 +306,7 @@ namespace Private {
 
   function parseSWC(mesh: any): IMeshDictSWCItem {
     return {
+      orid: mesh['orid'],
       uname: mesh['uname'],
       name: mesh['name'] ?? mesh['uname'],
       label: mesh['label'],
@@ -324,6 +331,7 @@ namespace Private {
 
   function parseMesh(mesh: any): IMeshDictMeshItem {
     return {
+      orid: mesh['orid'],
       uname: mesh['uname'],
       name: mesh['name'] ?? mesh['uname'],
       label: mesh['label'],
@@ -358,6 +366,7 @@ namespace Private {
     } else{
       if (mesh.filename){ // file
         return {
+          orid: mesh['orid'],
           uname: mesh['uname'],
           name: mesh['name'] ?? mesh['uname'],
           label: mesh['label'],
@@ -372,6 +381,7 @@ namespace Private {
         }
       } else if (mesh.dataStr){
         return {
+          orid: mesh['orid'],
           uname: mesh['uname'],
           name: mesh['name'] ?? mesh['uname'],
           label: mesh['label'],
@@ -386,6 +396,7 @@ namespace Private {
         }
       } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })) { // raw data
         return {
+          orid: mesh['orid'],
           uname: mesh['uname'],
           name: mesh['name'] ?? mesh['uname'],
           label: mesh['label'],
