@@ -1,25 +1,27 @@
-// Connectivity table that uses tabulator class to render connectivity data object
+/**
+ * Connectivity table that uses tabulator class to render connectivity data object 
+ */ 
 import "@fortawesome/fontawesome-free/js/all.js";
 import Tabulator from "tabulator-tables";
 import "tabulator-tables/dist/css/tabulator.min.css"; //import Tabulator stylesheet
 import { Neu3DWidget } from "../neu3d-widget";
+import { IDataChangeArgs, Neu3DModel } from "../neu3d-widget/model";
 
 export class ConnTable {
   constructor(props: {
-    container: any;
-    data: any;
-    neu3d: any;
+    container: HTMLElement;
+    preOrPost: 'pre' | 'post';
+    data: IConnDataItem[];
+    neu3d: Neu3DWidget;
   }) {
+    this.preOrPost = props.preOrPost;
     this.data = props.data;
     this.neu3d = props.neu3d;
     //instantiate Tabulator when element is mounted
-    let columns = this.columns;
-    if (!this.hasSynMorph(this.data)) {
-      columns = [this.columns[0], this.columns[2], this.columns[3]];
-    }
     this.tabulator = new Tabulator(props.container, {
+      reactiveData:true,
       data: this.data, //link data to table
-      columns: columns, //define table columns
+      columns: this.columns, //define table columns
       tooltips: true,
       pagination: "local",
       paginationSize: 8,
@@ -29,7 +31,7 @@ export class ConnTable {
       cellMouseOver: (e: any, cell:any) => {
         const { rid, syn_rid } = cell.getData();
         switch (cell.getColumn().getField()) {
-          case 'has_syn_morph':
+          case 'synapse_in_workspace':
             if (this.neu3d?.isInWorkspace(syn_rid)){
               this.neu3d.neu3d.highlight(syn_rid);
             }
@@ -38,16 +40,6 @@ export class ConnTable {
             if (this.neu3d?.isInWorkspace(rid)){
               this.neu3d.neu3d.highlight(rid);
             }
-            // let highlight_rids = []
-            // if (this.neu3d?.isInWorkspace(rid)) {
-            //   highlight_rids.push(rid);
-            // }
-            // if (this.neu3d?.isInWorkspace(syn_rid)) {
-            //   highlight_rids.push(syn_rid);
-            // }
-            // if (highlight_rids.length > 0) {
-            //   this.neu3d.neu3d.highlight(highlight_rids);  
-            // }
             break;
         }
       },
@@ -56,6 +48,105 @@ export class ConnTable {
         this.neu3d.neu3d.highlight()
       }
     });
+    if (!this.hasSynMorph(this.data)) {
+      this.tabulator.hideColumn('synapse_in_workspace');
+    }
+    this.neu3d?.model.dataChanged.connect(this.handleDataChanged.bind(this));
+  }
+
+  /**
+   * Parse Connectivity Data
+   * @param connData connectivity data
+   */
+  private parseConnData(connData: IConnData, neu3d: Neu3DWidget): IConnDataItem[] {
+    let new_data: IConnDataItem[] = [];
+    if (connData == undefined) {
+      return new_data;
+    }
+    if (!(this.preOrPost in connData)){ // no pre or post partners
+      return new_data;
+    }
+    if (!('details' in connData[this.preOrPost])) {
+      return new_data;
+    }
+    for (let item of connData[this.preOrPost]["details"]) {
+      let neuron_data: IConnDataItem = {
+        name: item.name ?? item.name ?? item.rid,
+        uname: item.uname ?? item.name ?? item.rid,
+        syn_uname: item.syn_uname,
+        number: parseInt(item.number),
+        rid: item.rid,
+        n_rid: item.n_rid,
+        neuron_in_workspace: neu3d.isInWorkspace(item.rid),
+        syn_rid: item.syn_rid,
+        s_rid: item.s_rid,
+        synapse_in_workspace: neu3d.isInWorkspace(item.syn_rid),
+        has_syn_morph: item.has_syn_morph  == 1,
+        has_morph: item.has_morph == 1
+      };
+      new_data.push(neuron_data);
+    }
+    return new_data;
+  }
+
+  /**
+   * Set Data 
+   * @param data 
+   */
+  setData(connData: IConnData, neu3d: Neu3DWidget) {
+    this.data = this.parseConnData(connData, neu3d);
+    this.tabulator.setData(this.data);
+    this.setNeu3D(neu3d);
+    if (!this.hasSynMorph(this.data)) {
+      this.tabulator.hideColumn('synapse_in_workspace');
+    } else{
+      this.tabulator.showColumn('synapse_in_workspace');
+    }
+  }
+
+  /**
+   * Set Neu3D's Callback
+   * @param neu3d New Neu3DWidget
+   */
+  setNeu3D(neu3d: Neu3DWidget) {
+    if (neu3d !== this.neu3d) {
+      // change dataChanged callback
+      this.neu3d?.model?.dataChanged.disconnect(this.handleDataChanged.bind(this));
+      neu3d?.model?.dataChanged.connect(this.handleDataChanged.bind(this));
+      this.neu3d = neu3d;
+    }
+  }
+
+  /**
+   * Handle Neu3D Data Changed
+   */
+  handleDataChanged(caller: Neu3DModel, change: IDataChangeArgs) {
+    const { event, key, rid } = change as IDataChangeArgs;
+    if (!(['add', 'remove'].includes(event))) { return; }
+    if (key === 'highlight') { return; }  // skip highlight
+    let neuronIdx = this.data.findIndex((row: IConnDataItem) => row.rid === rid);
+    let synapseIdx = this.data.findIndex((row: IConnDataItem) => row.syn_rid === rid);
+    
+    switch (event) {
+      case 'add':
+        if (neuronIdx > -1){
+          this.data[neuronIdx].neuron_in_workspace = true;
+        }
+        if (synapseIdx > -1) {
+          this.data[synapseIdx].synapse_in_workspace = true;
+        }
+        break;
+      case 'remove':
+        if (neuronIdx > -1){
+          this.data[neuronIdx].neuron_in_workspace = false;
+        }
+        if (synapseIdx > -1) {
+          this.data[synapseIdx].synapse_in_workspace = false;
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   /**
@@ -74,65 +165,23 @@ export class ConnTable {
   /**
    * Remove the synapse colummn if no synapse morphology
    */
-  removeSynColumn(){
-    if (this.tabulator.getColumn("has_syn_morph")) {
-      this.tabulator.deleteColumn("has_syn_morph");
-      this.tabulator.redraw();
+  hideSynColumn(){
+    let column = this.tabulator.getColumn("synapse_in_workspace");
+    if (column.isVisible()){
+      column.hide();
     }
   }
 
   /**
    * Add the synapse colummn if has synapse morphology
    */
-  addSynColumn(){
-    if (!this.tabulator.getColumn("has_syn_morph")) {
-      this.tabulator.addColumn(this.synColumn, true, "uname");
-      this.tabulator.redraw();
+  showSynColumn(){
+    let column = this.tabulator.getColumn("synapse_in_workspace");
+    if (!column.isVisible()){
+      column.show();
     }
   }
 
-  /**
-   * Schema for the synapse column
-   */
-  readonly synColumn = {
-    title: "Synapse",
-    field: "has_syn_morph",
-    hozAlign: "center",
-    headerSort:false,
-    width: 55,
-    formatter: (cell: any, formatterParams: any) => {
-      if (cell.getValue()) {
-        if (this.neu3d?.isInWorkspace(cell.getData().syn_rid)) {
-          return "<i class='fa fa-minus-circle' > </i>";
-        } else {
-          return "<i class='fa fa-plus-circle' > </i>";
-        }
-      }
-      return;
-    },
-    cellClick: (e: any, cell: any) => {
-      // let { syn_uname, syn_rid } = cell.getData();
-      //   if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
-      //     this.neu3d?.addByUname(syn_uname).then(()=>{
-      //       cell.getRow().reformat();
-      //     })
-      //   } else {
-      //     this.neu3d?.removeByUname(syn_uname).then(()=>{
-      //       cell.getRow().reformat();
-      //     })
-      //   }
-      let { s_rid, syn_rid } = cell.getData();
-      if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
-        this.neu3d?.addByRid(s_rid).then(()=>{
-          cell.getRow().reformat();
-        })
-      } else {
-        this.neu3d?.removeByRid(s_rid).then(()=>{
-          cell.getRow().reformat();
-        })
-      }
-    }
-  };
 
   /**
    * Schema for all columns.
@@ -140,45 +189,37 @@ export class ConnTable {
   readonly columns = [
     {
       title: "Neuron",
-      field: "has_morph",
+      field: "neuron_in_workspace",
       hozAlign: "center",
       headerFilter: false,
       headerSort:false,
       width: 50,
-      formatter: (cell: any, formatterParams: any) => {
-        if (cell.getValue()) {
-          if (this.neu3d?.isInWorkspace(cell.getData().rid)) {
-            return "<i class='fa fa-minus-circle' > </i>";
-          } else {
-            return "<i class='fa fa-plus-circle' > </i>";
-          }
-        }
-        return;
-      },
+      formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
-        // let { uname, rid } = cell.getData();
-        // if (!this.neu3d?.isInWorkspace(rid)) { // not in workspace
-        //   this.neu3d?.addByUname(uname).then(()=>{
-        //     cell.getRow().reformat();
-        //   })
-        // } else {
-        //   this.neu3d?.removeByUname(uname).then(()=>{
-        //     cell.getRow().reformat();
-        //   })
-        // }
         let { n_rid, rid } = cell.getData();
         if (!this.neu3d?.isInWorkspace(rid)) { // not in workspace
-          this.neu3d?.addByRid(n_rid).then(()=>{
-            cell.getRow().reformat();
-          })
+          this.neu3d?.addByRid(n_rid);
         } else {
-          this.neu3d?.removeByRid(n_rid).then(()=>{
-            cell.getRow().reformat();
-          })
+          this.neu3d?.removeByRid(n_rid);
         }
       }
     },
-    this.synColumn,
+    {
+      title: "Synapse",
+      field: "synapse_in_workspace",
+      hozAlign: "center",
+      headerSort:false,
+      width: 55,
+      formatter: 'tickCross',
+      cellClick: (e: any, cell: any) => {
+        let { s_rid, syn_rid } = cell.getData();
+        if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
+          this.neu3d?.addByRid(s_rid);
+        } else {
+          this.neu3d?.removeByRid(s_rid);
+        }
+      }
+    },
     {
       title: "Name",
       field: "uname",
@@ -199,7 +240,47 @@ export class ConnTable {
     }
   ];
 
-  data: any;
+  data: IConnDataItem[];
   tabulator: any;
   neu3d: Neu3DWidget;
+  readonly preOrPost: 'pre' | 'post';
+}
+
+/**
+ * Element of Data in Tabulator
+ */
+export interface IConnDataItem {
+  name: string,
+  uname: string,
+  syn_uname: string,
+  number: Number,
+  rid: string,
+  n_rid: string,
+  neuron_in_workspace: Boolean,
+  syn_rid: string,
+  s_rid: string,
+  synapse_in_workspace: Boolean,
+  has_syn_morph: Boolean,
+  has_morph: Boolean
+}
+
+
+/**
+ * Conn Data sent by Neu3D Widget
+ */
+export interface IConnData {
+  pre?: {
+    details?: Array<any>;
+    summary?: {
+      profile?: object | any;
+      number?: number | any;
+    }
+  },
+  post?: {
+    details?: Array<any>;
+    summary?: {
+      profile?: object | any;
+      number?: number | any;
+    }
+  }
 }

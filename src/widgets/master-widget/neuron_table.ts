@@ -95,6 +95,7 @@ export class Neu3DModelTable {
             if (background){
               this.neuropils.push({
                 rid: rid,
+                uname: source[rid].uname,
                 label: source[rid].label ?? rid,
                 visibility: source[rid].visibility ?? true,
                 background: true
@@ -104,6 +105,7 @@ export class Neu3DModelTable {
             } else{
               this.neurons.push({
                 rid: rid,
+                uname: source[rid].uname,
                 label: source[rid].label ?? rid,
                 visibility: source[rid].visibility ?? true,
                 pinned: source[rid].pinned ?? false,
@@ -151,15 +153,40 @@ export class Neu3DModelTable {
     })
   }
 
+  /**
+   * Remove all neurons
+   * @param active if true, only remove active neurons in the tabulator
+   */
+  removeAllNeurons(active?: boolean) {    
+    let unames: string[] = this.neuronTabulator.getData(active ? 'active': '').map((r: any) => r.uname);
+    this.neu3d.removeByUname(unames);
+  }
+
+  /**
+   * Remove all neuropils
+   * @param active if true, only remove active neurons in the tabulator
+   */
+  removeAllNeuropils(active?: boolean) {
+    // let unames: string[] = this.neuropilTabulator.getData(active ? 'active': '').map((r: any) => r.uname);
+    // this.neu3d.removeByUname(unames);
+    let rids: string[] = this.neuropilTabulator.getData(active ? 'active': '').map((r: any) => r.rid);
+    this.neu3d.neu3d.remove(rids as any);
+  }
+
+  /**
+   * Parse data from neu3d widget
+   * @param neu3d 
+   */
   parseData(neu3d: Neu3DWidget): {'neurons': Array<any>, 'neuropils': Array<any>} {
     let neurons: Array<any> = [];
     let neuropils: Array<any> = [];
     for (let row of Object.entries(neu3d.model.data)) {
       const rid = row[0];
-      const { label, visibility, pinned, background } = row[1] as IMeshDictItem;
+      const { label, visibility, pinned, background, uname } = row[1] as IMeshDictItem;
       if (background){
         neuropils.push({
           rid: rid,
+          uname: uname,
           label: label ?? rid,
           visibility: visibility,
           background: background ?? true
@@ -167,6 +194,7 @@ export class Neu3DModelTable {
       }else{
         neurons.push({
           rid: rid,
+          uname: uname,
           label: label ?? rid,
           visibility: visibility,
           pinned: pinned,
@@ -216,6 +244,19 @@ export class Neu3DModelTable {
       }
     },
     {
+      title: "Remove",
+      hozAlign: "center",
+      headerFilter: false,
+      headerSort:false,
+      width: 40,
+      formatter: (cell: any, formatterParams: any) => {
+        return "<i class='fa fa-trash' > </i>";
+      },
+      cellClick: (e: any, cell: any) => {
+        this.neu3d.removeByUname(cell.getData().uname)
+      }
+    },
+    {
       title: "Info",
       hozAlign: "center",
       headerFilter: false,
@@ -243,6 +284,20 @@ export class Neu3DModelTable {
       sorter:"alphanum",
       headerFilter: true,
       headerFilterPlaceholder: "filter name"
+    },
+    {
+      title: "Remove",
+      hozAlign: "center",
+      headerFilter: false,
+      headerSort:false,
+      width: 40,
+      formatter: (cell: any, formatterParams: any) => {
+        return "<i class='fa fa-trash' > </i>";
+      },
+      cellClick: (e: any, cell: any) => {
+        // this.neu3d.removeByUname(cell.getData().uname)
+        this.neu3d.neu3d.remove(cell.getData().rid)
+      }
     },
     {
       title: "Vis",
