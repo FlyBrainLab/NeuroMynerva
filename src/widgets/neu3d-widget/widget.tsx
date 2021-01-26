@@ -4,7 +4,7 @@ import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
-import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
+import { LabIcon, settingsIcon, bugIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Neu3DModel, INeu3DModel } from './model';
@@ -333,11 +333,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         return;
       }
       // trigger datachanged event for info panel, will cause re-rendering of data
-      this.info?.dataChanged.emit({
-        data: thisMsg.data.data.data,
-        inWorkspace: this.isInWorkspace,
-        neu3d: this
-      });
+      this.info?.setData(this, thisMsg.data.data.data)
     }
   }
 
@@ -361,7 +357,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   querySender(): string {
     let code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(res)
+    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(_fbl_query)
     `;
     return code;
   }
@@ -372,7 +368,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   NLPquerySender(): string {
     let code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(res)
+    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(_fbl_query)
     `;
     return code;
   }
@@ -395,9 +391,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async addByUname(uname: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'add'
-    res['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'add'
+    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
     code = code + this.querySender();
@@ -414,9 +410,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async removeByUname(uname: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'remove'
-    res['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'remove'
+    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
                     'object': {'class': ['Neuron', 'Synapse']}}]
     `;
     code = code + this.querySender();
@@ -433,11 +429,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async addByRid(rid: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'add'
-    res['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'add'
+    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
-    res['format'] = 'morphology'
+    _fbl_query['format'] = 'morphology'
     `;
     code = code + this.querySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
@@ -453,9 +449,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async removeByRid(rid: string | Array<string>): Promise<any> {
     let code = `
-    res = {}
-    res['verb'] = 'remove'
-    res['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query = {}
+    _fbl_query['verb'] = 'remove'
+    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
     `;
     code = code + this.querySender();
@@ -471,7 +467,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   async executeNLPquery(query: string): Promise<boolean> {
     let code = `
-    res = '${query}'
+    _fbl_query = '${query}'
     `;
     code = code + this.NLPquerySender();
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
@@ -484,11 +480,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
   /**
    * Get Info of a given neuron
+   * @param rid - rid of the neuron/synapse to query info about
    * @return a promise that resolves to the reply message when done 
    */
-  executeInfoQuery(uname: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+  executeInfoQuery(rid: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
     let code_to_send = `
-    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${uname}')
+    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${rid}')
     `
     return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
   }
@@ -676,28 +673,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.setProcessor(newProcessor);
   }
 
-  // /**
-  //  * Return the preset of the current neu3d instance.
-  //  * The final return value is based on value in schema and what's avaiable in PRESETS.
-  //  * If processor cannot be found anywhere, will return disconnected.
-  //  */
-  // get preset(): PRESETS_NAMES {
-  //   // return the corresponding preset in schema if found
-  //   if (this.processor in this.ffboProcessors) { 
-  //     let preset = this.ffboProcessors[this._processor].PRESETS.preset as PRESETS_NAMES;
-  //     if (preset in PRESETS) {
-  //       return preset;
-  //     } 
-  //     // preset not found in available PRESETS
-  //     console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
-  //     return "default";
-  //   }
-
-  //   this.setHasClient(false);
-  //   console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
-  //   INotification.error(`Processor (${this.processor}) not recognized. Disconnected`);
-  //   return "disconnected";
-  // }
 
   /**
    * Change processor.
@@ -712,101 +687,91 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    *    if on startup, the dialog for removing neuron will not be shown
    */
   setProcessor(newProcessor: string, startUp: boolean = false) {
+    let differentProcessor = newProcessor !== this.processor;
     super.setProcessor(newProcessor, startUp);
 
-    let removeNeurons = false;
     this.neu3DReady.then(()=>{
-      let selected = new PromiseDelegate();
-      if ((!startUp) && ((this.neu3d as any).groups.front.children.length > 0)){
-        showDialog({
-          title: 'Remove Neurons/Synapses?',
-          body: `
-            Current Neu3D contains neurons/synapses, do you want to 
-            keep the neurons or remove them after changing processor?
-          `,
-          buttons: [
-              Dialog.cancelButton({ label: 'Keep' }),
-              Dialog.warnButton({ label: 'Remove' })
-          ]
-        }).then(result => {
-            if (result.button.accept) {
-                if (result.button.displayType === 'warn') {
-                  removeNeurons = true
-                }
-            }
-            selected.resolve(void 0);
-        });
-      } else {
-        selected.resolve(void 0);
+      if (differentProcessor && !startUp) {
+        this.neu3d.reset(true);
       }
 
-      // once selection has been made
-      selected.promise.then(()=>{
-        if (removeNeurons) { // remove everything
-          this.neu3d.reset(true);
-        } else{ // remove only meshes
-          for (let mesh of Object.keys(this.neu3d.meshDict)){
-            if (this.neu3d.meshDict[mesh].background) {
-              this.neu3d.remove(mesh);
-            }
-          }
-        }
-
-        /**
-         * Return the preset of the current neu3d instance.
-         * The final return value is based on value in schema and what's avaiable in PRESETS.
-         * If processor cannot be found anywhere, will return disconnected.
-         */
-        let preset: PRESETS_NAMES = "default";
-        let settings: {[field: string]: {x:number, y:number, z:number}} = null;
-        let meshes: any = null;
-        let placeholder = PRESETS.disconnected.searchPlaceholder;
-        let inputQueryBar: HTMLInputElement = this._neu3dFooter.getElementsByTagName('input')[0];
-          // return the corresponding preset in schema if found
-        if (this.processor in this.ffboProcessors) {
-          let processorPreset = this.ffboProcessors[this._processor].PRESETS.preset;
-          if (!(processorPreset in PRESETS)) {
-            // preset not found in available PRESETS
-            console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
-            let schemaSettings = this.ffboProcessors[this.processor].PRESETS.neu3dSettings;
-            settings = {
-              resetPosition: schemaSettings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition,
-              upVector: schemaSettings.upVector ?? PRESETS.default.neu3dSettings.upVector,
-              cameraTarget: schemaSettings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget,
-            };
-            placeholder = PRESETS.default.searchPlaceholder;
-          } else {
-            preset = processorPreset as PRESETS_NAMES;
-            settings = PRESETS[preset].neu3dSettings;  
-            meshes = PRESETS[preset].meshes;
-            placeholder = PRESETS[preset].searchPlaceholder;
-          }
-          this.initClient().then((success) => {
-            this.setHasClient(success); // can fail
-          });
+      /**
+       * Return the preset of the current neu3d instance.
+       * The final return value is based on value in schema and what's avaiable in PRESETS.
+       * If processor cannot be found anywhere, will return disconnected.
+       */
+      let preset: PRESETS_NAMES = "default";
+      let settings: {[field: string]: {x:number, y:number, z:number}} = null;
+      // let meshes: any = null;
+      let placeholder = PRESETS.disconnected.searchPlaceholder;
+      let inputQueryBar: HTMLInputElement = this._neu3dFooter.getElementsByTagName('input')[0];
+        // return the corresponding preset in schema if found
+      if (this.processor in this.ffboProcessors) {
+        let processorPreset = this.ffboProcessors[this._processor].PRESETS.preset;
+        if (!(processorPreset in PRESETS)) {
+          // preset not found in available PRESETS
+          console.warn(`[Neu3D-Widget] processor (${this.processor}) preset (${preset}) not found, set to default.`);
+          let schemaSettings = this.ffboProcessors[this.processor].PRESETS.neu3dSettings;
+          settings = {
+            resetPosition: schemaSettings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition,
+            upVector: schemaSettings.upVector ?? PRESETS.default.neu3dSettings.upVector,
+            cameraTarget: schemaSettings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget,
+          };
+          placeholder = PRESETS.default.searchPlaceholder;
         } else {
-          placeholder = PRESETS.disconnected.searchPlaceholder;
-          this.setHasClient(false);
-          console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
+          preset = processorPreset as PRESETS_NAMES;
+          settings = PRESETS[preset].neu3dSettings;  
+          // meshes = PRESETS[preset].meshes;
+          placeholder = PRESETS[preset].searchPlaceholder;
         }
-        inputQueryBar.placeholder = placeholder;
+        this.initClient().then((success) => {
+          this.setHasClient(success); // can fail
+          if (success && differentProcessor && !startUp) {
+            this.getMeshesfromDB();
+          }
+        });
+      } else {
+        placeholder = PRESETS.disconnected.searchPlaceholder;
+        this.setHasClient(false);
+        console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
+      }
+      inputQueryBar.placeholder = placeholder;
 
-        if (settings) {
-          this.neu3d._metadata.resetPosition = settings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition;
-          this.neu3d._metadata.upVector = settings.upVector ?? PRESETS.default.neu3dSettings.upVector;
-          this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
-        }
-        if (meshes) {
-          this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
-        }
-        this.neu3d.updateControls();
-        this.neu3d.resetView();
-        window.active_neu3d_widget = this;
-        // reset info panel
-        this.info.reset();
-      });
+      if (settings) {
+        this.neu3d._metadata.resetPosition = settings.resetPosition ?? PRESETS.default.neu3dSettings.resetPosition;
+        this.neu3d._metadata.upVector = settings.upVector ?? PRESETS.default.neu3dSettings.upVector;
+        this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
+      }
+      // if (meshes) {
+      //   this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
+      // }
+      this.neu3d.updateControls();
+      this.neu3d.resetView();
+      window.active_neu3d_widget = this;
+      // reset info panel - clear evrerything
+      this.info.reset(true);
     });
   }
+
+  /**
+   * Get Meshes from DB
+   */
+  async getMeshesfromDB(): Promise<KernelMessage.IExecuteReplyMsg | null> {
+    let code = `
+    _fbl_query = {}
+    _fbl_query['format'] = 'morphology'
+    _fbl_query['query']= [{'action': {'method': {'query': {}}},
+                           'object': {'class': 'Neuropil'}}]
+    `;
+    code = code + this.querySender();
+    if (!this.sessionContext?.session?.kernel){
+      return null;
+    }
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.debug('getMeshesfromDB', result);
+    return result;
+  }
+
 
   /**
    * Populate the toolbar on the top of the widget
@@ -857,7 +822,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       () => { 
         this.neu3d.controlPanel.domElement.style.display === "" ? this.neu3d.controlPanel.hide() : this.neu3d.controlPanel.show();
       }));
-
+    this.toolbar.addItem(
+        'updateMesh', 
+        Private.createButton(bugIcon, "Update Mesh", 'jp-Neu3D-Btn jp-SearBar-updateMesh', 
+        () => { this.getMeshesfromDB() })
+      );
     super.populateToolBar();
   }
 
@@ -987,7 +956,7 @@ namespace Private {
           hints = PRESETS.disconnected.hints;
         }
       }
-      const hint_ul = hints.map((h, idx) => <li key={idx}><b>{h.query}</b>{h.effect}</li>);
+      const hint_ul = hints.map((h, idx) => <li key={idx}><b>{h.query}</b>{`: ${h.effect}`}</li>);
       let hint_header = <p>Connect to a Processor to see example queries.</p>;
       if (hint_ul.length > 0) {
         hint_header = <p>Here are a list of example queries you can try:</p>;

@@ -25,6 +25,7 @@ export interface IMeshDictBaseItem {
   pinned?: boolean,
   type?: 'morphology_json' | 'general_json' | string; // type, used to keep track of morphology json objects  
   morph_type?: 'swc' | 'mesh' | string; // specify mesh with faces and vertices enabled will parse background
+  class?: 'Neuron' | 'Neuropil' | 'Synapse' | string;
 }
 
 export interface IMeshDictSWCItem extends IMeshDictBaseItem {
@@ -97,14 +98,19 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     //   return;
     // }
     let oldValue = this.data[rid];
-    this.data[rid] = Private.convertRawMesh(value);
+    let mesh = Private.convertRawMesh(value);
+    if (mesh === null) {
+      console.warn(`[Neu3D-Widget] Mesh rid ${rid} mesh parse failed, ignoring.`)
+      return;
+    }
+    this.data[rid] = mesh;
     this._dataChanged.emit({
       event: (oldValue) ? 'change' : 'add',
       source: this.data,
       key: rid,
       rid: rid,
       oldValue: oldValue,
-      newValue: this.data[rid]
+      newValue: mesh
     });
   }
 
@@ -283,13 +289,19 @@ namespace Private {
       if (meshDict[rid].background) {
         continue;
       }
-      modelMeshDict[rid] = convertRawMesh(meshDict[rid]);
+      let mesh = convertRawMesh(meshDict[rid]);
+      if (mesh === null){
+        continue;
+      }
+      modelMeshDict[rid] = mesh;
     }
     return modelMeshDict;
   }
 
   function parseSWC(mesh: any): IMeshDictSWCItem {
     return {
+      uname: mesh['uname'],
+      name: mesh['name'] ?? mesh['uname'],
       label: mesh['label'],
       highlight: mesh['highlight'],
       opacity: mesh['opacity'],
@@ -305,12 +317,15 @@ namespace Private {
       z: mesh['z'],
       r: mesh['r'],
       type: 'morphology_json',
-      morph_type: 'swc'
+      morph_type: 'swc',
+      class: mesh['class'] ?? 'Neuron'
     }
   }
 
   function parseMesh(mesh: any): IMeshDictMeshItem {
     return {
+      uname: mesh['uname'],
+      name: mesh['name'] ?? mesh['uname'],
       label: mesh['label'],
       highlight: mesh['highlight'],
       opacity: mesh['opacity'],
@@ -321,7 +336,8 @@ namespace Private {
       faces: mesh['faces'],
       vertices: mesh['vertices'],
       type: 'morphology_json',
-      morph_type: 'mesh'
+      morph_type: 'mesh',
+      class: mesh['class'] ?? 'Neuropil'
     }
   }
 
@@ -329,7 +345,7 @@ namespace Private {
   /**
    * Convert Raw Neu3D Mesh to `IMeshDict`
    */
-  export function convertRawMesh(mesh: any): IMeshDictItem {
+  export function convertRawMesh(mesh: any): IMeshDictItem | null {
     if (('morph_type' in mesh) && ('class' in mesh)) {
       switch (mesh.morph_type) {
         case 'swc':
@@ -342,6 +358,8 @@ namespace Private {
     } else{
       if (mesh.filename){ // file
         return {
+          uname: mesh['uname'],
+          name: mesh['name'] ?? mesh['uname'],
           label: mesh['label'],
           highlight: mesh['highlight'],
           opacity: mesh['opacity'],
@@ -350,10 +368,12 @@ namespace Private {
           // color: mesh['color'],
           pinned: mesh['pinned'],
           filetype: mesh['filetype'],
-          filename: mesh['filename']
+          filename: mesh['filename'],
         }
       } else if (mesh.dataStr){
         return {
+          uname: mesh['uname'],
+          name: mesh['name'] ?? mesh['uname'],
           label: mesh['label'],
           highlight: mesh['highlight'],
           opacity: mesh['opacity'],
@@ -366,6 +386,8 @@ namespace Private {
         }
       } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })) { // raw data
         return {
+          uname: mesh['uname'],
+          name: mesh['name'] ?? mesh['uname'],
           label: mesh['label'],
           highlight: mesh['highlight'],
           opacity: mesh['opacity'],
@@ -384,7 +406,7 @@ namespace Private {
         }
       } 
       else {
-        return {}; // neither mesh nor swc
+        return null; // neither mesh nor swc
       }
     }
   }
