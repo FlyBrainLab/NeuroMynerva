@@ -7,7 +7,7 @@ import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/
 import { LabIcon, settingsIcon, bugIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
 import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { Neu3DModel, INeu3DModel } from './model';
+import { Neu3DModel, INeu3DModel, IMeshDictItem } from './model';
 import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
 import { HemibrainMesh } from './hemibrain_mesh';
@@ -293,15 +293,23 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         case "Data": {
           if (thisMsg.data.data){
             let rawData = thisMsg.data.data
-            if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
-              // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
-              let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
-              this.neu3d.addJson(neu3Ddata);
+            let processedData = Private.processMeshesFromCommData(rawData);
+            if (Object.keys(processedData.meshOrSWC).length > 0){
+              this.neu3d.addJson({ffbo_json: processedData.meshOrSWC, type: 'morphology_json'});
             }
-            else {
-              let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
-              this.neu3d.addJson(neu3Ddata);
+            
+            if (Object.keys(processedData.unknown).length > 0){
+              this.neu3d.addJson({ffbo_json: processedData.unknown, type: 'general_json'});
             }
+            // if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
+            //   // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
+            //   let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
+            //   this.neu3d.addJson(neu3Ddata);
+            // }
+            // else {
+            //   let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
+            //   this.neu3d.addJson(neu3Ddata);
+            // }
           } else {
             // no-op
           }
@@ -756,12 +764,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   /**
    * Get Meshes from DB
    */
-  async getMeshesfromDB(): Promise<KernelMessage.IExecuteReplyMsg | null> {
+  async getMeshesfromDB(type?: Private.MeshTypes ): Promise<KernelMessage.IExecuteReplyMsg | null> {
+    type = type ?? ['Neuropil', 'Tract', 'Subregion', 'Tract', 'Subsystem'];
     let code = `
     _fbl_query = {}
     _fbl_query['format'] = 'morphology'
     _fbl_query['query']= [{'action': {'method': {'query': {}}},
-                           'object': {'class': 'Neuropil'}}]
+                           'object': {'class': ${JSON.stringify(type)}}}]
     `;
     code = code + this.querySender();
     if (!this.sessionContext?.session?.kernel){
@@ -854,6 +863,33 @@ namespace Private {
 
   // The count is for managing the name of the widget every time a new one is added to the browser
   export let count = 1;
+
+  export type MeshTypes = 'Neuropil'| 'Tract'| 'Subregion'| 'Tract'| 'Subsystem'| Array<string>;
+
+  export function processMeshesFromCommData(
+    dictOfMeshes: {[rid:string]: IMeshDictItem}
+  ):{meshOrSWC:{[rid:string]: IMeshDictItem}, unknown:{[rid:string]: IMeshDictItem}} {
+    let processed: {meshOrSWC:{[rid:string]: IMeshDictItem}, unknown:{[rid:string]: IMeshDictItem}} = {
+      meshOrSWC:{}, unknown:{}
+    };
+    for (let [rid, mesh] of Object.entries(dictOfMeshes)) {
+      if (mesh.morph_type === 'mesh'){
+        if (['Neuropil', 'Tract', 'Subregion', 'Tract', 'Subsystem'].includes(mesh.class)){
+          mesh.background = mesh.background ?? true;
+        } else{
+          mesh.background = mesh.background ?? false;
+        }
+        processed.meshOrSWC[rid] = mesh;
+      } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })){
+        mesh.background = mesh.background ?? false;
+        processed.meshOrSWC[rid] = mesh;
+      } else{
+        processed.unknown[rid] = mesh;
+      }
+    }
+    return processed;
+  }
+
 
   export function createButton(
     icon: LabIcon.IMaybeResolvable,
