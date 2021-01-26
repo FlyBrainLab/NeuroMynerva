@@ -738,7 +738,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.initClient().then((success) => {
           this.setHasClient(success); // can fail
           if (success && differentProcessor && !startUp) {
-            this.getMeshesfromDB();
+            this.getMeshesfromDB().then(()=>{
+              this.hideMeshes('Neuropil');
+            });
           }
         });
       } else {
@@ -782,6 +784,21 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
     console.debug('getMeshesfromDB', result);
     return result;
+  }
+
+  /**
+   * Hide Background Meshes except some 
+   * @param exceptClasses 
+   */
+  hideMeshes(exceptClasses?: Private.MeshTypes) {
+    exceptClasses = Private.asarray(exceptClasses) ?? [];
+    for (const [rid, mesh] of Object.entries(this.model.background)) {
+      if (exceptClasses.includes(mesh.class)) {
+        continue;
+      } else{
+        this.neu3d.hide(rid);
+      }
+    }
   }
 
 
@@ -837,7 +854,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.toolbar.addItem(
         'updateMesh', 
         Private.createButton(bugIcon, "Update Mesh", 'jp-Neu3D-Btn jp-SearBar-updateMesh', 
-        () => { this.getMeshesfromDB() })
+        () => { 
+          this.getMeshesfromDB();
+          this.hideMeshes('Neuropil');
+        })
       );
     super.populateToolBar();
   }
@@ -866,6 +886,16 @@ namespace Private {
 
   // The count is for managing the name of the widget every time a new one is added to the browser
   export let count = 1;
+
+  export function asarray(string_or_array: string | Array<string>): Array<string> | undefined {
+    if (string_or_array == undefined) {
+      return undefined;
+    }
+    if (string_or_array.constructor !== Array) {
+      string_or_array = [string_or_array as string];
+    }
+    return string_or_array as Array<string>;
+  }
 
   export type MeshTypes = 'Neuropil'| 'Tract'| 'Subregion'| 'Tract'| 'Subsystem'| Array<string>;
 

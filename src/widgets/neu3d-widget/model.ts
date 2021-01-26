@@ -254,12 +254,17 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     return this._statesChanged;
   }
 
-  /** Return Array of Rid of all pinned neurons & synapses*/
+  /** Return Partial of Data Object of all pinned neurons & synapses*/
   get pinned(): {[rid: string]: IMeshDictItem} {
     return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.background && mesh.pinned);
   }
 
-  /** Return Array of Rid of all unpinned neurons & synapses*/
+  /** Return Partial of Data Object of all background meshes*/
+  get background(): {[rid: string]: IMeshDictItem} {
+    return Private.filter(this.data, (mesh: IMeshDictItem) => mesh.background);
+  }
+
+  /** Return Partial of Data Object of all unpinned neurons & synapses*/
   get unpinned(): {[rid: string]: IMeshDictItem} {
     return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.background && !mesh.pinned);
   }
