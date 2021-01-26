@@ -319,7 +319,7 @@ namespace Private {
       // color: mesh['color'],
       pinned: mesh['pinned'],
       faces: mesh['faces'],
-      vertices: mesh['faces'],
+      vertices: mesh['vertices'],
       type: 'morphology_json',
       morph_type: 'mesh'
     }
