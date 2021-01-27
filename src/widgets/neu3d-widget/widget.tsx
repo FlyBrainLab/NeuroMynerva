@@ -442,7 +442,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     let code = `
     _fbl_query = {}
     _fbl_query['verb'] = 'add'
-    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query['query']= [{'action': {'method': {'query': {}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
     _fbl_query['format'] = 'morphology'
     `;
@@ -462,7 +462,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     let code = `
     _fbl_query = {}
     _fbl_query['verb'] = 'remove'
-    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query['query']= [{'action': {'method': {'query': {}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
     `;
     code = code + this.querySender();
