@@ -8,7 +8,7 @@
     "fbl-config": {
       "description": "One instance of FFBOProcessor settings",
       "properties": {
-        "NAME": { 
+        "NAME": {
           "description": "Name of the processor",
           "type": "string"
         },
@@ -256,8 +256,49 @@
               }
             }
           }
+        },
+        {
+          "NAME": "adult(medulla)",
+          "AUTH": {
+            "ssl": true,
+            "authentication": true,
+            "ca_cert_file": "isrgrootx1.pem",
+            "intermediate_cert_file": "letsencryptauthorityx3.pem"
+          },
+          "USER": {
+            "user": "guest",
+            "secret": "jf81NF*3n28!ljief"
+          },
+          "SERVER": {
+            "IP": "medula.neuronlp.fruitflybrain.org",
+            "dataset": ["medulla"],
+            "realm": "realm1"
+          },
+          "DEBUG": {
+            "debug": false
+          },
+          "PRESETS": {
+            "preset": "",
+            "neu3dSettings": {
+              "resetPosition": {
+                "x": 212.0,
+                "y": 337.0,
+                "z": 35.5
+              },
+              "upVector": {
+                "x": 0.0504,
+                "y": -0.004173,
+                "z": 0.99852
+              },
+              "cameraTarget": {
+                "x": 17.593,
+                "y": 22.606,
+                "z": 21.8387
+              }
+            }
+          }
         }
       ]
     }
   }
-}  
+}
