@@ -1,263 +1,162 @@
 {
-  "jupyter.lab.setting-icon": "fbl:fbl",
-  "jupyter.lab.setting-icon-label": "FlyBrainLab Processor Settings",
-  "title": "FlyBrainLab",
-  "description": "FlyBrainLab FFBOProcessors Settings",
-  "type": "object",
-  "definitions": {
-    "fbl-config": {
-      "description": "One instance of FFBOProcessor settings",
-      "properties": {
-        "NAME": {
-          "description": "Name of the processor",
-          "type": "string"
-        },
-        "AUTH": {
-          "properties": {
-            "ssl": {
-              "type": "boolean"
+    "fbl-processors": [{
+            "NAME": "larva(l1em)",
+            "AUTH": {
+                "ssl": false,
+                "authentication": true,
+                "ca_cert_file": "isrgrootx1.pem",
+                "intermediate_cert_file": "letsencryptauthorityx3.pem"
             },
-            "authentication": {
-              "type": "boolean"
+            "USER": {
+                "user": "guest",
+                "secret": "guestpass"
             },
-            "cert": {
-              "type": "string"
+            "SERVER": {
+                "IP": "localhost:8081",
+                "dataset": ["l1em"],
+                "realm": "realm1"
             },
-            "key": {
-              "type": "string"
+            "DEBUG": {
+                "debug": false
             },
-            "chain-cert": {
-              "type": "string"
-            },
-            "ca_cert_file": {
-              "type": "string"
-            },
-            "intermediate_cert_file": {
-              "type": "string"
-            }
-          },
-          "required":["ssl", "authentication"],
-          "type": "object"
-        },
-        "USER": {
-          "properties": {
-            "user": {
-              "type": "string"
-            },
-            "secret": {
-              "type": "string"
-            }
-          },
-          "required":["user", "secret"],
-          "type": "object"
-        },
-        "SERVER": {
-          "properties": {
-            "IP": {
-              "type": "string"
-            },
-            "dataset": {
-              "title": "NA databases",
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            },
-            "realm": {
-              "description": "Do not change",
-              "type": "string"
-            }
-          },
-          "required":["IP", "dataset", "realm"],
-          "type": "object"
-        },
-        "DEBUG": {
-          "properties": {
-            "debug": {
-              "type": "boolean"
-            }
-          },
-          "type": "object"
-        },
-        "PRESETS": {
-          "properties": {
-            "preset": {
-              "type": "string",
-              "enum": [
-                "",
-                "adult(flycircuit)",
-                "larva(l1em)",
-                "adult(hemibrain)"
-              ]
-            },
-            "neu3dSettings" :{
-              "type": "object",
-              "properties": {
-                "resetPosition":{
-                  "type": "object",
-                  "properties":{
-                    "x": {"type": "number"},
-                    "y": {"type": "number"},
-                    "z": {"type": "number"}
-                  }
-                },
-                "upVector":{
-                  "type": "object",
-                  "properties":{
-                    "x": {"type": "number"},
-                    "y": {"type": "number"},
-                    "z": {"type": "number"}
-                  }
-                },
-                "cameraTarget":{
-                  "type": "object",
-                  "properties":{
-                    "x": {"type": "number"},
-                    "y": {"type": "number"},
-                    "z": {"type": "number"}
-                  }
-                }
-              }
-            }
-          },
-          "required": ["preset"]
-        }
-      }
-    },
-    "fbl-settings": {
-      "description": "All available connections for a given FlyBrainLab",
-      "type": "array",
-      "items": { "$ref": "#/definitions/fbl-config" }
-    }
-  },
-  "properties": {
-      "fbl-processors":{
-          "title": "FFBOProcessors",
-          "description": "Enumerates all available FFBOProcessors",
-          "$ref": "#/definitions/fbl-settings",
-          "format": "table",
-          "type": "array",
-          "items": { "$ref": "#/definitions/fbl-config" },
-          "default":[
-              {
-                  "NAME": "larva(l1em)",
-                  "AUTH": {
-                      "ssl": false,
-                      "authentication": true,
-                      "ca_cert_file": "isrgrootx1.pem",
-                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
-                  },
-                  "USER": {
-                      "user": "guest",
-                      "secret": "guestpass"
-                  },
-                  "SERVER": {
-                      "IP": "localhost:8081",
-                      "dataset": ["l1em"],
-                      "realm": "realm1"
-                  },
-                  "DEBUG": {
-                      "debug": false
-                  },
-                  "PRESETS": {
-                    "preset": "larva(l1em)",
-                    "neu3dSettings": {
-                      "resetPosition": {
-                        "x":  42.05716,
-                        "y":  18.46588,
-                        "z":  -509.65272
-                      },
-                      "upVector": {
+            "PRESETS": {
+                "preset": "larva(l1em)",
+                "neu3dSettings": {
+                    "resetPosition": {
+                        "x": 42.05716,
+                        "y": 18.46588,
+                        "z": -509.65272
+                    },
+                    "upVector": {
                         "x": 0.00226,
                         "y": -0.9592,
                         "z": 0.28260
-                      },
-                      "cameraTarget": {
+                    },
+                    "cameraTarget": {
                         "x": 42.113,
                         "y": 74.909,
                         "z": 58.654
-                      }
                     }
-                  }
-              },
-              {
-                  "NAME": "adult(flycircuit)",
-                  "AUTH": {
-                      "ssl": false,
-                      "authentication": true,
-                      "ca_cert_file": "isrgrootx1.pem",
-                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
-                  },
-                  "USER": {
-                      "user": "guest",
-                      "secret": "guestpass"
-                  },
-                  "SERVER": {
-                      "IP": "localhost:8081",
-                      "dataset": ["flycircuit"],
-                      "realm": "realm1"
-                  },
-                  "DEBUG": {
-                      "debug": false
-                  },
-                  "PRESETS": {
-                    "preset": "adult(flycircuit)",
-                    "neu3dSettings": {
-                      "resetPosition": {
+                }
+            }
+        },
+        {
+            "NAME": "adult(flycircuit)",
+            "AUTH": {
+                "ssl": false,
+                "authentication": true,
+                "ca_cert_file": "isrgrootx1.pem",
+                "intermediate_cert_file": "letsencryptauthorityx3.pem"
+            },
+            "USER": {
+                "user": "guest",
+                "secret": "guestpass"
+            },
+            "SERVER": {
+                "IP": "localhost:8081",
+                "dataset": ["flycircuit"],
+                "realm": "realm1"
+            },
+            "DEBUG": {
+                "debug": false
+            },
+            "PRESETS": {
+                "preset": "adult(flycircuit)",
+                "neu3dSettings": {
+                    "resetPosition": {
                         "x": 0.0,
                         "y": 0.0,
                         "z": 1800.0
-                      },
-                      "upVector": {
+                    },
+                    "upVector": {
                         "x": 0.0,
                         "y": 1.0,
                         "z": 0.0
-                      }
                     }
-                  }
-              },
-              {
-                  "NAME": "adult(hemibrain)",
-                  "AUTH": {
-                      "ssl": false,
-                      "authentication": true,
-                      "ca_cert_file": "isrgrootx1.pem",
-                      "intermediate_cert_file": "letsencryptauthorityx3.pem"
-                  },
-                  "USER": {
-                      "user": "guest",
-                      "secret": "guestpass"
-                  },
-                  "SERVER": {
-                      "IP": "localhost:8081",
-                      "dataset": ["hemibrain"],
-                      "realm": "realm1"
-                  },
-                  "DEBUG": {
-                      "debug": false
-                  },
-                  "PRESETS": {
-                    "preset": "adult(hemibrain)",
-                    "neu3dSettings": {
-                      "resetPosition": {
+                }
+            }
+        },
+        {
+            "NAME": "adult(hemibrain)",
+            "AUTH": {
+                "ssl": false,
+                "authentication": true,
+                "ca_cert_file": "isrgrootx1.pem",
+                "intermediate_cert_file": "letsencryptauthorityx3.pem"
+            },
+            "USER": {
+                "user": "guest",
+                "secret": "guestpass"
+            },
+            "SERVER": {
+                "IP": "localhost:8081",
+                "dataset": ["hemibrain"],
+                "realm": "realm1"
+            },
+            "DEBUG": {
+                "debug": false
+            },
+            "PRESETS": {
+                "preset": "adult(hemibrain)",
+                "neu3dSettings": {
+                    "resetPosition": {
                         "x": -0.4176,
                         "y": 151.64,
                         "z": -50.507
-                      },
-                      "upVector": {
+                    },
+                    "upVector": {
                         "x": -0.00203,
                         "y": -0.500,
                         "z": -0.8658
-                      },
-                      "cameraTarget": {
+                    },
+                    "cameraTarget": {
                         "x": 17.593,
                         "y": 22.606,
                         "z": 21.8387
-                      }
                     }
-                  }
-              }
-          ]
-      }
-  }
+                }
+            }
+        },
+        {
+            "NAME": "adult(medulla)",
+            "AUTH": {
+                "ssl": false,
+                "authentication": true,
+                "ca_cert_file": "isrgrootx1.pem",
+                "intermediate_cert_file": "letsencryptauthorityx3.pem"
+            },
+            "USER": {
+                "user": "guest",
+                "secret": "guestpass"
+            },
+            "SERVER": {
+                "IP": "localhost:8081",
+                "dataset": ["medulla"],
+                "realm": "realm1"
+            },
+            "DEBUG": {
+                "debug": false
+            },
+            "PRESETS": {
+                "preset": "",
+                "neu3dSettings": {
+                    "resetPosition": {
+                        "x": 212.0,
+                        "y": 337.0,
+                        "z": 35.5
+                    },
+                    "upVector": {
+                        "x": 0.0504,
+                        "y": -0.004173,
+                        "z": 0.99852
+                    },
+                    "cameraTarget": {
+                        "x": 17.593,
+                        "y": 22.606,
+                        "z": 21.8387
+                    }
+                }
+            }
+        }
+    ]
 }
