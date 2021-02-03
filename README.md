@@ -50,17 +50,12 @@ pip install neuromynerva
 ### Develop NeuroMynerva
 We use [Anaconda](https://www.anaconda.com/) to manage development environment, you are encouraged to first create a Conda environment
 
-_Note:_ You will need NodeJS to build the extension package.
-
-The `jlpm` command is JupyterLab's pinned version of
-[yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
-`yarn` or `npm` in lieu of `jlpm` below.
-
 ```bash
 # create conda environment and install python dependencies
 conda create -n fbl python=3.7 nodejs scipy pandas cookiecutter git yarn -c conda-forge -y
 conda activate fbl
 ```
+
 
 You can then use the following script to setup the development environment.
 ```bash
@@ -72,13 +67,25 @@ pip install txaio twisted autobahn crochet service_identity autobahn-sync matplo
 # pip install pypiwin32
 
 # install inhouse packages and NeuroMynerva
-git clone https://github.com/FlyBrainLab/NeuroMynerva.git
 git clone https://github.com/FlyBrainLab/Neuroballad.git
 git clone https://github.com/FlyBrainLab/FBLClient.git
 cd ./Neuroballad
 python setup.py develop
 cd ../FBLClient
 python setup.py develop
+```
+
+Next, we build the NeuroMynerva from source.
+
+_Note:_ You will need NodeJS to build the extension package.
+
+The `jlpm` command is JupyterLab's pinned version of
+[yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
+`yarn` or `npm` in lieu of `jlpm` below.
+```bash
+# assuming currently in FBLClient folder
+cd ../  # go back to parent folder on the same level as FBLClient and NeuroBallad
+git clone https://github.com/FlyBrainLab/NeuroMynerva.git
 cd ../NeuroMynerva
 git checkout jlab3 # switch to branch compatible with JupyterLab 3
 
