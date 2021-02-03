@@ -192,7 +192,7 @@ export class ConnTable {
       field: "neuron_in_workspace",
       hozAlign: "center",
       headerFilter: false,
-      headerSort:false,
+      headerSort:true,
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -208,7 +208,7 @@ export class ConnTable {
       title: "Synapse",
       field: "synapse_in_workspace",
       hozAlign: "center",
-      headerSort:false,
+      headerSort:true,
       width: 55,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
