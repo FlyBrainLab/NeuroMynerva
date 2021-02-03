@@ -31,11 +31,11 @@ declare global {
 export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions, iFrameSrc?: string) {
     super({
-      name:options.name || `NeuGFX-${Private.count++}`, 
+      name:options.name || `NeuGFX-${Private.count++}`,
       icon: Icons.neuGFXIcon,
       ...options});
     this.addClass(NeuGFX_CLASS_JLab);
-    
+
 
     this._neugfxContainer = document.createElement('iframe');
     this._neugfxContainer.className = 'neurogfxwidget-iframe';
@@ -105,7 +105,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].addByUname([${event.data.uname}])
         `;
-        console.debug(code_to_send); 
+        console.debug(code_to_send);
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
@@ -115,7 +115,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].addByUname([${event.data.uname}], verb='remove')
         `;
-        console.debug(code_to_send); 
+        console.debug(code_to_send);
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
@@ -125,7 +125,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         let code_to_send = `
         _fblres = fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client'].loadExperimentConfig("""${event.data.config}""")
         `;
-        console.debug(code_to_send); 
+        console.debug(code_to_send);
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
@@ -138,14 +138,14 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
         code_to_send = code_to_send.replace('$CLIENT', `
         fbl.client_manager.clients[fbl.widget_manager.widgets['${_this.id}'].client_id]['client']
         `);
-        console.debug(code_to_send); 
+        console.debug(code_to_send);
         // neu3dwidget._userAction.emit({ action: 'execute', content: { code: '_FFBOLABres = _FFBOLABClient.addByUname([' + event.data.uname + ']);' } });
         _this.sessionContext.session.kernel.requestExecute({code: code_to_send}).done;
       }
     };
 
     window.addEventListener('message', event_func);
-    
+
   }
 
   set iFrameSrc(url: string) {
@@ -161,7 +161,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
   get iFrameSrc(): string {
     return this._iFrameSrc;
   }
-  
+
 
   onCommMsg(msg: any) {
     console.debug(msg);
@@ -192,7 +192,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
   get processor(): string{
     return this._processor;
   }
-  
+
   set processor(newProcessor: string) {
     if (newProcessor === this._processor) {
       return;
@@ -259,13 +259,13 @@ namespace Private {
         const text = document.createElement('label');
         text.textContent = `Select Processor for: "${widget.id}"`;
         body.appendChild(text);
-        
+
         const inputDiv = document.createElement('input');
         inputDiv.placeholder = widget.iFrameSrc ?? 'NeuGFX IFrame URL...';
         body.appendChild(inputDiv);
         super({node: body});
     }
-    
+
     /**
     * Get the value of the kernel selector widget.
     */
@@ -274,10 +274,10 @@ namespace Private {
         return inputDiv.value as string;
     }
   }
-    
+
   /**
   * React component for a Iframe Source Button.
-  * This wraps the ToolbarButtonComponent and watches the iFrameSrc 
+  * This wraps the ToolbarButtonComponent and watches the iFrameSrc
   */
   export function IFrameSrcComponent(
     props: { widget: NeuGFXWidget }
@@ -295,7 +295,7 @@ namespace Private {
             widget.iFrameSrc = result.value;
         }
     });
-    
+
     const signal = widget.iFrameSrcChanged;
     const iframeSrc = widget.iFrameSrc;
     return (
