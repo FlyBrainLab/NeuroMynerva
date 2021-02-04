@@ -1,15 +1,15 @@
 // an diagram that renders the percentage neuron types pre/post synaptic to a given neuron
 // Uses ReCharts to draw PieCharts
-import * as React from "react";
-import { PieChart, Pie, Cell, Tooltip, Label } from "recharts";
+import * as React from 'react';
+import { PieChart, Pie, Cell, Tooltip, Label } from 'recharts';
 
-const COLORS_PRE = ["#f01a1a", "#f34747", "#f67575", "#f9a3a3", "#fcd1d1"];
-const COLORS_POST = ["#2859b8", "#527ac6", "#7e9bd4", "#a9bce2", "#d4ddf0"];
+const COLORS_PRE = ['#f01a1a', '#f34747', '#f67575', '#f9a3a3', '#fcd1d1'];
+const COLORS_POST = ['#2859b8', '#527ac6', '#7e9bd4', '#a9bce2', '#d4ddf0'];
 
-export function ConnSVG(props: { pre: any; post: any }) {
+export function ConnSVG(props: { pre: any; post: any }): JSX.Element {
   let pre_arr = [];
-  if (props.pre?.profile != null) {
-    for (let [key, number] of Object.entries(props.pre.profile)) {
+  if (props.pre?.profile) {
+    for (const [key, number] of Object.entries(props.pre.profile)) {
       pre_arr.push({ name: key, proportion: number });
     }
   }
@@ -18,8 +18,8 @@ export function ConnSVG(props: { pre: any; post: any }) {
   });
 
   let post_arr = [];
-  if (props.post?.profile != null) {
-    for (let [key, number] of Object.entries(props.post.profile)) {
+  if (props.post?.profile) {
+    for (const [key, number] of Object.entries(props.post.profile)) {
       post_arr.push({ name: key, proportion: number });
     }
   }
@@ -27,14 +27,10 @@ export function ConnSVG(props: { pre: any; post: any }) {
     return a.proportion - b.proportion;
   });
 
-  let chunkWidth = 30;
+  const chunkWidth = 30;
   if (pre_arr.length > 0 || post_arr.length > 0) {
     return (
-      <PieChart
-        width={chunkWidth * 9}
-        height={chunkWidth * 6}
-        style={{ margin: "0 auto" }}
-      >
+      <PieChart width={chunkWidth * 9} height={chunkWidth * 6} style={{ margin: '0 auto' }}>
         {pre_arr.length ? (
           <Pie
             data={pre_arr}
@@ -48,22 +44,12 @@ export function ConnSVG(props: { pre: any; post: any }) {
             dataKey="proportion"
           >
             {pre_arr.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS_PRE[index % COLORS_PRE.length]}
-              />
+              <Cell key={`cell-${index}`} fill={COLORS_PRE[index % COLORS_PRE.length]} />
             ))}
             <Label
               width={30}
               position="center"
-              content={
-                <PrePost
-                  cx={chunkWidth * 2}
-                  cy={chunkWidth * 3}
-                  pre={true}
-                  num={props.pre.number}
-                />
-              }
+              content={<PrePost cx={chunkWidth * 2} cy={chunkWidth * 3} pre={true} num={props.pre.number} />}
             />
           </Pie>
         ) : (
@@ -82,21 +68,13 @@ export function ConnSVG(props: { pre: any; post: any }) {
             dataKey="proportion"
           >
             {post_arr.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS_POST[index % COLORS_POST.length]}
-              />
+              <Cell key={`cell-${index}`} fill={COLORS_POST[index % COLORS_POST.length]} />
             ))}
             <Label
               width={30}
               position="center"
               content={
-                <PrePost
-                  cx={chunkWidth * 6.5}
-                  cy={chunkWidth * 3}
-                  pre={false}
-                  num={props.post.number}
-                />
+                <PrePost cx={chunkWidth * 6.5} cy={chunkWidth * 3} pre={false} num={props.post.number} />
               }
             />
           </Pie>
