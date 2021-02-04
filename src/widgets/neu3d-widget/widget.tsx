@@ -942,7 +942,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
  */
 namespace Private {
   // The count is for managing the name of the widget every time a new one is added to the browser
-  export const count = 1;
+  export let count = 1; // eslint-disable-line
 
   export function asarray(string_or_array: string | Array<string>): Array<string> | undefined {
     if (string_or_array === undefined || string_or_array === null) {

@@ -30,7 +30,7 @@ declare global {
 export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions, iFrameSrc?: string) {
     super({
-      name: options.name || `NeuGFX-${Private.count++}`,  // eslint-disable-line
+      name: options.name || `NeuGFX-${Private.count++}`,
       icon: Icons.neuGFXIcon,
       ...options
     });
@@ -248,7 +248,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
  * A namespace for private data.
  */
 namespace Private {
-  export const count = 1;
+  export let count = 1; // eslint-disable-line
 
   export function createButton(
     icon: LabIcon.IMaybeResolvable,

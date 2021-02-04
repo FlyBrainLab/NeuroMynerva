@@ -69,7 +69,7 @@ export interface IFBLWidget extends Widget {
   /**
    * Signal that emits model change
    */
-  modelChanged: ISignal<FBLWidget, Record<string, unknown>>;
+  modelChanged: ISignal<FBLWidget, any>;
 
   /**
    * Signal that emits the widget when it is getting disposed. Only fires once.
@@ -513,7 +513,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
    * Return A signal that indicates model changed
    */
-  get modelChanged(): ISignal<this, Record<string, unknown>> {
+  get modelChanged(): ISignal<this, any> {
     return this._modelChanged;
   }
 
@@ -914,7 +914,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   ffboProcessors: FFBOProcessor.IProcessors;
   protected _connected: Date;
   protected _isDisposed = false;
-  protected _modelChanged = new Signal<this, Record<string, unknown>>(this);
+  protected _modelChanged = new Signal<this, any>(this);
   protected _processorChanged = new Signal<this, string>(this);
   protected _gettingDisposed = new Signal<this, this>(this);
   toolbar: Toolbar<Widget>;
@@ -1021,7 +1021,7 @@ namespace Private {
   /**
    * The counter for new consoles.
    */
-  export const count = 1;
+  export let count = 1; // eslint-disable-line
 
   /**
    * Update the title of a console panel.
