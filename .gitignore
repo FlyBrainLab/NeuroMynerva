@@ -6,3 +6,6 @@ tsconfig.tsbuildinfo
 *.ipynb
 .vscode
 .ipynb_checkpoints
+__pycache__/
+labextension/
+*.egg-info

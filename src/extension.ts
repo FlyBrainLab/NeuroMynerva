@@ -132,7 +132,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
 
     // when widget dirty state changes, need to
     // 1. if became dirty, set labstatus to be dirty
-    // 2. if no longer dity, dispose labstatus dirty 
+    // 2. if no longer dity, dispose labstatus dirty
     let disposable: IDisposable | null = null;
     panel.content.dirty.connect((_, dirty: boolean) => {
       if (dirty === true) {
@@ -140,7 +140,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
           disposable = status.setDirty();
         }
         if (!(panel.title.className.includes(DIRTY_CLASS))) {
-          panel.title.className += ` ${DIRTY_CLASS}`; 
+          panel.title.className += ` ${DIRTY_CLASS}`;
         }
       } else {
         if (disposable) {
@@ -334,7 +334,7 @@ async function activateFBL(
 
   // all available processor settings
   let ffboProcessorSetting: ISettingRegistry.ISettings = undefined;
-  
+
 
   // Wait for the application to be restored and
   // for the settings for this plugin to be loaded
@@ -356,7 +356,7 @@ async function activateFBL(
             // add to last
         if (restorer) {
           restorer.add(masterWidget, 'FBL-Master');
-        } 
+        }
         app.shell.add(masterWidget, 'left', {rank: 1900});
         window.master = masterWidget;
       } else {
@@ -396,7 +396,7 @@ async function activateFBL(
   fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
     w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
   }, extension);
-  
+
 
   // add info panel
   infoWidget = new InfoWidget();
@@ -582,9 +582,9 @@ async function activateFBL(
           Module:Neu3DWidget,
           icon:NEU3DICON,
           moduleArgs: {
-            info: infoWidget, 
-            processor: processor, 
-            sessionContext: notebook_panel.sessionContext, 
+            info: infoWidget,
+            processor: processor,
+            sessionContext: notebook_panel.sessionContext,
             ...args
           },
           fbltracker: fblWidgetTrackers,
@@ -602,7 +602,7 @@ async function activateFBL(
           moduleArgs: {
             clientId: neu3d_panel.content.clientId,
             processor: processor,
-            sessionContext: notebook_panel.sessionContext, 
+            sessionContext: notebook_panel.sessionContext,
             ...args
           },
           fbltracker: fblWidgetTrackers,
@@ -757,7 +757,7 @@ export namespace FBL {
     }
     return FFBOProcessor.arrToDict(setting.get('fbl-processors').composite as any as FFBOProcessor.ISettings[]);
   }
-  
+
 
   /**
    * A widget that provides a processor selection.
