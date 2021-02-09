@@ -2,17 +2,17 @@ import { FBLWidgetModel, IFBLWidgetModel } from '../template-widget/index';
 import { ISignal, Signal } from '@lumino/signaling';
 
 /**
-* currently rendered neuron information
-*/
-export interface INeuGFXModel extends IFBLWidgetModel{
+ * currently rendered neuron information
+ */
+export interface INeuGFXModel extends IFBLWidgetModel {
   placeholder: string;
 }
 
 /**
-* NeuGFX Model class
-*/
+ * NeuGFX Model class
+ */
 export class NeuGFXModel extends FBLWidgetModel implements INeuGFXModel {
-  constructor(options?: Partial<INeuGFXModel>){
+  constructor(options?: Partial<INeuGFXModel>) {
     super(options);
     this.placeholder = 'place holder';
   }
@@ -21,11 +21,11 @@ export class NeuGFXModel extends FBLWidgetModel implements INeuGFXModel {
     return this._dataChanged;
   }
 
-  get metadataChanged():ISignal<this, any>{
+  get metadataChanged(): ISignal<this, any> {
     return this._metadataChanged;
   }
-  
-  get statesChanged(): ISignal<this, any>{
+
+  get statesChanged(): ISignal<this, any> {
     return this._statesChanged;
   }
 
@@ -33,7 +33,7 @@ export class NeuGFXModel extends FBLWidgetModel implements INeuGFXModel {
   _metadataChanged = new Signal<this, any>(this);
   _statesChanged = new Signal<this, any>(this);
   placeholder: string;
-  data: object | any;
-  metadata:  object | any;
-  states: object | any;
+  data: Record<string, unknown> | any;
+  metadata: Record<string, unknown> | any;
+  states: Record<string, unknown> | any;
 }
