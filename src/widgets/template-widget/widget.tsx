@@ -2,6 +2,7 @@ import * as React from 'react';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
+import { PromiseDelegate } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable'
 import { Message } from '@lumino/messaging';
 import { PathExt, Time } from '@jupyterlab/coreutils';
@@ -783,9 +784,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
 
     // register comm and callback
-    kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
+    let commRegistered = new PromiseDelegate<void>();
+    await kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
       if (commMsg.content.target_name !== this._commTarget) {
-        return;
+        return Promise.resolve(void 0);
       }
       this.comm = comm;
       comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {

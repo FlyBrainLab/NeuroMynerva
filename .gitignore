@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 __pycache__/
 labextension/
 *.egg-info
+yarn-error.log
