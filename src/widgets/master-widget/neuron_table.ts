@@ -1,4 +1,4 @@
-// Neuron Table that renders the metadata of a given neuron 
+// Neuron Table that renders the metadata of a given neuron
 // in a table format
 import * as _ from 'lodash';
 import "@fortawesome/fontawesome-free/js/all.js";
@@ -11,7 +11,7 @@ import { ILabShell } from '@jupyterlab/application';
 
 /**
  * Renderes a single Neu3D panel as a list item with buttons and dropdown
- * @param props 
+ * @param props
  */
 export class Neu3DModelTable {
   constructor(props: {
@@ -157,7 +157,7 @@ export class Neu3DModelTable {
    * Remove all neurons
    * @param active if true, only remove active neurons in the tabulator
    */
-  removeAllNeurons(active?: boolean) {    
+  removeAllNeurons(active?: boolean) {
     let unames: string[] = this.neuronTabulator.getData(active ? 'active': '').map((r: any) => r.uname);
     this.neu3d.removeByUname(unames);
   }
@@ -174,7 +174,7 @@ export class Neu3DModelTable {
 
   /**
    * Parse data from neu3d widget
-   * @param neu3d 
+   * @param neu3d
    */
   parseData(neu3d: Neu3DWidget): {'neurons': Array<any>, 'neuropils': Array<any>} {
     let neurons: Array<any> = [];
@@ -265,7 +265,7 @@ export class Neu3DModelTable {
         return "<i class='fa fa-info-circle' > </i>";
       },
       cellClick: (e: any, cell: any) => {
-        this.neu3d.executeInfoQuery(cell.getData().rid).done.then(()=>{
+        this.neu3d.client.executeInfoQuery(cell.getData().rid).then(()=>{
           this.labShell.activateById(this.neu3d.info.id);
         })
       }

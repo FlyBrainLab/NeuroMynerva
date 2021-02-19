@@ -6,7 +6,7 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Kernel } from '@jupyterlab/services';
 import { Neu3DModel, INeu3DModel } from './model';
 import { AdultMesh } from './adult_mesh';
 import { LarvaMesh } from './larva_mesh';
@@ -14,7 +14,7 @@ import { HemibrainMesh } from './hemibrain_mesh';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import { InfoWidget } from '../info-widget/index';
 import { PRESETS, PRESETS_NAMES } from './presets';
-
+import { Neu3DClient } from './client';
 import * as Icons from '../../icons';
 import '../../../style/neu3d-widget/neu3d.css';
 
@@ -23,25 +23,7 @@ const Neu3D_BLOCKING_DIV = "jp-FBL-Neu3D-Blocking-Div";
 const Neu3D_CONTAINER_DIV = "jp-FBL-Neu3D-Container";
 
 /**
- * Check if object is empty
- * @param obj 
- */
-function objEmpty(obj: any): boolean {
-  return Object.keys(obj).length === 0 && obj.constructor === Object;
-}
-
-/**
- * Convert integer Hex to rgb format
- * @param hex 
- */
-function toHexString( hex: number ) {
-  hex = Math.floor( hex );
-  return ( '000000' + hex.toString( 16 ) ).slice( - 6 );
-}
-
-
-/**
- * Data sent from neu3d's `on` callbacks
+ * Interface for Event Message sent from neu3d's `on` callbacks
  * Only covers `add, remove, pinned, visibility` events
  */
 interface INeu3DMessage {
@@ -53,6 +35,9 @@ interface INeu3DMessage {
   obj?: any;
 }
 
+/**
+ * Expose some things to window
+ */
 declare global {
   interface Window {
     neu3d_widget: any; // Latest created neu3d widget
@@ -69,7 +54,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     super({
       name:options.name || `Neu3D-${Private.count++}`,
       icon: Icons.neu3DIcon,
-      ...options});
+      ...options
+    });
+    this.addClass(Neu3D_CLASS_JLab);
 
     // load in meshes
     this.info = options.info;
@@ -77,56 +64,79 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this._larvaMesh = LarvaMesh;
     this._hemibrainMesh = HemibrainMesh;
 
-    this.addClass(Neu3D_CLASS_JLab);
+    // create a container for neu3d's rendering component to reside
     this._neu3dContainer = document.createElement('div');
     this._neu3dContainer.className = Neu3D_CONTAINER_DIV;
     this.node.appendChild(this._neu3dContainer);
     this._neu3dFooter = Private.createFooterBar(this);
     this.node.appendChild(this._neu3dFooter);
+
+    // expose this widget to window
     window.neu3d_widget = this;
 
+    // restore visualization settings if provided
     if (options.model?.metadata || options.model?.states) {
-      this.neu3DReady.then(() => {
-        this._blockingDiv = document.createElement('div');
-        this._blockingDiv.className = `jp-Dialog-header ${Neu3D_BLOCKING_DIV}`;
-        this._blockingDiv.innerText = `Reload previous visualization settings?`
-        let acceptBtn = document.createElement('button');
-        acceptBtn.innerText = "Yes"
-        acceptBtn.className = "jp-Dialog-button jp-mod-accept jp-mod-styled";
-        acceptBtn.onclick = () => {
-          try {
-            if (!objEmpty(options.model?.metadata)) {
-              this.neu3d.import_settings(options.model.metadata)
-            }
-            if (!objEmpty(options.model?.states)) {
-              this.neu3d.import_state(options.model.states);
-            }
-          } catch (error) {
-            this.model.metadata = this.neu3d.export_settings();
-            this.model.states = this.neu3d.export_state();
-            console.error(`[Neu3D-Widget] Visualization Settings Restore Failed. Ignoring previous settings.`, error);
-          }
-          this._blockingDiv.remove();
-        };
-        let cancelBtn = document.createElement('button');
-        cancelBtn.innerText = "No"
-        cancelBtn.className = "jp-Dialog-button jp-mod-reject jp-mod-styled";
-        cancelBtn.onclick = () => {
-          this.model.metadata = this.neu3d.export_settings();
-          this.model.states = this.neu3d.export_state();
-          this._blockingDiv.remove();
-        };
-        this._blockingDiv.appendChild(cancelBtn);
-        this._blockingDiv.appendChild(acceptBtn);
-        this.node.insertBefore(this._blockingDiv, this.node.childNodes[0]);
-      });
+      this.restoreVizDialog(options.model?.metadata, options.model?.states);
     }
   }
 
   /**
+   * Asynchronously, create a dialog on Neu3D window to ask if visualization settings
+   * should be restored, and restore previous visualization settings if selected
+   * Yes
+   *
+   * @param metadata
+   * @param states
+   */
+  private async restoreVizDialog(metadata?: object, states?: object): Promise<void> {
+    return this.neu3DReady.then(() => {
+      this._blockingDiv = document.createElement('div');
+      this._blockingDiv.className = `jp-Dialog-header ${Neu3D_BLOCKING_DIV}`;
+      this._blockingDiv.innerText = `Reload previous visualization settings?`
+      let acceptBtn = document.createElement('button');
+      acceptBtn.innerText = "Yes"
+      acceptBtn.className = "jp-Dialog-button jp-mod-accept jp-mod-styled";
+      acceptBtn.onclick = () => {
+        try {
+          if (!Private.objEmpty(metadata)) {
+            this.neu3d.import_settings(metadata)
+          }
+          if (!Private.objEmpty(states)) {
+            this.neu3d.import_state(states);
+          }
+        } catch (error) {
+          this.model.metadata = this.neu3d.export_settings();
+          this.model.states = this.neu3d.export_state();
+          console.error(
+            `[Neu3D-Widget] Visualization Settings Restore Failed.
+            Ignoring previous settings.`,
+            error
+          );
+        }
+        this._blockingDiv.remove();
+      };
+      let cancelBtn = document.createElement('button');
+      cancelBtn.innerText = "No"
+      cancelBtn.className = "jp-Dialog-button jp-mod-reject jp-mod-styled";
+      cancelBtn.onclick = () => {
+        this.model.metadata = this.neu3d.export_settings();
+        this.model.states = this.neu3d.export_state();
+        this._blockingDiv.remove();
+      };
+      this._blockingDiv.appendChild(cancelBtn);
+      this._blockingDiv.appendChild(acceptBtn);
+      this.node.insertBefore(this._blockingDiv, this.node.childNodes[0]);
+    });
+  }
+
+  createClient(): Neu3DClient {
+    return new Neu3DClient(this);
+  }
+
+  /**
    * Block and unblock input field in neu3d when kernel is busy/not busy
-   * @param sess 
-   * @param status 
+   * @param sess
+   * @param status
    */
   onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) {
     super.onKernelStatusChanged(sess, status);
@@ -134,14 +144,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     if (status === 'busy') {
       queryBar.disabled = true;
     } else {
-      if (this.hasClient) {
-        queryBar.disabled = false;
-      } else {
-        queryBar.disabled = true;
-      }
+      queryBar.disabled = !this.client.isConnected;
     }
   }
-
 
   /**
    * Dispose of the widget and free-up resource
@@ -155,9 +160,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
   /**
    * Initialize the model and connect model change signals
-   * @param model 
+   *
+   * @param model if provided, this.model is created based on content of the argument
    */
-  initModel(model: Partial<INeu3DModel>){
+  initModel(model?: Partial<INeu3DModel>){
     // create model
     this.model = new Neu3DModel(model);
     this.model.dataChanged.connect(this.onDataChanged, this);
@@ -167,13 +173,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
   /**
    * Render objects stored within model
-   * 
+   *
    * Currently used for state restoration on reload
    * Currently re-rendering the whole scene regardless
-   * 
-   * TODO: Handle incremental rendering for model change
-   * 
-   * @param change 
+   *
+   * *NOTE*: incremental rendering is not yet supported
+   *
+   * @param change change in model for incremental rendering
    */
   renderModel(change?: any): void {
     for (const [key, value] of Object.entries(this.model.data)) {
@@ -181,7 +187,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       data[key] = value;
       const color = (value as any).color;
       if (typeof(color) === 'number') {
-        (value as any).color = toHexString(color);
+        (value as any).color = Private.toHexString(color);
       }
       if ('type' in (value as any)) {
         this.neu3d.addJson({ ffbo_json: data, type: (value as any).type });
@@ -190,7 +196,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       }
     }
 
-
+    // TODO: Handle incremental rendering for model change
     // if (change) {
     //   this.neu3d.addJson({ ffbo_json: this.model.data });
     // } else {
@@ -202,74 +208,50 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
   /**
    * Callback for when model.metadata is changed
-   * 
-   * TODO: to be added to handle rendering changes
-   * @param change 
+   *
+   * @param change
    */
   onDataChanged(change: any) {
-    // this.renderModel(change);
-    // do nothing
+    // TODO: to be added to handle rendering changes
     return;
   }
 
 
   /**
    * Callback for when model.metadata is changed
-   * 
-   * TODO: to be added to handle rendering changes
-   * @param change 
+   *
+   * @param change
    */
   onStatesChanged(change: any) {
-    // this.renderModel(change);
-    // no-op
+    // TODO: to be added to handle rendering changes
     return;
   }
 
 
   /**
    * Callback for when model.metadata is changed
-   * 
-   * TODO: to be added to handle rendering changes
-   * @param change 
+   *
+   * @param change
    */
   onMetadataChanged(change: any) {
-    // do nothing
-    // this.renderModel(change);
+    // TODO: to be added to handle rendering changes
     return;
   }
 
 
   /**
-   * Get signal if the data in the neu3D workspace has changed
+   * A signal if the meshes in the neu3D meshDict has changed
+   *
+   * Emits the Neu3D `on` signal's message that causes such a change.
+   * Should either be on `add` or on `remove` in Neu3D
    */
-  get workspaceChanged(): ISignal<this, any> {
+  get workspaceChanged(): ISignal<this, INeu3DMessage> {
     return this._workspaceChanged;
   }
 
-
   /**
    * Handle Command message from Comm from Kernel
-   * @param message 
-   */
-  _receiveCommand(message: any) {
-    if (!('commands' in message))
-      return;
-    if ('reset' in message['commands']) {
-      this.neu3d.reset();
-      delete message.commands.reset;
-    }
-    for (var cmd in message["commands"])
-      this.neu3d.execCommand({
-        "commands": [cmd],
-        "neurons": message["commands"][cmd][0], 
-        "args": message['commands'][cmd][1] 
-      });
-  }
-
-
-  /**
-   * Handle Command message from Comm from Kernel
-   * @param message 
+   * @param message Comm Message
    */
   onCommMsg(msg: any) {
     super.onCommMsg(msg);
@@ -283,9 +265,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       switch (thisMsg.messageType) {
         case "Message": {
           if (thisMsg.data.info.success) {
-            INotification.success(thisMsg.data.info.success, {'autoClose': 1500});  
+            INotification.success(thisMsg.data.info.success, {'autoClose': 1500});
           } else if (thisMsg.data.info.error) {
-            INotification.error(thisMsg.data.info.error, {'autoClose': 5000});  
+            INotification.error(thisMsg.data.info.error, {'autoClose': 5000});
           }
           console.debug('[NEU3D] Message received.', thisMsg.data);
           break;
@@ -323,7 +305,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         default: {
           console.debug('[NEU3D] RESET', thisMsg.data);
           // this.n3dlog = [];
-          this._receiveCommand(thisMsg.data);
+          if ('commands' in thisMsg.data){
+            if ('reset' in thisMsg.data.commands) {
+              this.neu3d.reset();
+            }
+            for (var cmd in thisMsg.data.commands)
+              this.neu3d.execCommand({
+                "commands": [cmd],
+                "neurons": thisMsg.data.commands[cmd][0],
+                "args": thisMsg.data.commands[cmd][1]
+              });
+          }
           break;
         }
 
@@ -341,9 +333,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   /**
    * Check if an object is in the workspace.
    *
-   * @param rid -  rid of target object (neuron/synapse)
-   * @returns  if object in workspace
-  */
+   * @param rid rid of target object (neuron/synapse)
+   */
   isInWorkspace(rid: string): boolean {
     if(this.model?.data){
       return (rid in this.model.data);
@@ -351,55 +342,13 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     return false;
   }
 
-
-  /** 
-   * Return string for NA query that is aware of the right clientId 
-   */
-  querySender(): string {
-    let code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(_fbl_query)
-    `;
-    return code;
-  }
-
-
-  /** 
-   * Return string for NLP query that is aware of the right clientId
-   */
-  NLPquerySender(): string {
-    let code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(_fbl_query)
-    `;
-    return code;
-  }
-
-  // /**
-  //  * Method passed to info panel to ensure stateful data
-  //  * 
-  //  * Addresses 
-  //  * @param command 
-  //  */
-  // infoCommandWrapper(command: any){ 
-
-  // }
-
-
-  /** 
+  /**
    * Add an object into the workspace using Uname by Kernel Call.
-   * 
+   *
    * @param uname -  uname of target object (neuron/synapse)
    */
   async addByUname(uname: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'add'
-    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
-                    'object': {'class': ['Neuron', 'Synapse']}}]
-    `;
-    code = code + this.querySender();
-    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.debug('addByUname', uname, result);
-    return result;
+    return this.client.addByUname(uname);
   }
 
 
@@ -409,135 +358,75 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    * @param uname -  uname of target object (neuron/synapse)
    */
   async removeByUname(uname: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'remove'
-    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(uname)}}}},
-                    'object': {'class': ['Neuron', 'Synapse']}}]
-    `;
-    code = code + this.querySender();
-    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.debug('removeByUname', uname, result);
-    return result;
+    return this.client.removeByUname(uname);
   }
 
 
-  /** 
+  /**
    * Add an object into the workspace using Rid by Kernel Call.
    *
    * @param rid -  rid of target object (neuron/synapse)
    */
   async addByRid(rid: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'add'
-    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
-                    'object': {'rid': ${JSON.stringify(rid)}}}]
-    _fbl_query['format'] = 'morphology'
-    `;
-    code = code + this.querySender();
-    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.debug('addByRid', rid, result);
-    return result;
+    this.client.addByRid(rid);
   }
 
 
-  /** 
+  /**
    * Remove an object from the workspace using Rid by Kernel Call.
    *
    * @param rid -  rid of target object (neuron/synapse)
    */
   async removeByRid(rid: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'remove'
-    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
-                    'object': {'rid': ${JSON.stringify(rid)}}}]
-    `;
-    code = code + this.querySender();
-    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    console.debug('removeByRid', rid, result);
-    return result;
-  }
-
-  /** 
-   * Send an NLP query.
-   *
-   * @param query -  query to send(text)
-   */
-  async executeNLPquery(query: string): Promise<boolean> {
-    let code = `
-    _fbl_query = '${query}'
-    `;
-    code = code + this.NLPquerySender();
-    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
-    if (result.content.status == 'error'){
-      return Promise.resolve(false);
-    }
-    console.debug('NLPquery', result);
-    return Promise.resolve(true);
+    this.client.removeByRid(rid);
   }
 
   /**
-   * Get Info of a given neuron
-   * @param rid - rid of the neuron/synapse to query info about
-   * @return a promise that resolves to the reply message when done 
+   * Creat a Neu3D instance
    */
-  executeInfoQuery(rid: string): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-    let code_to_send = `
-    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${rid}')
-    `
-    return this.sessionContext.session.kernel.requestExecute({code: code_to_send});
-  }
-  
-
-  /** 
-   * Callback after the DOM element is attached to the Browser.
-   * 
-   * Note: Does the following
-   * 1. Instantiate Neu3D and add to DOM
-   * 2. Setup Callbacks
-   * */
-  onAfterAttach(msg: Message){
-    super.onAfterAttach(msg);
-    if (!this.neu3d){
-      this.neu3d = new Neu3D(
-        this._neu3dContainer, 
-        undefined,
-        {
-          "enablePositionReset": true
-         },
-        {
-          stats: true,
-          datGUI: {
-            createButtons: false,
-            preset: "Low"
-          }
+  createNeu3D(): Neu3D {
+    return new Neu3D(
+      this._neu3dContainer,
+      undefined,
+      {
+        "enablePositionReset": true
+       },
+      {
+        stats: true,
+        datGUI: {
+          createButtons: false,
+          preset: "Low"
         }
-      );
-    }
+      }
+    );
+  }
 
-    /** Get Neuron Information */
-    this.neu3d.on('click', (e: INeu3DMessage) => {
-      this.executeInfoQuery(e.value);
+  /**
+   * Set up callbacks for Neu3D
+   * @param neu3d a neu3d instance
+   */
+  setupNeu3DCallbacks(neu3d: Neu3D): void {
+    // Get Neuron Information
+    neu3d.on('click', (e: INeu3DMessage) => {
+      this.client.executeInfoQuery(e.value);
     });
 
-    /** Add Mesh */
-    this.neu3d.meshDict.on('add', (e:INeu3DMessage) => {
+    // Add Mesh
+    neu3d.meshDict.on('add', (e:INeu3DMessage) => {
       this.model.addMesh(e.prop, e.value);
       this._modelChanged.emit(e);
       this._workspaceChanged.emit(e);
     });
 
-    /** Remove Mesh */
-    this.neu3d.meshDict.on('remove', (e:INeu3DMessage) => {
+    // Remove Mesh
+    neu3d.meshDict.on('remove', (e:INeu3DMessage) => {
       this.model.removeMesh(e.prop)
       this._modelChanged.emit(e);
       this._workspaceChanged.emit(e);
     });
 
-    /** Pin/UnPin */
-    this.neu3d.meshDict.on('change', 
+    // Pin/UnPin
+    neu3d.meshDict.on('change',
     (e:INeu3DMessage) =>{
       switch (e.value) {
         case true:
@@ -553,8 +442,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     },
     'pinned');
 
-    /** Hide/Show */
-    this.neu3d.meshDict.on('change', 
+    // Hide/Show
+    neu3d.meshDict.on('change',
     (e:INeu3DMessage) =>{
       switch (e.value) {
         case true:
@@ -570,87 +459,112 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     },
     'visibility');
 
-    /** Callback when Visualization Settings Change */
-    this.neu3d.settings.on("change", ((e:any) => {
-      let settings = this.neu3d.export_settings();
+    // Callback when Visualization Settings Change
+    neu3d.settings.on("change", ((e:any) => {
+      let settings = neu3d.export_settings();
       this.model.metadata = settings;
       this.model._metadataChanged.emit(settings);
       this._modelChanged.emit(e);
     }), [
-        "pinLowOpacity", "pinOpacity", "defaultOpacity", "backgroundOpacity",
-        "backgroundWireframeOpacity", "synapseOpacity",
-        "highlightedObjectOpacity", "nonHighlightableOpacity", "lowOpacity"
-      ]);
+      "pinLowOpacity", "pinOpacity", "defaultOpacity", "backgroundOpacity",
+      "backgroundWireframeOpacity", "synapseOpacity",
+      "highlightedObjectOpacity", "nonHighlightableOpacity", "lowOpacity"
+    ]);
 
-    /** Callback when Shape/Size Settings Change */
-    this.neu3d.settings.on('change', ((e:any) => {
-      let settings = this.neu3d.export_settings();
+    // Callback when Shape/Size Settings Change
+    neu3d.settings.on('change', ((e:any) => {
+      let settings = neu3d.export_settings();
       this.model.metadata = settings;
       this.model._metadataChanged.emit(settings);
       this._modelChanged.emit(e);
     }), ['radius', 'strength', 'threshold', 'enabled']);
-  
-    /** Callback when ToneMappingPass Settings Change */
-    this.neu3d.settings.toneMappingPass.on('change', ((e:any) => {
-      let settings = this.neu3d.export_settings();
+
+    // Callback when ToneMappingPass Settings Change
+    neu3d.settings.toneMappingPass.on('change', ((e:any) => {
+      let settings = neu3d.export_settings();
       this.model.metadata = settings;
       this.model._metadataChanged.emit(settings);
       this._modelChanged.emit(e);
     }), 'brightness');
 
-    /** Callback when Background Settings Change */
-    this.neu3d.settings.on('change', ((e:any) => {
-      let settings = this.neu3d.export_settings();
+    // Callback when Background Settings Change
+    neu3d.settings.on('change', ((e:any) => {
+      let settings = neu3d.export_settings();
       this.model.metadata = settings;
       this.model._metadataChanged.emit(settings);
       this._modelChanged.emit(e);
     }), 'backgroundColor');
 
-    /** trackball control end interaction save camera*/
-    this.neu3d.controls.addEventListener('end', (e:any)=>{
-      let states = this.neu3d.export_state();
+    // trackball control end interaction save camer
+    neu3d.controls.addEventListener('end', (e:any)=>{
+      let states = neu3d.export_state();
       this.model.states = states;
       this.model._statesChanged.emit(states);
       this._modelChanged.emit(e);
     });
+  }
 
-    if (!objEmpty(this.model.metadata)) {
-      this.neu3d.import_settings(this.model.metadata);
-    }
-    if (!objEmpty(this.model.states)) {
-      this.neu3d.import_state(this.model.states);
-    }
+  /**
+   * Callback after the DOM element is attached to the Browser.
+   *
+   * Note: Does the following
+   * 1. Instantiate Neu3D and add to DOM
+   * 2. Setup Callbacks
+   * */
+  onAfterAttach(msg: Message): void {
+    super.onAfterAttach(msg);
+    this.neu3d = this.neu3d ?? this.createNeu3D();
+    this.setupNeu3DCallbacks(this.neu3d);
 
-    /** Initialize neu3d's model metadata and states */
+    // update visualiaztion based on meta data and states
+    this.updateVisualization(this.model.metadata, this.model.states);
+
+    // Initialize neu3d's model metadata and states
     this.model.metadata = this.neu3d.export_settings();
     this.model.states = this.neu3d.export_state();
+
+    // render model
     this.renderModel();
 
-    /** Widget is ready */
+    // Widget is ready
     this._neu3DReady.resolve(void 0);
   }
 
+  /**
+   * Update Neu3D Visualization based on metadata and states
+   * @param metadata
+   * @param states
+   */
+  updateVisualization(metadata: object, states: object): void {
+    if (!Private.objEmpty(metadata)) {
+      this.neu3d.import_settings(metadata);
+    }
+    if (!Private.objEmpty(states)) {
+      this.neu3d.import_state(states);
+    }
+  }
 
   /**
    * Resize neu3d after widget is shown to ensure the right aspect ratio.
-   * @param msg 
+   * @param msg
    */
   onAfterShow(msg: Message){
+    super.onAfterShow(msg);
     this.neu3d?.onWindowResize();
   }
 
   /**
    * Propagate resize event to neu3d
-   * @param msg 
+   * @param msg
    */
   onResize(msg: any) {
     super.onResize(msg);
     this.neu3d?.onWindowResize();
   }
-  
-  /** 
+
+  /**
    * Returns processor.
-   * 
+   *
    * Processors are the objects that manage connection to the backend.
    */
   get processor(): string {
@@ -667,26 +581,21 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
 
   /**
-   * Setter for processor to ignore startUp keyword
-   */
-  set processor(newProcessor: string) {
-    this.setProcessor(newProcessor);
-  }
-
-
-  /**
    * Change processor.
-   * 
+   *
    * A change in processor promotes:
    * 1. Change the rendering settings (coordinate systems, camera angles)
    * 2. search bar content
    * 3. Brain meshes
-   * 
+   *
    * @param newProcessor new processor to be added
-   * @param startUp whether this setter is being called on startup, 
+   * @param startUp whether this setter is being called on startup,
    *    if on startup, the dialog for removing neuron will not be shown
    */
   setProcessor(newProcessor: string, startUp: boolean = false) {
+    if (newProcessor === this._processor) {
+      return;
+    }
     super.setProcessor(newProcessor, startUp);
 
     this.neu3DReady.then(()=>{
@@ -725,16 +634,16 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           placeholder = PRESETS.default.searchPlaceholder;
         } else {
           preset = processorPreset as PRESETS_NAMES;
-          settings = PRESETS[preset].neu3dSettings;  
+          settings = PRESETS[preset].neu3dSettings;
           meshes = PRESETS[preset].meshes;
           placeholder = PRESETS[preset].searchPlaceholder;
         }
-        this.initClient().then((success) => {
-          this.setHasClient(success); // can fail
+        this.client.init().then((success) => {
+          this.client.setConnection(success); // can fail
         });
       } else {
         placeholder = PRESETS.disconnected.searchPlaceholder;
-        this.setHasClient(false);
+        this.client.setConnection(false);
         console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
       }
       inputQueryBar.placeholder = placeholder;
@@ -745,7 +654,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
       }
       if (meshes) {
-        this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });  
+        this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });
       }
       this.neu3d.updateControls();
       this.neu3d.resetView();
@@ -760,45 +669,41 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    */
   populateToolBar(): void {
     this.toolbar.addItem(
-      'upload', 
-      Private.createButton(Icons.uploadIcon, "Upload SWC File", 'jp-Neu3D-Btn jp-SearBar-upload', 
+      'upload',
+      Private.createButton(Icons.uploadIcon, "Upload SWC File", 'jp-Neu3D-Btn jp-SearBar-upload',
         () => { this.neu3d.fileUploadInput.click();}));
     this.toolbar.addItem(
-      'reset', 
-      Private.createButton(Icons.syncIcon, "Reset View", 'jp-Neu3D-Btn jp-SearBar-reset', 
+      'reset',
+      Private.createButton(Icons.syncIcon, "Reset View", 'jp-Neu3D-Btn jp-SearBar-reset',
       () => { this.neu3d.resetView() }));
     this.toolbar.addItem(
-      'zoomToFit', 
-      Private.createButton(Icons.zoomToFitIcon, "Center and zoom into visible Neurons/Synapses", 'jp-Neu3D-Btn jp-SearBar-zoomToFit', 
+      'zoomToFit',
+      Private.createButton(Icons.zoomToFitIcon, "Center and zoom into visible Neurons/Synapses", 'jp-Neu3D-Btn jp-SearBar-zoomToFit',
       () => { this.neu3d.resetVisibleView() }));
     this.toolbar.addItem(
-      'hideAll', 
-      Private.createButton(Icons.eyeSlashIcon, "Hide All", 'jp-Neu3D-Btn jp-SearBar-hideAll', 
+      'hideAll',
+      Private.createButton(Icons.eyeSlashIcon, "Hide All", 'jp-Neu3D-Btn jp-SearBar-hideAll',
       () => { this.neu3d.hideAll() }));
     this.toolbar.addItem(
-      'showAll', 
-      Private.createButton(Icons.eyeIcon, "Show All", 'jp-Neu3D-Btn jp-SearBar-showAll', 
+      'showAll',
+      Private.createButton(Icons.eyeIcon, "Show All", 'jp-Neu3D-Btn jp-SearBar-showAll',
       () => { this.neu3d.showAll() }));
-    // this.toolbar.addItem(
-    //   'screenshot', 
-    //   Private.createButton(Icons.cameraIcon,"Download Screenshot", 'jp-Neu3D-Btn jp-SearBar-camera', 
-    //   () => { this.neu3d._take_screenshot = true;}));
     this.toolbar.addItem(
-      'unpinAll', 
-      Private.createButton(Icons.mapUpinIcon, "Unpin All", 'jp-Neu3D-Btn jp-SearBar-unpin', 
+      'unpinAll',
+      Private.createButton(Icons.mapUpinIcon, "Unpin All", 'jp-Neu3D-Btn jp-SearBar-unpin',
       () => { this.neu3d.unpinAll(); }));
     this.toolbar.addItem(
-      'removeUnpinned', 
-      Private.createButton(Icons.trashIcon, "Remove Unpinned Neurons", 'jp-Neu3D-Btn jp-SearBar-remove-unpinned', 
+      'removeUnpinned',
+      Private.createButton(Icons.trashIcon, "Remove Unpinned Neurons", 'jp-Neu3D-Btn jp-SearBar-remove-unpinned',
         () => {
           let unames: string[] = Object.values(this.model.unpinned).map((mesh) => mesh.label);
           this.removeByUname(unames);
           // this.neu3d.removeUnpinned();
         }));
     this.toolbar.addItem(
-      'toggleControlPanel', 
-      Private.createButton(settingsIcon, "Toggle Control Panel", 'jp-Neu3D-Btn jp-SearBar-showAll', 
-      () => { 
+      'toggleControlPanel',
+      Private.createButton(settingsIcon, "Toggle Control Panel", 'jp-Neu3D-Btn jp-SearBar-showAll',
+      () => {
         this.neu3d.controlPanel.domElement.style.display === "" ? this.neu3d.controlPanel.hide() : this.neu3d.controlPanel.show();
       }));
 
@@ -816,9 +721,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   private _neu3dContainer: HTMLDivElement;
   private _neu3dFooter: HTMLDivElement;
   private _blockingDiv: HTMLDivElement; // On browser refresh, a blocking div is shown to prompt user
-  private _workspaceChanged = new Signal<this, any>(this);
+  private _workspaceChanged = new Signal<this, INeu3DMessage>(this);
   model: Neu3DModel;
   info: InfoWidget; // info panel widget that this extension is connected to
+  client: Neu3DClient;
 };
 
 
@@ -829,6 +735,23 @@ namespace Private {
 
   // The count is for managing the name of the widget every time a new one is added to the browser
   export let count = 1;
+
+  /**
+   * Check if object is empty
+   * @param obj
+   */
+  export function objEmpty(obj: any): boolean {
+    return Object.keys(obj).length === 0 && obj.constructor === Object;
+  }
+
+  /**
+   * Convert integer Hex to rgb format
+   * @param hex
+   */
+  export function toHexString( hex: number ) {
+    hex = Math.floor( hex );
+    return ( '000000' + hex.toString( 16 ) ).slice( - 6 );
+  }
 
   export function createButton(
     icon: LabIcon.IMaybeResolvable,
@@ -854,7 +777,7 @@ namespace Private {
   ): HTMLDivElement {
     let footer = document.createElement('div');
     footer.classList.add("navbar");
-    
+
     var searchWrapper = document.createElement('div');
     searchWrapper.classList.add("neu3dSearchWrapper");
 
@@ -884,8 +807,8 @@ namespace Private {
     searchWrapper.appendChild(hintButton);
     searchWrapper.appendChild(searchInput);
     searchWrapper.appendChild(searchButton);
-    
-    neu3d.clientConnect.connect((_, hasClient) => {
+
+    neu3d.client.connectionChanged.connect((_, hasClient) => {
       if (hasClient) {
         searchInput.disabled = false;
         if (neu3d.processor in PRESETS) {
@@ -903,15 +826,15 @@ namespace Private {
     });
 
     searchButton.onclick = () => {
-      if ((searchInput.value) && (neu3d.hasClient)) {
-        neu3d.executeNLPquery(searchInput.value);
+      if ((searchInput.value) && (neu3d.client.isConnected)) {
+        neu3d.client.executeNLPQuery(searchInput.value);
       }
       searchInput.value = "";
     }
     searchInput.addEventListener('keyup', ({key}) => {
       if (key === "Enter") {
-        if ((searchInput.value) && (neu3d.hasClient)) {
-          neu3d.executeNLPquery(searchInput.value);
+        if ((searchInput.value) && (neu3d.client.isConnected)) {
+          neu3d.client.executeNLPQuery(searchInput.value);
         }
         searchInput.value = "";
       }
@@ -925,7 +848,7 @@ namespace Private {
         let preset = neu3d.ffboProcessors[neu3d.processor].PRESETS.preset;
         hints = (PRESETS as any)[preset].hints;
       } else {
-        if (neu3d.hasClient) {
+        if (neu3d.client.isConnected) {
           hints = PRESETS.default.hints;
         } else {
           hints = PRESETS.disconnected.hints;
@@ -940,8 +863,8 @@ namespace Private {
         title: 'Quick Query Reference',
         body:<>
           <p>
-            The Search Bar is the central querying interface. It supports natural language queries of neurons, 
-            synaptic partners, etc. By combining various attributes of query targets, you can create some very 
+            The Search Bar is the central querying interface. It supports natural language queries of neurons,
+            synaptic partners, etc. By combining various attributes of query targets, you can create some very
             powerful queries.
           </p>
           {hint_header}

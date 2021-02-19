@@ -70,7 +70,7 @@ export const fblSettingIcon = new LabIcon({
     name: 'fbl:setting',
     svgstr: fblSettingIconStr
   });
-  
+
 export const chartAreaIcon = new LabIcon({
   name: 'fbl:chart-area',
   svgstr: chartAreaStr

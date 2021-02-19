@@ -365,20 +365,20 @@ async function activateFBL(
 
       let _settings = FBL.getProcessors(setting);
       fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-        w.content.ffboProcessors = _settings
+        w.content.setFFBOProcessors(_settings);
       });
       fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-        w.content.ffboProcessors = _settings;
+        w.content.setFFBOProcessors(_settings);
       })
 
       // Listen for your plugin setting changes using Signal
       setting.changed.connect((setting)=>{
         _settings = FBL.getProcessors(setting);
         fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessors = _settings;
+          w.content.setFFBOProcessors(_settings);
         });
         fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
-          w.content.ffboProcessors = _settings;
+          w.content.setFFBOProcessors(_settings);
         });
         masterWidget.ffboProcessorSetting = ffboProcessorSetting;
       }, extension);
@@ -391,10 +391,10 @@ async function activateFBL(
 
   // Ensure that the widgets' are aware of all processor settings when added
   fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
+    w.content.setFFBOProcessors(FBL.getProcessors(ffboProcessorSetting));
   }, extension);
   fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
+    w.content.setFFBOProcessors(FBL.getProcessors(ffboProcessorSetting));
   }, extension);
 
 

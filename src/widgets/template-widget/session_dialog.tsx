@@ -1,6 +1,6 @@
 import * as React from 'react';
 import{
-    Dialog, UseSignal, 
+    Dialog, UseSignal,
     ReactWidget, showDialog
 } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
@@ -8,13 +8,13 @@ import { PathExt } from '@jupyterlab/coreutils';
 import {
     Widget
 } from '@lumino/widgets';
-import { 
-    ToolbarButtonComponent 
+import {
+    ToolbarButtonComponent
 } from '@jupyterlab/apputils';
 import {
     IFBLWidget, FBLWidget
 } from './widget';
-import { 
+import {
     fblSettingIcon
 } from '../../icons';
 import { FFBOProcessor } from '../../ffboprocessor';
@@ -33,7 +33,7 @@ export class ProcessorSelector extends Widget {
         const text = document.createElement('label');
         text.textContent = `Select Processor for: "${widget.id}"`;
         body.appendChild(text);
-        
+
         const selector = document.createElement('select');
         for (const processor of Object.keys(widget.ffboProcessors)){
             const option = document.createElement('option');
@@ -44,7 +44,7 @@ export class ProcessorSelector extends Widget {
         body.appendChild(selector);
         super({node: body});
     }
-    
+
     /**
     * Get the value of the kernel selector widget.
     */
@@ -94,7 +94,7 @@ class SessionDialog extends ReactWidget {
                             {kernelInfo}
                             <tr key={"processor"}><td><b>Processor</b></td><td>{this.widget.processor}</td></tr>
                             {processorInfo}
-                            <tr key={"comm"}><td><b>Comm Target</b></td><td>{this.widget._commTarget}</td></tr>
+                            <tr key={"comm"}><td><b>Comm Target</b></td><td>{this.widget.commTarget}</td></tr>
                             {commInfo}
                         </tbody>
                     </table>
@@ -109,7 +109,7 @@ class SessionDialog extends ReactWidget {
 
 /**
 * React component for a processor name button.
-* This wraps the ToolbarButtonComponent and watches the processor 
+* This wraps the ToolbarButtonComponent and watches the processor
 * keyword
 */
 function ProcessorComponent(
@@ -125,10 +125,10 @@ function ProcessorComponent(
         ]
     }).then(result =>{
         if (result.button.accept){
-            widget.processor = result.value;
+            widget.setProcessor(result.value);
         }
     });
-    
+
     const signal = widget.processorChanged;
     const processor = widget.processor;
     return (
@@ -147,7 +147,7 @@ function ProcessorComponent(
 
 /**
 * React component for session overview dialog
-* This wraps the ToolbarButtonComponent and watches the processor 
+* This wraps the ToolbarButtonComponent and watches the processor
 * keyword
 */
 export function SessionDialogComponent(
@@ -161,7 +161,7 @@ export function SessionDialogComponent(
             Dialog.okButton({label: 'OK'})
         ]
     });
-    
+
     return (
         <ToolbarButtonComponent
             className={TOOLBAR_SERVER_CLASS}
@@ -171,7 +171,7 @@ export function SessionDialogComponent(
         />
     );
 }
-            
+
 export function createProcessorButton(
     widget: FBLWidget
 ): Widget {
