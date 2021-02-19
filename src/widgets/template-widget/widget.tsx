@@ -2,7 +2,7 @@ import * as React from 'react';
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
-import { PromiseDelegate } from '@lumino/coreutils';
+// import { PromiseDelegate } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable'
 import { Message } from '@lumino/messaging';
 import { PathExt, Time } from '@jupyterlab/coreutils';
@@ -38,7 +38,7 @@ import { FFBOProcessor } from '../../ffboprocessor';
  *
  * Version is checked when client is initialized
  */
-const SUPPORTED_FBLCLIENT_VERSION = '0.3.0';
+const SUPPORTED_FBLCLIENT_VERSION = '1.0.0';
 
 export interface IFBLWidget extends Widget {
   /**
@@ -641,11 +641,15 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
+    fbl.widget_manager.add_widget('${this.id}', '${this.clientId}', '${this.constructor.name}', '${this._commTarget}')
     if '${this.clientId}' not in fbl.client_manager.clients or fbl.client_manager.get_client('${this.clientId}') is None:
       _comm = fbl.MetaComm('${this.clientId}', fbl)
       _client = fbl.Client(FFBOLabcomm=_comm, ${args})
       _client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
-      _client.check_NeuroMynerva_version()
+      try:
+        _client.check_NeuroMynerva_version()
+      except:
+        pass
       fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
     else:
       _client =fbl.client_manager.get_client('${this.clientId}')
@@ -659,7 +663,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
         _client = fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
         fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
       _client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
-      _client.check_NeuroMynerva_version()
+      try:
+        _client.check_NeuroMynerva_version()
+      except:
+        pass
       if '${this.id}' not in fbl.client_manager.clients['${this.clientId}']['widgets']:
         fbl.client_manager.clients['${this.clientId}']['widgets'] += ['${this.id}']
       _comm = _client.FBLcomm
@@ -784,10 +791,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
 
     // register comm and callback
-    let commRegistered = new PromiseDelegate<void>();
-    await kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
+    // const commRegistered = new PromiseDelegate<void>();
+    kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
       if (commMsg.content.target_name !== this._commTarget) {
-        return Promise.resolve(void 0);
+        // commRegistered.resolve(void 0);
+        return;
       }
       this.comm = comm;
       comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
@@ -796,7 +804,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
       comm.onClose = (msg: KernelMessage.ICommCloseMsg) => {
         this.onCommClose(msg);
       };
+      // commRegistered.resolve(void 0);
     });
+
+    // await commRegistered.promise;
 
     // import flybrainlab and add current widget to widget_manager in kernel
     let initFBLSuccess = await this.initFBL();
