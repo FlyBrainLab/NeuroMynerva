@@ -937,7 +937,6 @@ export namespace FBL {
   ): Promise<boolean> {
     const client_check_code = `
 import flybrainlab as fbl
-fbl.init()
     `
     let clientRes = await executeCodeInCodeCell(app, client_check_code);
     if (clientRes.executeReply.content.status !== 'ok') {
@@ -972,37 +971,39 @@ fbl.init()
       clientRes.codeCell.dispose();
     }
 
-    const version_code = `
+    // check Client Version
+    const client_version_code = `
 import flybrainlab as fbl
-fbl.init()
-_client = fbl.Client()
-_client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
-_client.check_NeuroMynerva_version()
+fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
     `
-    let versionRes = await executeCodeInCodeCell(app, version_code);
-    console.log(versionRes);
-    if (versionRes.executeReply.content.status !== 'ok') {
+    let clientVersionRes = await executeCodeInCodeCell(app, client_version_code);
+    console.log(clientVersionRes);
+    if (clientVersionRes.executeReply.content.status === 'error') {
+      const errMessage = `
+      FBLClient Version Check Failed!
+      Error: ${clientVersionRes.executeReply.content.evalue}
+      `;
       if (toastProgressId){
         INotification.update({
           toastId: toastProgressId,
-          message: 'FBLClient Version Check Failed! Please Upgrade!',
+          message: errMessage,
           type: 'error',
           autoClose: null,
           buttons: [{
             'label': 'Details', callback: ()=> showDialog({
-              title: 'FBLClient Version Check Failed! Please Update!',
-              body: versionRes.codeCell
+              title: errMessage,
+              body: clientVersionRes.codeCell
             })
           }]
         });
       } else {
         INotification.error(
-          'FBLClient Version Check Failed! Please Upgrade!',
+          errMessage,
           {
             buttons: [{
               'label': 'Details', callback: ()=> showDialog({
-                title: 'FBLClient Version Check Failed! ',
-                body: versionRes.codeCell
+                title: errMessage,
+                body: clientVersionRes.codeCell
                 })
             }]
           }
@@ -1010,7 +1011,50 @@ _client.check_NeuroMynerva_version()
       }
       return Promise.resolve(false);
     } else {
-      versionRes.codeCell.dispose();
+      clientVersionRes.codeCell.dispose();
+    }
+
+    // check NM Version
+    const NM_version_code = `
+import flybrainlab as fbl
+fbl.check_NeuroMynerva_version()
+    `
+    let NMVersionRes = await executeCodeInCodeCell(app, NM_version_code);
+    console.log(NMVersionRes);
+    if (NMVersionRes.executeReply.content.status  === 'error') {
+      const errMessage = `
+      FBLClient Version Check Failed!
+      Error: ${clientVersionRes.executeReply.content.evalue}
+      `;
+      if (toastProgressId){
+        INotification.update({
+          toastId: toastProgressId,
+          message: errMessage,
+          type: 'error',
+          autoClose: null,
+          buttons: [{
+            'label': 'Details', callback: ()=> showDialog({
+              title: errMessage,
+              body: NMVersionRes.codeCell
+            })
+          }]
+        });
+      } else {
+        INotification.error(
+          errMessage,
+          {
+            buttons: [{
+              'label': 'Details', callback: ()=> showDialog({
+                title: errMessage,
+                body: NMVersionRes.codeCell
+                })
+            }]
+          }
+        );
+      }
+      return Promise.resolve(false);
+    } else {
+      NMVersionRes.codeCell.dispose();
     }
     if (toastProgressId) {
       INotification.update({
