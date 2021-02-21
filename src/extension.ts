@@ -59,7 +59,7 @@ const NEUGFXICON = neuGFXIcon;
  *
  * Version is checked when client is initialized
  */
-export const SUPPORTED_FBLCLIENT_VERSION = '5.0.0';
+export const SUPPORTED_FBLCLIENT_VERSION = '1.0.0';
 
 declare global {
   interface Window {
@@ -947,7 +947,7 @@ import flybrainlab as fbl
           type: 'error',
           autoClose: null,
           buttons: [{
-            'label': 'Details', callback: ()=> showDialog({
+            'label': 'Call Stack', callback: ()=> showDialog({
               title: 'FBLClient Not Installed!',
               body: clientRes.codeCell
             })
@@ -958,7 +958,7 @@ import flybrainlab as fbl
           'FBLClient Not Installed!',
           {
             buttons: [{
-              'label': 'Details', callback: ()=> showDialog({
+              'label': 'Call Stack', callback: ()=> showDialog({
                 title: 'FBLClient Not Installed!',
                 body: clientRes.codeCell
               })
@@ -990,7 +990,7 @@ fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
           type: 'error',
           autoClose: null,
           buttons: [{
-            'label': 'Details', callback: ()=> showDialog({
+            'label': 'Call Stack', callback: ()=> showDialog({
               title: errMessage,
               body: clientVersionRes.codeCell
             })
@@ -1001,7 +1001,7 @@ fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
           errMessage,
           {
             buttons: [{
-              'label': 'Details', callback: ()=> showDialog({
+              'label': 'Call Stack', callback: ()=> showDialog({
                 title: errMessage,
                 body: clientVersionRes.codeCell
                 })
@@ -1023,8 +1023,8 @@ fbl.check_NeuroMynerva_version()
     console.log(NMVersionRes);
     if (NMVersionRes.executeReply.content.status  === 'error') {
       const errMessage = `
-      FBLClient Version Check Failed!
-      Error: ${clientVersionRes.executeReply.content.evalue}
+      NeuroMynerva Version Check Failed!
+      Error: ${NMVersionRes.executeReply.content.evalue}
       `;
       if (toastProgressId){
         INotification.update({
@@ -1079,8 +1079,8 @@ fbl.check_NeuroMynerva_version()
     const sessionContext = new SessionContext({
       sessionManager: app.serviceManager.sessions,
       specsManager: app.serviceManager.kernelspecs,
-      path: `NeuroMynerva-Test`,
-      name: 'NMExtensionTest',
+      path: `NeuroMynerva-Version-Check`,
+      name: 'NeuroMnyerva-Version-Check',
       type: 'console',
       kernelPreference: {
         shouldStart: true,
