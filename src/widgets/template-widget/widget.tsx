@@ -32,13 +32,7 @@ import {
 import '../../../style/template-widget/template.css';
 import { InfoWidget } from '../info-widget';
 import { FFBOProcessor } from '../../ffboprocessor';
-
-/**
- * Currently Supported FBLClient Version
- *
- * Version is checked when client is initialized
- */
-const SUPPORTED_FBLCLIENT_VERSION = '1.0.0';
+import { SUPPORTED_FBLCLIENT_VERSION } from '../../extension';
 
 export interface IFBLWidget extends Widget {
   /**
@@ -646,10 +640,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
       _comm = fbl.MetaComm('${this.clientId}', fbl)
       _client = fbl.Client(FFBOLabcomm=_comm, ${args})
       _client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
-      try:
-        _client.check_NeuroMynerva_version()
-      except:
-        pass
       fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
     else:
       _client =fbl.client_manager.get_client('${this.clientId}')
