@@ -98,7 +98,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           } catch (error) {
             this.model.metadata = this.neu3d.export_settings();
             this.model.states = this.neu3d.export_state();
-            console.error(`[Neu3D-Widget] Visualization Settings Restore Failed. Ignoring previous settings.`, error);
+            console.warn(
+              `[Neu3D-Widget] Visualization Settings Restore Failed.
+              Ignoring previous settings.`,
+              error
+            );
           }
           this._blockingDiv.remove();
         };
@@ -726,7 +730,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         } else {
           preset = processorPreset as PRESETS_NAMES;
           settings = PRESETS[preset].neu3dSettings;
-          // meshes = PRESETS[preset].meshes;
           placeholder = PRESETS[preset].searchPlaceholder;
         }
         this.initClient().then((success) => {
@@ -740,7 +743,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       } else {
         placeholder = PRESETS.disconnected.searchPlaceholder;
         this.setHasClient(false);
-        console.error(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
+        console.warn(`[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`);
       }
       inputQueryBar.placeholder = placeholder;
 
@@ -749,9 +752,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d._metadata.upVector = settings.upVector ?? PRESETS.default.neu3dSettings.upVector;
         this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
       }
-      // if (meshes) {
-      //   this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });
-      // }
       this.neu3d.updateControls();
       this.neu3d.resetView();
       window.active_neu3d_widget = this;
