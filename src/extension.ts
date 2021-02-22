@@ -5,48 +5,31 @@ import {
   ILabStatus,
   ILabShell
 } from '@jupyterlab/application';
-
-import {
-  DocumentRegistry
-} from '@jupyterlab/docregistry';
-
-import {
-  ISettingRegistry
-} from '@jupyterlab/settingregistry';
-
-import {
-  ILauncher
-} from '@jupyterlab/launcher';
-
-import {
-  ReadonlyPartialJSONObject,
-  Token
-} from '@lumino/coreutils';
-
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { ILauncher } from '@jupyterlab/launcher';
+import { ReadonlyPartialJSONObject, Token } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
-
 import {
   ICommandPalette,
   MainAreaWidget,
   WidgetTracker,
   IWidgetTracker,
   showDialog,
-  Dialog
+  Dialog,
+  SessionContext
 } from '@jupyterlab/apputils';
-
-import{
-  Kernel,
-  Session
-} from '@jupyterlab/services';
-
+import{ Kernel, Session } from '@jupyterlab/services';
+import { LabIcon } from '@jupyterlab/ui-components'
+import { Widget } from '@lumino/widgets';
+import { INotification } from 'jupyterlab_toastify';
 import {
-  LabIcon
-} from '@jupyterlab/ui-components'
-import {
-  Widget
- } from '@lumino/widgets';
+  RenderMimeRegistry,
+  standardRendererFactories as initialFactories
+} from '@jupyterlab/rendermime';
+import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
-
+// components from widgets
 import { fblIcon, neu3DIcon, neuGFXIcon, neuInfoIcon, masterIcon } from './icons';
 import { FFBOProcessor } from './ffboprocessor';
 import { MasterWidget } from './widgets/master-widget/index';
@@ -56,6 +39,7 @@ import { NeuGFXWidget } from './widgets/neugfx-widget/index';
 import { Neu3DWidget } from './widgets/neu3d-widget/index';
 import { FBLWidget } from './widgets/template-widget/index';
 
+// import all css files to make sure that npm packages this files when publishing
 import '../style/index.css';
 import '../style/info-widget/info.css';
 import '../style/info-widget/summary.css';
@@ -70,6 +54,12 @@ const NEUGFX_CLASS_NAME = '.jp-FBL-NeuGFX';
 const DIRTY_CLASS = 'jp-mod-dirty';
 const NEU3DICON = neu3DIcon;
 const NEUGFXICON = neuGFXIcon;
+/**
+ * Currently Supported FBLClient Version
+ *
+ * Version is checked when client is initialized
+ */
+export const SUPPORTED_FBLCLIENT_VERSION = '1.0.0';
 
 declare global {
   interface Window {
@@ -132,7 +122,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
 
     // when widget dirty state changes, need to
     // 1. if became dirty, set labstatus to be dirty
-    // 2. if no longer dity, dispose labstatus dirty 
+    // 2. if no longer dity, dispose labstatus dirty
     let disposable: IDisposable | null = null;
     panel.content.dirty.connect((_, dirty: boolean) => {
       if (dirty === true) {
@@ -140,7 +130,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
           disposable = status.setDirty();
         }
         if (!(panel.title.className.includes(DIRTY_CLASS))) {
-          panel.title.className += ` ${DIRTY_CLASS}`; 
+          panel.title.className += ` ${DIRTY_CLASS}`;
         }
       } else {
         if (disposable) {
@@ -270,7 +260,6 @@ async function activateFBL(
   status: ILabStatus,
   labShell: ILabShell
 ): Promise<IFBLWidgetTrackers> {
-  console.debug("FBL Extension Activated");
   const fblWidgetTrackers = new FBLWidgetTrackers({
     "Neu3D": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'}),
     "NeuGFX": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'})
@@ -334,7 +323,7 @@ async function activateFBL(
 
   // all available processor settings
   let ffboProcessorSetting: ISettingRegistry.ISettings = undefined;
-  
+
 
   // Wait for the application to be restored and
   // for the settings for this plugin to be loaded
@@ -356,7 +345,7 @@ async function activateFBL(
             // add to last
         if (restorer) {
           restorer.add(masterWidget, 'FBL-Master');
-        } 
+        }
         app.shell.add(masterWidget, 'left', {rank: 1900});
         window.master = masterWidget;
       } else {
@@ -396,7 +385,7 @@ async function activateFBL(
   fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
     w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
   }, extension);
-  
+
 
   // add info panel
   infoWidget = new InfoWidget();
@@ -410,7 +399,18 @@ async function activateFBL(
   app.shell.add(infoWidget, 'left', {rank: 2000});
   window.info = infoWidget;
 
-  /** Get the current widget of a given widget type and activate unless the args specify otherwise. */
+  // Check FBLClient is installed and version matches
+  // let clientCheckPassed = await FBL.checkFBLClientAndVersions(app.serviceManager.sessions);
+  // TODO: clientCheckPassed should be used to statefully render some warnings for each widget
+
+  // although this returns a promise, we cannot make this blocking using await because it may
+  // cause the entire JLab to stall
+  const version_check_toast_id = await INotification.inProgress(
+    'Checking FlyBrainLab Backend Package Installations...'
+  );
+  FBL.checkFBLClientAndVersions(app, version_check_toast_id);
+
+  // Get the current widget of a given widget type and activate unless the args specify otherwise.
   function getCurrent(args: ReadonlyPartialJSONObject): MainAreaWidget<IFBLWidget> | null {
     let widget = undefined;
     switch (args['widget']) {
@@ -582,9 +582,9 @@ async function activateFBL(
           Module:Neu3DWidget,
           icon:NEU3DICON,
           moduleArgs: {
-            info: infoWidget, 
-            processor: processor, 
-            sessionContext: notebook_panel.sessionContext, 
+            info: infoWidget,
+            processor: processor,
+            sessionContext: notebook_panel.sessionContext,
             ...args
           },
           fbltracker: fblWidgetTrackers,
@@ -602,7 +602,7 @@ async function activateFBL(
           moduleArgs: {
             clientId: neu3d_panel.content.clientId,
             processor: processor,
-            sessionContext: notebook_panel.sessionContext, 
+            sessionContext: notebook_panel.sessionContext,
             ...args
           },
           fbltracker: fblWidgetTrackers,
@@ -750,6 +750,9 @@ async function activateFBL(
   );
 }
 
+/**
+ * FBL Namespace with helper functions
+ */
 export namespace FBL {
   export function getProcessors(setting?: ISettingRegistry.ISettings): FFBOProcessor.IProcessors {
     if (!setting) {
@@ -757,7 +760,7 @@ export namespace FBL {
     }
     return FFBOProcessor.arrToDict(setting.get('fbl-processors').composite as any as FFBOProcessor.ISettings[]);
   }
-  
+
 
   /**
    * A widget that provides a processor selection.
@@ -823,7 +826,9 @@ export namespace FBL {
    * 3. Return the first Comm targetName if found
    * @param kernel - kernel to be changed
    */
-  export async function isFBLKernel(kernel: Kernel.IKernelConnection): Promise<string|null> {
+  export async function isFBLKernel(
+    kernel: Kernel.IKernelConnection
+  ): Promise<string|null> {
     let targetCandidates = new Array<any>();
     // interrogate kernel as Kernel class
     let msg = await kernel.requestCommInfo({});
@@ -919,5 +924,181 @@ export namespace FBL {
         insertMode: args['insertMode'] ?? 'split-right',
         activate: args['activate'] as boolean
       });
+  }
+
+  /**
+   * Check that FBLClient is installed and Versions match
+   * @param app
+   * @param toastProgressId
+   */
+  export async function checkFBLClientAndVersions(
+    app: JupyterFrontEnd,
+    toastProgressId?: string | number
+  ): Promise<boolean> {
+
+    // check fbl installed
+    const client_check_code = `
+import flybrainlab as fbl
+    `
+    let clientRes = await executeCodeInCodeCell(app, client_check_code, null, false);
+    const session = clientRes.session;
+    const clientBtns = [{
+      'label': 'Call Stack', callback: ()=> showDialog({
+        title: 'FBLClient Not Installed!',
+        body: clientRes.codeCell
+      })
+    }];
+    if (clientRes.executeReply.content.status !== 'ok') {
+      if (toastProgressId){
+        INotification.update({
+          toastId: toastProgressId,
+          message: 'FBLClient Not Installed!',
+          type: 'error',
+          autoClose: null,
+          buttons: clientBtns
+        });
+      } else {
+        INotification.error('FBLClient Not Installed!',{ buttons: clientBtns });
+      }
+      app.serviceManager.sessions.shutdown(session.session.id);
+      session.dispose()
+      return Promise.resolve(false);
+    } else {
+      clientRes.codeCell.dispose();
+    }
+
+    // check Client Version
+    const client_version_code = `
+import flybrainlab as fbl
+fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
+    `
+    let clientVersionRes = await executeCodeInCodeCell(
+      app, client_version_code, session, false
+    );
+
+    if (clientVersionRes.executeReply.content.status === 'error') {
+      const errMessage = `
+      FBLClient Version Check Failed!
+      Error: ${clientVersionRes.executeReply.content.evalue}
+      `;
+      const clientVersionBtns = [{
+        'label': 'Call Stack', callback: ()=> showDialog({
+          title: errMessage,
+          body: clientVersionRes.codeCell
+        })
+      }];
+      if (toastProgressId){
+        INotification.update({
+          toastId: toastProgressId,
+          message: errMessage,
+          type: 'error',
+          autoClose: null,
+          buttons: clientVersionBtns
+        });
+      } else {
+        INotification.error( errMessage, { buttons: clientVersionBtns } );
+      }
+      app.serviceManager.sessions.shutdown(session.session.id);
+      session.dispose();
+      return Promise.resolve(false);
+    } else {
+      clientVersionRes.codeCell.dispose();
+    }
+
+    // check NM Version
+    const NM_version_code = `
+import flybrainlab as fbl
+fbl.check_NeuroMynerva_version()
+    `
+    let NMVersionRes = await executeCodeInCodeCell(
+      app, NM_version_code, session, false
+    );
+    if (NMVersionRes.executeReply.content.status  === 'error') {
+      const errMessage = `
+      NeuroMynerva Version Check Failed!
+      Error: ${NMVersionRes.executeReply.content.evalue}
+      `;
+      const NMVersionBtns = [{
+        'label': 'Details', callback: ()=> showDialog({
+          title: errMessage,
+          body: NMVersionRes.codeCell
+        })
+      }];
+      if (toastProgressId){
+        INotification.update({
+          toastId: toastProgressId,
+          message: errMessage,
+          type: 'error',
+          autoClose: null,
+          buttons: NMVersionBtns
+        });
+      } else {
+        INotification.error(errMessage, { buttons: NMVersionBtns });
+      }
+      app.serviceManager.sessions.shutdown(session.session.id);
+      session.dispose();
+      return Promise.resolve(false);
+    } else {
+      NMVersionRes.codeCell.dispose();
+    }
+
+    // success
+    app.serviceManager.sessions.shutdown(session.session.id);
+    NMVersionRes.session.dispose();
+    if (toastProgressId) {
+      INotification.update({
+        toastId: toastProgressId,
+        message: 'FlyBrainLab Backend Check Successful!',
+        type: 'success',
+        autoClose: 1500
+      });
+    }
+    return Promise.resolve(true);
+  }
+
+  /**
+   * Execute Code in a given Code Cell and return the result
+   * @param app
+   * @param code
+   */
+  async function executeCodeInCodeCell(
+    app: JupyterFrontEnd,
+    code: string,
+    sessionContext?: SessionContext,
+    closeSession=true
+  ): Promise<{
+    codeCell: CodeCell,
+    executeReply:any,
+    session: SessionContext
+  }> {
+    sessionContext = sessionContext ?? new SessionContext({
+      sessionManager: app.serviceManager.sessions,
+      specsManager: app.serviceManager.kernelspecs,
+      path: `NeuroMynerva-Version-Check`,
+      name: 'NeuroMnyerva-Version-Check',
+      type: 'console',
+      kernelPreference: {
+        shouldStart: true,
+        canStart: true,
+        name: 'python3'
+      }
+    });
+
+    await sessionContext.initialize();
+    const model = new CodeCellModel({});
+    model.value.text = code;
+    const rendermime = new RenderMimeRegistry({ initialFactories });
+    const widget = new CodeCell({
+      model:model,
+      rendermime: rendermime
+    });
+    widget.readOnly = true;
+    widget.initializeState()
+    const executeReply = await CodeCell.execute(widget, sessionContext);
+    if (closeSession) {
+      app.serviceManager.sessions.shutdown(sessionContext.session.id);
+      sessionContext.dispose();
+    }
+    return {codeCell: widget, executeReply:executeReply, session: sessionContext};
   }
 }
