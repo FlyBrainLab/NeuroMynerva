@@ -935,10 +935,19 @@ export namespace FBL {
     app: JupyterFrontEnd,
     toastProgressId?: string | number
   ): Promise<boolean> {
+
+    // check fbl installed
     const client_check_code = `
 import flybrainlab as fbl
     `
-    let clientRes = await executeCodeInCodeCell(app, client_check_code);
+    let clientRes = await executeCodeInCodeCell(app, client_check_code, null, false);
+    const session = clientRes.session;
+    const clientBtns = [{
+      'label': 'Call Stack', callback: ()=> showDialog({
+        title: 'FBLClient Not Installed!',
+        body: clientRes.codeCell
+      })
+    }];
     if (clientRes.executeReply.content.status !== 'ok') {
       if (toastProgressId){
         INotification.update({
@@ -946,28 +955,15 @@ import flybrainlab as fbl
           message: 'FBLClient Not Installed!',
           type: 'error',
           autoClose: null,
-          buttons: [{
-            'label': 'Call Stack', callback: ()=> showDialog({
-              title: 'FBLClient Not Installed!',
-              body: clientRes.codeCell
-            })
-          }]
+          buttons: clientBtns
         });
       } else {
-        INotification.error(
-          'FBLClient Not Installed!',
-          {
-            buttons: [{
-              'label': 'Call Stack', callback: ()=> showDialog({
-                title: 'FBLClient Not Installed!',
-                body: clientRes.codeCell
-              })
-            }]
-          }
-        );
+        INotification.error('FBLClient Not Installed!',{ buttons: clientBtns });
       }
+      app.serviceManager.sessions.shutdown(session.session.id);
+      session.dispose()
       return Promise.resolve(false);
-    } else{
+    } else {
       clientRes.codeCell.dispose();
     }
 
@@ -976,38 +972,34 @@ import flybrainlab as fbl
 import flybrainlab as fbl
 fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
     `
-    let clientVersionRes = await executeCodeInCodeCell(app, client_version_code);
+    let clientVersionRes = await executeCodeInCodeCell(
+      app, client_version_code, session, false
+    );
+
     if (clientVersionRes.executeReply.content.status === 'error') {
       const errMessage = `
       FBLClient Version Check Failed!
       Error: ${clientVersionRes.executeReply.content.evalue}
       `;
+      const clientVersionBtns = [{
+        'label': 'Call Stack', callback: ()=> showDialog({
+          title: errMessage,
+          body: clientVersionRes.codeCell
+        })
+      }];
       if (toastProgressId){
         INotification.update({
           toastId: toastProgressId,
           message: errMessage,
           type: 'error',
           autoClose: null,
-          buttons: [{
-            'label': 'Call Stack', callback: ()=> showDialog({
-              title: errMessage,
-              body: clientVersionRes.codeCell
-            })
-          }]
+          buttons: clientVersionBtns
         });
       } else {
-        INotification.error(
-          errMessage,
-          {
-            buttons: [{
-              'label': 'Call Stack', callback: ()=> showDialog({
-                title: errMessage,
-                body: clientVersionRes.codeCell
-                })
-            }]
-          }
-        );
+        INotification.error( errMessage, { buttons: clientVersionBtns } );
       }
+      app.serviceManager.sessions.shutdown(session.session.id);
+      session.dispose();
       return Promise.resolve(false);
     } else {
       clientVersionRes.codeCell.dispose();
@@ -1018,42 +1010,41 @@ fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
 import flybrainlab as fbl
 fbl.check_NeuroMynerva_version()
     `
-    let NMVersionRes = await executeCodeInCodeCell(app, NM_version_code);
+    let NMVersionRes = await executeCodeInCodeCell(
+      app, NM_version_code, session, false
+    );
     if (NMVersionRes.executeReply.content.status  === 'error') {
       const errMessage = `
       NeuroMynerva Version Check Failed!
       Error: ${NMVersionRes.executeReply.content.evalue}
       `;
+      const NMVersionBtns = [{
+        'label': 'Details', callback: ()=> showDialog({
+          title: errMessage,
+          body: NMVersionRes.codeCell
+        })
+      }];
       if (toastProgressId){
         INotification.update({
           toastId: toastProgressId,
           message: errMessage,
           type: 'error',
           autoClose: null,
-          buttons: [{
-            'label': 'Details', callback: ()=> showDialog({
-              title: errMessage,
-              body: NMVersionRes.codeCell
-            })
-          }]
+          buttons: NMVersionBtns
         });
       } else {
-        INotification.error(
-          errMessage,
-          {
-            buttons: [{
-              'label': 'Details', callback: ()=> showDialog({
-                title: errMessage,
-                body: NMVersionRes.codeCell
-                })
-            }]
-          }
-        );
+        INotification.error(errMessage, { buttons: NMVersionBtns });
       }
+      app.serviceManager.sessions.shutdown(session.session.id);
+      session.dispose();
       return Promise.resolve(false);
     } else {
       NMVersionRes.codeCell.dispose();
     }
+
+    // success
+    app.serviceManager.sessions.shutdown(session.session.id);
+    NMVersionRes.session.dispose();
     if (toastProgressId) {
       INotification.update({
         toastId: toastProgressId,
@@ -1072,9 +1063,15 @@ fbl.check_NeuroMynerva_version()
    */
   async function executeCodeInCodeCell(
     app: JupyterFrontEnd,
-    code: string
-  ): Promise<{codeCell: CodeCell, executeReply:any}> {
-    const sessionContext = new SessionContext({
+    code: string,
+    sessionContext?: SessionContext,
+    closeSession=true
+  ): Promise<{
+    codeCell: CodeCell,
+    executeReply:any,
+    session: SessionContext
+  }> {
+    sessionContext = sessionContext ?? new SessionContext({
       sessionManager: app.serviceManager.sessions,
       specsManager: app.serviceManager.kernelspecs,
       path: `NeuroMynerva-Version-Check`,
@@ -1086,6 +1083,7 @@ fbl.check_NeuroMynerva_version()
         name: 'python3'
       }
     });
+
     await sessionContext.initialize();
     const model = new CodeCellModel({});
     model.value.text = code;
@@ -1097,8 +1095,10 @@ fbl.check_NeuroMynerva_version()
     widget.readOnly = true;
     widget.initializeState()
     const executeReply = await CodeCell.execute(widget, sessionContext);
-    app.serviceManager.sessions.shutdown(sessionContext.session.id);
-    sessionContext.dispose();
-    return {codeCell: widget, executeReply:executeReply};
+    if (closeSession) {
+      app.serviceManager.sessions.shutdown(sessionContext.session.id);
+      sessionContext.dispose();
+    }
+    return {codeCell: widget, executeReply:executeReply, session: sessionContext};
   }
 }
