@@ -1005,6 +1005,24 @@ fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
       clientVersionRes.codeCell.dispose();
     }
 
+    // check Client Update
+    const client_update_code = `
+import flybrainlab as fbl
+fbl.check_for_update()
+    `
+    let clientUpdateRes = await executeCodeInCodeCell(
+      app, client_update_code, session, false
+    );
+    console.log(clientUpdateRes);
+    if (clientUpdateRes.executeReply.content.status === 'error') {
+      const msg = clientUpdateRes.executeReply.content;
+      if (msg.ename === 'FlyBrainLabVersionUpgradeException'){
+        const errMessage = clientUpdateRes.executeReply.content.evalue;
+        INotification.info(errMessage, {autoClose: null});
+      }
+    }
+    clientUpdateRes.codeCell.dispose();
+
     // check NM Version
     const NM_version_code = `
 import flybrainlab as fbl
@@ -1014,6 +1032,7 @@ fbl.check_NeuroMynerva_version()
       app, NM_version_code, session, false
     );
     if (NMVersionRes.executeReply.content.status  === 'error') {
+
       const errMessage = `
       NeuroMynerva Version Check Failed!
       Error: ${NMVersionRes.executeReply.content.evalue}
