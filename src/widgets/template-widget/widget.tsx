@@ -573,11 +573,29 @@ export class FBLWidget extends Widget implements IFBLWidget {
       if (reply && reply.content.status === 'ok') {
         outputArea.dispose();
         return Promise.resolve(true);
+      } else if (reply && reply.content.status === 'error') {
+        INotification.error(
+          `FlyBrainLab Initialization Failed! Error: ${(reply.content as any).evalue}`,
+          {
+          buttons:[{
+            'label': 'Traceback', callback:()=> showDialog({
+              title: `FlyBrainLab Initialization Failed!`,
+              body: outputArea
+            })
+          }]
+        })
+        return Promise.resolve(false);
       } else {
-        showDialog({
-          title: `FBL Initialization Registration Failed`,
-          body: outputArea,
-        });
+        INotification.error(
+          `FBL Initialization Registration Failed! Unkown Error`,
+          {
+          buttons:[{
+            'label': 'Traceback', callback:()=> showDialog({
+              title: `FlyBrainLab Initialization Failed!`,
+              body: outputArea
+            })
+          }]
+        })
         return Promise.resolve(false);
       }
     }, (failure) => {
@@ -639,10 +657,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if '${this.clientId}' not in fbl.client_manager.clients or fbl.client_manager.get_client('${this.clientId}') is None:
       _comm = fbl.MetaComm('${this.clientId}', fbl)
       _client = fbl.Client(FFBOLabcomm=_comm, ${args})
-      _client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
       fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
     else:
-      _client =fbl.client_manager.get_client('${this.clientId}')
+      _client = fbl.client_manager.get_client('${this.clientId}')
       if _client.url != '${url}' or not _client.connected:
         try:
           _client.client._async_session.disconnect()
@@ -652,14 +669,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
           pass
         _client = fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
         fbl.client_manager.add_client('${this.clientId}', _client, client_widgets=['${this.id}'])
-      _client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
-      try:
-        _client.check_NeuroMynerva_version()
-      except:
-        pass
       if '${this.id}' not in fbl.client_manager.clients['${this.clientId}']['widgets']:
         fbl.client_manager.clients['${this.clientId}']['widgets'] += ['${this.id}']
-      _comm = _client.FBLcomm
     `
     return code;
   }
@@ -678,11 +689,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     _client.check_NeuroMynerva_version()
     `
     let reply = await this.sessionContext.session.kernel.requestExecute({ code: code }).done;
-    if (reply && reply.content.status === 'ok') {
-      return Promise.resolve(true);
-    } else {
-      return Promise.resolve(false);
-    }
+    return Promise.resolve((reply && reply.content.status === 'ok'));
   }
 
   /**
@@ -705,17 +712,49 @@ export class FBLWidget extends Widget implements IFBLWidget {
       return Promise.resolve(false);
     }
 
+    const toastId = await INotification.inProgress('Intializing FBLClient...');
+
     outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
     outputArea.node.style.display = 'block';
     let reply = await this.sessionContext.session.kernel.requestExecute({ code: code }).done;
     if (reply && reply.content.status === 'ok') {
-      // outputArea.dispose();
-      return Promise.resolve(true);
-    } else {
-      showDialog({
-        title: `FBLClient Initialization Registration Failed`,
-        body: outputArea,
+      outputArea.dispose();
+      INotification.update({
+        toastId: toastId,
+        message: `FBLClient Initialization Successful!`,
+        type: 'success',
+        autoClose: 1000
       });
+      return Promise.resolve(true);
+    } else if (reply && reply.content.status === 'error') {
+      INotification.update({
+        toastId: toastId,
+        message: `FBLClient Initialization Failed! Error: ${(reply.content as any).evalue}`,
+        type: 'error',
+        buttons:[
+          {
+           'label': 'Traceback', callback:()=> showDialog({
+              title: `FBLClient Initialization Registration Failed`,
+              body: outputArea
+            })
+          }
+        ]
+      })
+      return Promise.resolve(false);
+    } else {
+      INotification.update({
+        toastId: toastId,
+        message: `FBLClient Initialization Failed! Unknown Error`,
+        type: 'error',
+        buttons:[
+          {
+           'label': 'Traceback', callback:()=> showDialog({
+              title: `FBLClient Initialization Registration Failed`,
+              body: outputArea
+            })
+          }
+        ]
+      })
       return Promise.resolve(false);
     }
   }
@@ -735,9 +774,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
             raise Exception('Client not found')
         if not fbl.client_manager.get_client('${this.clientId}').connected:
             raise Exception('Client not connected')
-        _client = fbl.client_manager.get_client('${this.clientId}')
-        _client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
-        _client.check_NeuroMynerva_version()
+        fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
+        fbl.check_NeuroMynerva_version()
     except:
         raise Exception('Client not found')
     `;
@@ -822,9 +860,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
     // create fblclient instance with a processor connection.
     let initClientSuccess = await this.initClient();
     if (!initClientSuccess){
-      INotification.error(`
-        FBL Client Initialization Failed. See popup for more info
-      `, { 'autoClose': 5000 });
       this.setHasClient(false);
       return Promise.resolve(false);
     };
