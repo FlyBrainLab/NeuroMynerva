@@ -751,10 +751,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         }
         this.initClient().then((success) => {
           this.setHasClient(success); // can fail
-          if (success && differentProcessor && !startUp) {
-            this.getMeshesfromDB().then(()=>{
-              this.hideMeshes('Neuropil');
-            });
+          if (success && differentProcessor) {
+            if ((this.neu3d as any).groups.back.children.length === 0){
+              this.getMeshesfromDB().then(()=>{
+                this.hideMeshes('Neuropil');
+              });
+            }
           }
         });
       } else {
