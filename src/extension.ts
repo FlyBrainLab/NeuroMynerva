@@ -1013,7 +1013,6 @@ fbl.check_for_update()
     let clientUpdateRes = await executeCodeInCodeCell(
       app, client_update_code, session, false
     );
-    console.log(clientUpdateRes);
     if (clientUpdateRes.executeReply.content.status === 'error') {
       const msg = clientUpdateRes.executeReply.content;
       if (msg.ename === 'FlyBrainLabVersionUpgradeException'){
