@@ -742,13 +742,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
         raise Exception('Client not found')
     `;
     let reply = await this.sessionContext.session.kernel.requestExecute({ code: code_to_send }).done;
-    if (reply && reply.content.status === 'ok') {
-      this.setHasClient(true);
-      return Promise.resolve(true);
-    } else {
-      this.setHasClient(false);
-      return Promise.resolve(false);
-    }
+    const hasClient = (reply && reply.content.status === 'ok')
+    this.setHasClient(hasClient);
+    return Promise.resolve(hasClient);
   }
 
   /**
