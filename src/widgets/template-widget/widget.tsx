@@ -487,7 +487,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
     if (this.sessionContext.session) {
       await this.sessionContext.ready;
-      this.initFBLClient();
+      await this.initFBLClient();
       this.onPathChanged();
 
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);

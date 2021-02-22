@@ -6,7 +6,7 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { Neu3DModel, INeu3DModel, IMeshDictItem } from './model';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import { InfoWidget } from '../info-widget/index';
@@ -187,7 +187,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ ffbo_json: data });
       }
     }
-
+    this.hideMeshes('Neuropil');
 
     // if (change) {
     //   this.neu3d.addJson({ ffbo_json: this.model.data });
@@ -657,6 +657,23 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.neu3d?.onWindowResize();
   }
 
+  async onKernelChanged(
+    context: ISessionContext,
+    args: Session.ISessionConnection.IKernelChangedArgs
+ ) {
+    await super.onKernelChanged(context, args);
+    if (args.oldValue === null && args.newValue === null) {
+      // this is called by the restart routine by default
+      return; // no op
+    }
+    if (this.hasClient) {
+      if ((this.neu3d as any).groups.back.children.length === 0){
+        this.getMeshesfromDB().then(()=>{
+          this.hideMeshes('Neuropil');
+        });
+      }
+    }
+  }
   /**
    * Returns processor.
    *
