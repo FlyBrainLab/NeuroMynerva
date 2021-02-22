@@ -977,7 +977,6 @@ import flybrainlab as fbl
 fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
     `
     let clientVersionRes = await executeCodeInCodeCell(app, client_version_code);
-    console.log(clientVersionRes);
     if (clientVersionRes.executeReply.content.status === 'error') {
       const errMessage = `
       FBLClient Version Check Failed!
@@ -1020,7 +1019,6 @@ import flybrainlab as fbl
 fbl.check_NeuroMynerva_version()
     `
     let NMVersionRes = await executeCodeInCodeCell(app, NM_version_code);
-    console.log(NMVersionRes);
     if (NMVersionRes.executeReply.content.status  === 'error') {
       const errMessage = `
       NeuroMynerva Version Check Failed!
