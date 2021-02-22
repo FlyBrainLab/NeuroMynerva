@@ -59,7 +59,7 @@ const NEUGFXICON = neuGFXIcon;
  *
  * Version is checked when client is initialized
  */
-export const SUPPORTED_FBLCLIENT_VERSION = '1.0.0';
+export const SUPPORTED_FBLCLIENT_VERSION = '1.1.0';
 
 declare global {
   interface Window {
