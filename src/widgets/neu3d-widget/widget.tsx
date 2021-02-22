@@ -4,7 +4,7 @@ import { Message } from '@lumino/messaging';
 import { Signal, ISignal } from '@lumino/signaling';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
-import { LabIcon, settingsIcon, bugIcon } from '@jupyterlab/ui-components';
+import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Neu3DModel, INeu3DModel, IMeshDictItem } from './model';
@@ -767,6 +767,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     type = type ?? ['Neuropil', 'Tract', 'Subregion', 'Tract', 'Subsystem'];
     let code = `
     _fbl_query = {}
+    _fbl_query['verb'] = 'add'
     _fbl_query['format'] = 'morphology'
     _fbl_query['query']= [{'action': {'method': {'query': {}}},
                            'object': {'class': ${JSON.stringify(type)}}}]
@@ -847,7 +848,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       }));
     this.toolbar.addItem(
         'updateMesh',
-        Private.createButton(bugIcon, "Update Mesh", 'jp-Neu3D-Btn jp-SearBar-updateMesh',
+        Private.createButton(Icons.fblIcon, "Fetch Brain Meshes from NeuroArch", 'jp-Neu3D-Btn jp-SearBar-updateMesh',
         () => {
           this.getMeshesfromDB();
           this.hideMeshes('Neuropil');
