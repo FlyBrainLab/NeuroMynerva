@@ -43,9 +43,9 @@ export const PRESETS: {[name in PRESETS_NAMES]: PresetEntry} = {
   'adult(hemibrain)': {
     'searchPlaceholder': "Write Query. (Example: Show APL)",
     'neu3dSettings': {
-      'resetPosition': {x: -0.41758013880199485, y: 151.63625728674563, z: -50.50723330508691},
-      'upVector': {x: -0.0020307520395871814, y: -0.500303768173525, z: -0.8658475706482184},
-      'cameraTarget' : {x: 17.593074756823892, y: 22.60567192152306, z: 21.838699853616273},
+      'resetPosition': {x: 191.128, y: 1917.794, z: -281.683},
+      'upVector': {x: -0.00203, y: -0.5, z: -0.8658},
+      'cameraTarget' : {x: 137.984, y: 179.674, z: 172.154},
     },
     'hints': [
       {query:`show $MBON$`, effect: `search for any neuron whose name contains text "MBON"` },
