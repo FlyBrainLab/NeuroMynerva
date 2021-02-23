@@ -41,11 +41,11 @@ NeuroMynerva has the following requirements:
 Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab#readme.
 
 ### Installation of NeuroMynerva
-You can either install NeuroMynerva via command line as
+You either install NeuroMynerva directly from PyPI via command line as
 ```bash
+pip install flybrainlab  # required package for communicating with backend
 pip install neuromynerva
 ```
-
 
 ### Develop NeuroMynerva
 We use [Anaconda](https://www.anaconda.com/) to manage development environment, you are encouraged to first create a Conda environment
@@ -66,13 +66,16 @@ pip install txaio twisted autobahn crochet service_identity autobahn-sync matplo
 # if on Windows, execute the following:
 # pip install pypiwin32
 
-# install inhouse packages and NeuroMynerva
-git clone https://github.com/FlyBrainLab/Neuroballad.git
-git clone https://github.com/FlyBrainLab/FBLClient.git
-cd ./Neuroballad
-python setup.py develop
-cd ../FBLClient
-python setup.py develop
+# Install flybrainlab package for communication with backend
+pip install flybrainlab
+
+# Alternative, you can download the source code for the inhouse packages as well
+# git clone https://github.com/FlyBrainLab/Neuroballad.git
+# git clone https://github.com/FlyBrainLab/FBLClient.git
+# cd ./Neuroballad
+# python setup.py develop
+# cd ../FBLClient
+# python setup.py develop
 ```
 
 Next, we build the NeuroMynerva from source.
@@ -87,7 +90,7 @@ The `jlpm` command is JupyterLab's pinned version of
 cd ../  # go back to parent folder on the same level as FBLClient and NeuroBallad
 git clone https://github.com/FlyBrainLab/NeuroMynerva.git
 cd ../NeuroMynerva
-git checkout jlab3 # switch to branch compatible with JupyterLab 3
+git checkout jlab3-publish # switch to branch compatible with JupyterLab 3
 
 # Clone the repo to your local environment
 # Change directory to the neuromynerva directory
