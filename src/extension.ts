@@ -59,7 +59,7 @@ const NEUGFXICON = neuGFXIcon;
  *
  * Version is checked when client is initialized
  */
-export const SUPPORTED_FBLCLIENT_VERSION = '1.0.0';
+export const SUPPORTED_FBLCLIENT_VERSION = '1.1.0';
 
 declare global {
   interface Window {
@@ -1013,7 +1013,6 @@ fbl.check_for_update()
     let clientUpdateRes = await executeCodeInCodeCell(
       app, client_update_code, session, false
     );
-    console.log(clientUpdateRes);
     if (clientUpdateRes.executeReply.content.status === 'error') {
       const msg = clientUpdateRes.executeReply.content;
       if (msg.ename === 'FlyBrainLabVersionUpgradeException'){

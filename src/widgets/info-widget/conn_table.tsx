@@ -254,11 +254,11 @@ export interface IConnDataItem {
   uname: string,
   syn_uname: string,
   number: Number,
-  rid: string,
-  n_rid: string,
+  rid: string,   // neuron morphologyData node id
+  n_rid: string, // neuron node id
   neuron_in_workspace: Boolean,
-  syn_rid: string,
-  s_rid: string,
+  syn_rid: string, // synapse morphologyData node id
+  s_rid: string, // synapse node id
   synapse_in_workspace: Boolean,
   has_syn_morph: Boolean,
   has_morph: Boolean
@@ -283,4 +283,12 @@ export interface IConnData {
       number?: number | any;
     }
   }
+}
+
+/**
+ * Fill Empty Connectivity Data
+ */
+export const EmptyConnData: IConnData = {
+  pre: {details: [], summary: {profile: {}, number: 0}},
+  post: {details: [], summary: {profile: {}, number: 0}}
 }

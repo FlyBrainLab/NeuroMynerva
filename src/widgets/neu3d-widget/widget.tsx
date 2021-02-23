@@ -6,11 +6,8 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import { ToolbarButton, showDialog, Dialog, ISessionContext } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from "jupyterlab_toastify";
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { Neu3DModel, INeu3DModel } from './model';
-import { AdultMesh } from './adult_mesh';
-import { LarvaMesh } from './larva_mesh';
-import { HemibrainMesh } from './hemibrain_mesh';
+import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
+import { Neu3DModel, INeu3DModel, IMeshDictItem } from './model';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import { InfoWidget } from '../info-widget/index';
 import { PRESETS, PRESETS_NAMES } from './presets';
@@ -73,9 +70,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
     // load in meshes
     this.info = options.info;
-    this._adultMesh = AdultMesh;
-    this._larvaMesh = LarvaMesh;
-    this._hemibrainMesh = HemibrainMesh;
 
     this.addClass(Neu3D_CLASS_JLab);
     this._neu3dContainer = document.createElement('div');
@@ -193,7 +187,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d.addJson({ ffbo_json: data });
       }
     }
-
+    this.hideMeshes('Neuropil');
 
     // if (change) {
     //   this.neu3d.addJson({ ffbo_json: this.model.data });
@@ -297,15 +291,23 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         case "Data": {
           if (thisMsg.data.data){
             let rawData = thisMsg.data.data
-            if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
-              // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
-              let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
-              this.neu3d.addJson(neu3Ddata);
+            let processedData = Private.processMeshesFromCommData(rawData);
+            if (Object.keys(processedData.meshOrSWC).length > 0){
+              this.neu3d.addJson({ffbo_json: processedData.meshOrSWC, type: 'morphology_json'});
             }
-            else {
-              let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
-              this.neu3d.addJson(neu3Ddata);
+
+            if (Object.keys(processedData.unknown).length > 0){
+              this.neu3d.addJson({ffbo_json: processedData.unknown, type: 'general_json'});
             }
+            // if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
+            //   // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
+            //   let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
+            //   this.neu3d.addJson(neu3Ddata);
+            // }
+            // else {
+            //   let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
+            //   this.neu3d.addJson(neu3Ddata);
+            // }
           } else {
             // no-op
           }
@@ -410,6 +412,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   /**
    * Remove an object into the workspace using Uname by Kernel Call.
    *
+   * WARNING: Deprecated! Do not use addByUname since uname may no longer be unique.
+   *  Use addByRid instead
+   *
    * @param uname -  uname of target object (neuron/synapse)
    */
   async removeByUname(uname: string | Array<string>): Promise<any> {
@@ -435,7 +440,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     let code = `
     _fbl_query = {}
     _fbl_query['verb'] = 'add'
-    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query['query']= [{'action': {'method': {'query': {}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
     _fbl_query['format'] = 'morphology'
     `;
@@ -455,7 +460,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     let code = `
     _fbl_query = {}
     _fbl_query['verb'] = 'remove'
-    _fbl_query['query']= [{'action': {'method': {'query': {'rid': ${JSON.stringify(rid)}}}},
+    _fbl_query['query']= [{'action': {'method': {'query': {}}},
                     'object': {'rid': ${JSON.stringify(rid)}}}]
     `;
     code = code + this.querySender();
@@ -652,6 +657,23 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     this.neu3d?.onWindowResize();
   }
 
+  async onKernelChanged(
+    context: ISessionContext,
+    args: Session.ISessionConnection.IKernelChangedArgs
+ ) {
+    await super.onKernelChanged(context, args);
+    if (args.oldValue === null && args.newValue === null) {
+      // this is called by the restart routine by default
+      return; // no op
+    }
+    if (this.hasClient) {
+      if ((this.neu3d as any).groups.back.children.length === 0){
+        this.getMeshesfromDB().then(()=>{
+          this.hideMeshes('Neuropil');
+        });
+      }
+    }
+  }
   /**
    * Returns processor.
    *
@@ -691,16 +713,11 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    *    if on startup, the dialog for removing neuron will not be shown
    */
   setProcessor(newProcessor: string, startUp: boolean = false) {
+    let differentProcessor = newProcessor !== this.processor;
     super.setProcessor(newProcessor, startUp);
 
     this.neu3DReady.then(()=>{
-      if (startUp) { // only remove meshes on startup
-        for (let mesh of Object.keys(this.neu3d.meshDict)){
-          if (this.neu3d.meshDict[mesh].background) {
-            this.neu3d.remove(mesh);
-          }
-        }
-      } else{ // Remove everything
+      if (differentProcessor && !startUp) {
         this.neu3d.reset(true);
       }
 
@@ -711,7 +728,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
        */
       let preset: PRESETS_NAMES = "default";
       let settings: {[field: string]: {x:number, y:number, z:number}} = null;
-      let meshes: any = null;
+      // let meshes: any = null;
       let placeholder = PRESETS.disconnected.searchPlaceholder;
       let inputQueryBar: HTMLInputElement = this._neu3dFooter.getElementsByTagName('input')[0];
         // return the corresponding preset in schema if found
@@ -730,11 +747,17 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         } else {
           preset = processorPreset as PRESETS_NAMES;
           settings = PRESETS[preset].neu3dSettings;
-          meshes = PRESETS[preset].meshes;
           placeholder = PRESETS[preset].searchPlaceholder;
         }
         this.initClient().then((success) => {
           this.setHasClient(success); // can fail
+          if (success && differentProcessor) {
+            if ((this.neu3d as any).groups.back.children.length === 0){
+              this.getMeshesfromDB().then(()=>{
+                this.hideMeshes('Neuropil');
+              });
+            }
+          }
         });
       } else {
         placeholder = PRESETS.disconnected.searchPlaceholder;
@@ -748,9 +771,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         this.neu3d._metadata.upVector = settings.upVector ?? PRESETS.default.neu3dSettings.upVector;
         this.neu3d._metadata.cameraTarget = settings.cameraTarget ?? PRESETS.default.neu3dSettings.cameraTarget;
       }
-      if (meshes) {
-        this.neu3d.addJson({ ffbo_json: meshes, showAfterLoadAll: true });
-      }
       this.neu3d.updateControls();
       this.neu3d.resetView();
       window.active_neu3d_widget = this;
@@ -758,6 +778,43 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       this.info.reset(true);
     });
   }
+
+  /**
+   * Get Meshes from DB
+   */
+  async getMeshesfromDB(type?: Private.MeshTypes ): Promise<KernelMessage.IExecuteReplyMsg | null> {
+    type = type ?? ['Neuropil', 'Tract', 'Subregion', 'Tract', 'Subsystem'];
+    let code = `
+    _fbl_query = {}
+    _fbl_query['verb'] = 'add'
+    _fbl_query['format'] = 'morphology'
+    _fbl_query['query']= [{'action': {'method': {'query': {}}},
+                           'object': {'class': ${JSON.stringify(type)}}}]
+    `;
+    code = code + this.querySender();
+    if (!this.sessionContext?.session?.kernel){
+      return null;
+    }
+    let result = await this.sessionContext.session.kernel.requestExecute({code: code}).done;
+    console.debug('getMeshesfromDB', result);
+    return result;
+  }
+
+  /**
+   * Hide Background Meshes except some
+   * @param exceptClasses
+   */
+  hideMeshes(exceptClasses?: Private.MeshTypes) {
+    exceptClasses = Private.asarray(exceptClasses) ?? [];
+    for (const [rid, mesh] of Object.entries(this.model.background)) {
+      if (exceptClasses.includes(mesh.class)) {
+        continue;
+      } else{
+        this.neu3d.hide(rid);
+      }
+    }
+  }
+
 
   /**
    * Populate the toolbar on the top of the widget
@@ -795,9 +852,12 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       'removeUnpinned',
       Private.createButton(Icons.trashIcon, "Remove Unpinned Neurons", 'jp-Neu3D-Btn jp-SearBar-remove-unpinned',
         () => {
-          let unames: string[] = Object.values(this.model.unpinned).map((mesh) => mesh.label);
-          this.removeByUname(unames);
-          // this.neu3d.removeUnpinned();
+          let orids: string[] = Object.values(this.model.unpinned).map((mesh) => mesh.orid);
+          if (this.sessionContext?.session?.kernel){
+            this.removeByRid(orids);
+          } else{
+            this.neu3d.removeUnpinned();
+          }
         }));
     this.toolbar.addItem(
       'toggleControlPanel',
@@ -805,7 +865,14 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       () => {
         this.neu3d.controlPanel.domElement.style.display === "" ? this.neu3d.controlPanel.hide() : this.neu3d.controlPanel.show();
       }));
-
+    this.toolbar.addItem(
+        'updateMesh',
+        Private.createButton(Icons.fblIcon, "Fetch Brain Meshes from NeuroArch", 'jp-Neu3D-Btn jp-SearBar-updateMesh',
+        () => {
+          this.getMeshesfromDB();
+          this.hideMeshes('Neuropil');
+        })
+      );
     super.populateToolBar();
   }
 
@@ -813,9 +880,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   * The Elements associated with the widget.
   */
   neu3d: Neu3D;
-  readonly _adultMesh: Object; // caching for dynamically imported mesh
-  readonly _larvaMesh: Object; // caching for dynamically import mesh
-  readonly _hemibrainMesh: Object; // caching for dynamically import mesh
   private _neu3DReady = new PromiseDelegate<void>();
   private _neu3dContainer: HTMLDivElement;
   private _neu3dFooter: HTMLDivElement;
@@ -833,6 +897,43 @@ namespace Private {
 
   // The count is for managing the name of the widget every time a new one is added to the browser
   export let count = 1;
+
+  export function asarray(string_or_array: string | Array<string>): Array<string> | undefined {
+    if (string_or_array == undefined) {
+      return undefined;
+    }
+    if (string_or_array.constructor !== Array) {
+      string_or_array = [string_or_array as string];
+    }
+    return string_or_array as Array<string>;
+  }
+
+  export type MeshTypes = 'Neuropil'| 'Tract'| 'Subregion'| 'Tract'| 'Subsystem'| Array<string>;
+
+  export function processMeshesFromCommData(
+    dictOfMeshes: {[rid:string]: IMeshDictItem}
+  ):{meshOrSWC:{[rid:string]: IMeshDictItem}, unknown:{[rid:string]: IMeshDictItem}} {
+    let processed: {meshOrSWC:{[rid:string]: IMeshDictItem}, unknown:{[rid:string]: IMeshDictItem}} = {
+      meshOrSWC:{}, unknown:{}
+    };
+    for (let [rid, mesh] of Object.entries(dictOfMeshes)) {
+      if (mesh.morph_type === 'mesh'){
+        if (['Neuropil', 'Tract', 'Subregion', 'Tract', 'Subsystem'].includes(mesh.class)){
+          mesh.background = mesh.background ?? true;
+        } else{
+          mesh.background = mesh.background ?? false;
+        }
+        processed.meshOrSWC[rid] = mesh;
+      } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })){
+        mesh.background = mesh.background ?? false;
+        processed.meshOrSWC[rid] = mesh;
+      } else{
+        processed.unknown[rid] = mesh;
+      }
+    }
+    return processed;
+  }
+
 
   export function createButton(
     icon: LabIcon.IMaybeResolvable,

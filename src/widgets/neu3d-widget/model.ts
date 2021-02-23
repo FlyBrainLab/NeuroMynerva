@@ -13,9 +13,10 @@ export interface IDataChangeArgs {
 /**
 * ID and a few selected attributes of the associated mesh dict items
 */
-export interface IMeshDictItem {
-  name?: string,
+export interface IMeshDictBaseItem {
+  orid?: string,  // neuron/synapse/mesh node rid. used to removeByRid
   uname?: string,
+  name?: string,
   label?: string,
   highlight?: Boolean,
   opacity?: Number,
@@ -23,9 +24,12 @@ export interface IMeshDictItem {
   background?: Boolean
   color?: {r: Number, g:Number, b:Number},
   pinned?: boolean,
-  filename?: string,  // specified if downloaded mesh
-  filetype?: 'swc' | string,  // 'swc'
-  dataStr?: string, // datastring of swcs
+  type?: 'morphology_json' | 'general_json' | string; // type, used to keep track of morphology json objects  
+  morph_type?: 'swc' | 'mesh' | string; // specify mesh with faces and vertices enabled will parse background
+  class?: 'Neuron' | 'Neuropil' | 'Synapse' | string;
+}
+
+export interface IMeshDictSWCItem extends IMeshDictBaseItem {
   sample?: Array<number>, // content of loading raw object
   parent?: Array<number>, // content of loading raw object
   identifier?: Array<number>, // content of loading raw object
@@ -33,9 +37,24 @@ export interface IMeshDictItem {
   y?: Array<number>, // content of loading raw object
   z?: Array<number>, // content of loading raw object
   r?: Array<number>,  // content of loading raw object
-  object?: any // THREEJS 3D Object
-  type?: 'morphology_json' | 'general_json' | string; // type, used to keep track of morphology json objects
 }
+
+export interface IMeshDictMeshItem extends IMeshDictBaseItem {
+  faces?: Array<number>; // mesh faces
+  vertices?: Array<number>; // mesh faces
+}
+
+export interface IMeshDictObjItem extends IMeshDictBaseItem {
+  filetype?: string,
+  dataStr?: string, // datastring of swcs
+}
+
+export interface IMeshDictFileItem extends IMeshDictBaseItem {
+  filename?: string,  // specified if downloaded mesh
+  filetype?: string,  // 'swc'
+}
+
+export type IMeshDictItem = IMeshDictBaseItem | IMeshDictSWCItem | IMeshDictMeshItem | IMeshDictObjItem | IMeshDictFileItem;
 
 /**
 * currently rendered neuron information
@@ -80,14 +99,19 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     //   return;
     // }
     let oldValue = this.data[rid];
-    this.data[rid] = Private.convertRawMesh(value);
+    let mesh = Private.convertRawMesh(value);
+    if (mesh === null) {
+      console.warn(`[Neu3D-Widget] Mesh rid ${rid} mesh parse failed, ignoring.`)
+      return;
+    }
+    this.data[rid] = mesh;
     this._dataChanged.emit({
       event: (oldValue) ? 'change' : 'add',
       source: this.data,
       key: rid,
       rid: rid,
       oldValue: oldValue,
-      newValue: this.data[rid]
+      newValue: mesh
     });
   }
 
@@ -230,14 +254,19 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     return this._statesChanged;
   }
 
-  /** Return Array of Rid of all pinned objects*/
+  /** Return Partial of Data Object of all pinned neurons & synapses*/
   get pinned(): {[rid: string]: IMeshDictItem} {
-    return Private.filter(this.data, (mesh: IMeshDictItem) => mesh.pinned);
+    return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.background && mesh.pinned);
   }
 
-  /** Return Array of Rid of all unpinned objects*/
+  /** Return Partial of Data Object of all background meshes*/
+  get background(): {[rid: string]: IMeshDictItem} {
+    return Private.filter(this.data, (mesh: IMeshDictItem) => mesh.background);
+  }
+
+  /** Return Partial of Data Object of all unpinned neurons & synapses*/
   get unpinned(): {[rid: string]: IMeshDictItem} {
-    return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.pinned);
+    return Private.filter(this.data, (mesh: IMeshDictItem) => !mesh.background && !mesh.pinned);
   }
 
   _dataChanged = new Signal<this, IDataChangeArgs>(this);
@@ -250,6 +279,11 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
 
 
 namespace Private {
+  /**
+   * Filter Object based on predicate on each obj
+   * @param obj 
+   * @param predicate 
+   */
   export function filter(obj: Object, predicate: CallableFunction): Object | any {
     return Object.keys(obj)
       .filter((key: string) => predicate((obj as any)[key ]))
@@ -266,69 +300,130 @@ namespace Private {
       if (meshDict[rid].background) {
         continue;
       }
-      modelMeshDict[rid] = convertRawMesh(meshDict[rid]);
+      let mesh = convertRawMesh(meshDict[rid]);
+      if (mesh === null){
+        continue;
+      }
+      modelMeshDict[rid] = mesh;
     }
     return modelMeshDict;
+  }
+
+  function parseSWC(mesh: any): IMeshDictSWCItem {
+    return {
+      orid: mesh['orid'],
+      uname: mesh['uname'],
+      name: mesh['name'] ?? mesh['uname'],
+      label: mesh['label'],
+      highlight: mesh['highlight'],
+      opacity: mesh['opacity'],
+      visibility: mesh['visibility'],
+      background: mesh['background'],
+      // color: mesh['color'],
+      pinned: mesh['pinned'],
+      sample: mesh['sample'],
+      parent: mesh['parent'],
+      identifier: mesh['identifier'],
+      x: mesh['x'],
+      y: mesh['y'],
+      z: mesh['z'],
+      r: mesh['r'],
+      type: 'morphology_json',
+      morph_type: 'swc',
+      class: mesh['class'] ?? 'Neuron'
+    }
+  }
+
+  function parseMesh(mesh: any): IMeshDictMeshItem {
+    return {
+      orid: mesh['orid'],
+      uname: mesh['uname'],
+      name: mesh['name'] ?? mesh['uname'],
+      label: mesh['label'],
+      highlight: mesh['highlight'],
+      opacity: mesh['opacity'],
+      visibility: mesh['visibility'],
+      background: mesh['background'],
+      // color: mesh['color'],
+      pinned: mesh['pinned'],
+      faces: mesh['faces'],
+      vertices: mesh['vertices'],
+      type: 'morphology_json',
+      morph_type: 'mesh',
+      class: mesh['class'] ?? 'Neuropil'
+    }
   }
 
 
   /**
    * Convert Raw Neu3D Mesh to `IMeshDict`
    */
-  export function convertRawMesh(mesh: any): IMeshDictItem {
-    if (mesh.filename){
-      return {
-        uname: mesh['uname'], 
-        name: mesh['name'] ?? mesh['uname'],
-        label: mesh['label'],
-        highlight: mesh['highlight'],
-        opacity: mesh['opacity'],
-        visibility: mesh['visibility'],
-        background: mesh['background'],
-        // color: mesh['color'],
-        pinned: mesh['pinned'],
-        filetype: mesh['filetype'],
-        filename: mesh['filename']
+  export function convertRawMesh(mesh: any): IMeshDictItem | null {
+    if (('morph_type' in mesh) && ('class' in mesh)) {
+      switch (mesh.morph_type) {
+        case 'swc':
+          return parseSWC(mesh);
+        case 'mesh':
+          return parseMesh(mesh);
+        default:
+          break;
       }
-    } else if (mesh.dataStr){
-      return {
-        uname: mesh['uname'],
-        name: mesh['name'] ?? mesh['uname'],
-        label: mesh['label'],
-        highlight: mesh['highlight'],
-        opacity: mesh['opacity'],
-        visibility: mesh['visibility'],
-        background: mesh['background'],
-        // color: mesh['color'],
-        pinned: mesh['pinned'],
-        filetype: mesh['filetype'],
-        dataStr: mesh['dataStr']
-      }
-    } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })) { // raw data
-      return {
-        uname: mesh['uname'],
-        name: mesh['name'] ?? mesh['uname'],
-        label: mesh['label'],
-        highlight: mesh['highlight'],
-        opacity: mesh['opacity'],
-        visibility: mesh['visibility'],
-        background: mesh['background'],
-        // color: mesh['color'],
-        pinned: mesh['pinned'],
-        sample: mesh['sample'],
-        parent: mesh['parent'],
-        identifier: mesh['identifier'],
-        x: mesh['x'],
-        y: mesh['y'],
-        z: mesh['z'],
-        r: mesh['r'],
-        // object: mesh.object ?? {},
-        type: 'morphology_json'
+    } else{
+      if (mesh.filename){ // file
+        return {
+          orid: mesh['orid'],
+          uname: mesh['uname'],
+          name: mesh['name'] ?? mesh['uname'],
+          label: mesh['label'],
+          highlight: mesh['highlight'],
+          opacity: mesh['opacity'],
+          visibility: mesh['visibility'],
+          background: mesh['background'],
+          // color: mesh['color'],
+          pinned: mesh['pinned'],
+          filetype: mesh['filetype'],
+          filename: mesh['filename'],
+        }
+      } else if (mesh.dataStr){
+        return {
+          orid: mesh['orid'],
+          uname: mesh['uname'],
+          name: mesh['name'] ?? mesh['uname'],
+          label: mesh['label'],
+          highlight: mesh['highlight'],
+          opacity: mesh['opacity'],
+          visibility: mesh['visibility'],
+          background: mesh['background'],
+          // color: mesh['color'],
+          pinned: mesh['pinned'],
+          filetype: mesh['filetype'],
+          dataStr: mesh['dataStr']
+        }
+      } else if (['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => { return l in mesh })) { // raw data
+        return {
+          orid: mesh['orid'],
+          uname: mesh['uname'],
+          name: mesh['name'] ?? mesh['uname'],
+          label: mesh['label'],
+          highlight: mesh['highlight'],
+          opacity: mesh['opacity'],
+          visibility: mesh['visibility'],
+          background: mesh['background'],
+          // color: mesh['color'],
+          pinned: mesh['pinned'],
+          sample: mesh['sample'],
+          parent: mesh['parent'],
+          identifier: mesh['identifier'],
+          x: mesh['x'],
+          y: mesh['y'],
+          z: mesh['z'],
+          r: mesh['r'],
+          type: 'morphology_json'
+        }
+      } 
+      else {
+        return null; // neither mesh nor swc
       }
     }
-    else {
-      return {}; // neither mesh nor swc
-    }
-    
   }
 }

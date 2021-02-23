@@ -14,7 +14,7 @@ import {
 import {
   SummaryTable, MorphometryTable, AdditionalInfoTable
 } from './summary_table';
-import { ConnTable, IConnData } from './conn_table';
+import { ConnTable, EmptyConnData, IConnData } from './conn_table';
 import { ConnSVG } from './conn_svg';
 import '../../../style/info-widget/info.css';
 import { SessionDialogComponent } from '../template-widget';
@@ -90,10 +90,7 @@ interface IInfoData {
  * Empty data to be used in case there is no data coming in
  */
 const empty_data: IInfoData = {
-  connectivity: {
-    pre: {details: [], summary: {profile: {}, number: 0}},
-    post: {details: [], summary: {profile: {}, number: 0}}
-  }, 
+  connectivity: EmptyConnData,
   summary: {}
 };
 
@@ -151,8 +148,8 @@ export class InfoWidget extends ReactWidget {
     {
       this.neu3d = neu3d;
       this.data = data;
-      this.tabConnPost.setData(data.connectivity, neu3d);
-      this.tabConnPre.setData(data.connectivity, neu3d);
+      this.tabConnPost.setData(data?.connectivity ?? EmptyConnData, neu3d);
+      this.tabConnPre.setData(data?.connectivity ?? EmptyConnData, neu3d);
     }, this);
   }
 

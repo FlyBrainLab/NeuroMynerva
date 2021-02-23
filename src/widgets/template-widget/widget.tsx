@@ -487,7 +487,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     }
     if (this.sessionContext.session) {
       await this.sessionContext.ready;
-      this.initFBLClient();
+      await this.initFBLClient();
       this.onPathChanged();
 
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
@@ -653,7 +653,6 @@ export class FBLWidget extends Widget implements IFBLWidget {
     if 'fbl' not in globals():
         import flybrainlab as fbl
         fbl.init()
-    fbl.widget_manager.add_widget('${this.id}', '${this.clientId}', '${this.constructor.name}', '${this._commTarget}')
     if '${this.clientId}' not in fbl.client_manager.clients or fbl.client_manager.get_client('${this.clientId}') is None:
       _comm = fbl.MetaComm('${this.clientId}', fbl)
       _client = fbl.Client(FFBOLabcomm=_comm, ${args})
@@ -712,7 +711,9 @@ export class FBLWidget extends Widget implements IFBLWidget {
       return Promise.resolve(false);
     }
 
-    const toastId = await INotification.inProgress('Intializing FBLClient...');
+    const toastId = await INotification.inProgress(
+      <p>Intializing FBLClient for <b>{this.name}</b>...</p>
+    );
 
     outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
     outputArea.node.style.display = 'block';
@@ -721,7 +722,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       outputArea.dispose();
       INotification.update({
         toastId: toastId,
-        message: `FBLClient Initialization Successful!`,
+        message: <p>FBLClient Initialization Successful for <b>{this.name}</b>!</p>,
         type: 'success',
         autoClose: 1000
       });
@@ -734,7 +735,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
         buttons:[
           {
            'label': 'Traceback', callback:()=> showDialog({
-              title: `FBLClient Initialization Registration Failed`,
+              title: <p>FBLClient Initialization Registration Failed for <b>{this.name}</b></p>,
               body: outputArea
             })
           }
