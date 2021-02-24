@@ -1,11 +1,11 @@
 /**
- * Connectivity table that uses tabulator class to render connectivity data object 
- */ 
-import "@fortawesome/fontawesome-free/js/all.js";
-import Tabulator from "tabulator-tables";
-import "tabulator-tables/dist/css/tabulator.min.css"; //import Tabulator stylesheet
-import { Neu3DWidget } from "../neu3d-widget";
-import { IDataChangeArgs, Neu3DModel } from "../neu3d-widget/model";
+ * Connectivity table that uses tabulator class to render connectivity data object
+ */
+import '@fortawesome/fontawesome-free/js/all.js';
+import Tabulator from 'tabulator-tables';
+import 'tabulator-tables/dist/css/tabulator.min.css'; //import Tabulator stylesheet
+import { Neu3DWidget } from '../neu3d-widget';
+import { IDataChangeArgs, Neu3DModel } from '../neu3d-widget/model';
 
 export class ConnTable {
   constructor(props: {
@@ -19,33 +19,33 @@ export class ConnTable {
     this.neu3d = props.neu3d;
     //instantiate Tabulator when element is mounted
     this.tabulator = new Tabulator(props.container, {
-      reactiveData:true,
+      reactiveData: true,
       data: this.data, //link data to table
       columns: this.columns, //define table columns
       tooltips: true,
-      pagination: "local",
+      pagination: 'local',
       paginationSize: 8,
       // page: 3,
-      initialSort: [{ column: "number", dir: "desc" }],
-      layout: "fitColumns",
-      cellMouseOver: (e: any, cell:any) => {
+      initialSort: [{ column: 'number', dir: 'desc' }],
+      layout: 'fitColumns',
+      cellMouseOver: (e: any, cell: any) => {
         const { rid, syn_rid } = cell.getData();
         switch (cell.getColumn().getField()) {
           case 'synapse_in_workspace':
-            if (this.neu3d?.isInWorkspace(syn_rid)){
+            if (this.neu3d?.isInWorkspace(syn_rid)) {
               this.neu3d.neu3d.highlight(syn_rid);
             }
             break;
           default:
-            if (this.neu3d?.isInWorkspace(rid)){
+            if (this.neu3d?.isInWorkspace(rid)) {
               this.neu3d.neu3d.highlight(rid);
             }
             break;
         }
       },
-      rowMouseOut: (e: any, row:any) =>{
+      rowMouseOut: (e: any, row: any) => {
         // reset highlight
-        this.neu3d.neu3d.highlight()
+        this.neu3d.neu3d.highlight();
       }
     });
     if (!this.hasSynMorph(this.data)) {
@@ -58,19 +58,23 @@ export class ConnTable {
    * Parse Connectivity Data
    * @param connData connectivity data
    */
-  private parseConnData(connData: IConnData, neu3d: Neu3DWidget): IConnDataItem[] {
-    let new_data: IConnDataItem[] = [];
-    if (connData == undefined) {
+  private parseConnData(
+    connData: IConnData,
+    neu3d: Neu3DWidget
+  ): IConnDataItem[] {
+    const new_data: IConnDataItem[] = [];
+    if (connData === undefined || connData === null) {
       return new_data;
     }
-    if (!(this.preOrPost in connData)){ // no pre or post partners
+    if (!(this.preOrPost in connData)) {
+      // no pre or post partners
       return new_data;
     }
     if (!('details' in connData[this.preOrPost])) {
       return new_data;
     }
-    for (let item of connData[this.preOrPost]["details"]) {
-      let neuron_data: IConnDataItem = {
+    for (const item of connData[this.preOrPost]['details']) {
+      const neuron_data: IConnDataItem = {
         name: item.name ?? item.name ?? item.rid,
         uname: item.uname ?? item.name ?? item.rid,
         syn_uname: item.syn_uname,
@@ -81,8 +85,8 @@ export class ConnTable {
         syn_rid: item.syn_rid,
         s_rid: item.s_rid,
         synapse_in_workspace: neu3d.isInWorkspace(item.syn_rid),
-        has_syn_morph: item.has_syn_morph  == 1,
-        has_morph: item.has_morph == 1
+        has_syn_morph: item.has_syn_morph in [1, true],
+        has_morph: item.has_morph in [1, true]
       };
       new_data.push(neuron_data);
     }
@@ -90,16 +94,16 @@ export class ConnTable {
   }
 
   /**
-   * Set Data 
-   * @param data 
+   * Set Data
+   * @param data
    */
-  setData(connData: IConnData, neu3d: Neu3DWidget) {
+  setData(connData: IConnData, neu3d: Neu3DWidget): void {
     this.data = this.parseConnData(connData, neu3d);
     this.tabulator.setData(this.data);
     this.setNeu3D(neu3d);
     if (!this.hasSynMorph(this.data)) {
       this.tabulator.hideColumn('synapse_in_workspace');
-    } else{
+    } else {
       this.tabulator.showColumn('synapse_in_workspace');
     }
   }
@@ -108,10 +112,12 @@ export class ConnTable {
    * Set Neu3D's Callback
    * @param neu3d New Neu3DWidget
    */
-  setNeu3D(neu3d: Neu3DWidget) {
+  setNeu3D(neu3d: Neu3DWidget): void {
     if (neu3d !== this.neu3d) {
       // change dataChanged callback
-      this.neu3d?.model?.dataChanged.disconnect(this.handleDataChanged.bind(this));
+      this.neu3d?.model?.dataChanged.disconnect(
+        this.handleDataChanged.bind(this)
+      );
       neu3d?.model?.dataChanged.connect(this.handleDataChanged.bind(this));
       this.neu3d = neu3d;
     }
@@ -120,16 +126,24 @@ export class ConnTable {
   /**
    * Handle Neu3D Data Changed
    */
-  handleDataChanged(caller: Neu3DModel, change: IDataChangeArgs) {
+  handleDataChanged(caller: Neu3DModel, change: IDataChangeArgs): void {
     const { event, key, rid } = change as IDataChangeArgs;
-    if (!(['add', 'remove'].includes(event))) { return; }
-    if (key === 'highlight') { return; }  // skip highlight
-    let neuronIdx = this.data.findIndex((row: IConnDataItem) => row.rid === rid);
-    let synapseIdx = this.data.findIndex((row: IConnDataItem) => row.syn_rid === rid);
-    
+    if (!['add', 'remove'].includes(event)) {
+      return;
+    }
+    if (key === 'highlight') {
+      return;
+    } // skip highlight
+    const neuronIdx = this.data.findIndex(
+      (row: IConnDataItem) => row.rid === rid
+    );
+    const synapseIdx = this.data.findIndex(
+      (row: IConnDataItem) => row.syn_rid === rid
+    );
+
     switch (event) {
       case 'add':
-        if (neuronIdx > -1){
+        if (neuronIdx > -1) {
           this.data[neuronIdx].neuron_in_workspace = true;
         }
         if (synapseIdx > -1) {
@@ -137,7 +151,7 @@ export class ConnTable {
         }
         break;
       case 'remove':
-        if (neuronIdx > -1){
+        if (neuronIdx > -1) {
           this.data[neuronIdx].neuron_in_workspace = false;
         }
         if (synapseIdx > -1) {
@@ -151,12 +165,12 @@ export class ConnTable {
 
   /**
    * Check an array of whether if a connection has morphology data of the synapses
-   * @param connData 
+   * @param connData
    */
-  hasSynMorph(connData: Array<any>) {
-    for (let entry of connData) {
+  hasSynMorph(connData: Array<any>): boolean {
+    for (const entry of connData) {
       if (entry.has_syn_morph) {
-        return true
+        return true;
       }
     }
     return false;
@@ -165,9 +179,9 @@ export class ConnTable {
   /**
    * Remove the synapse colummn if no synapse morphology
    */
-  hideSynColumn(){
-    let column = this.tabulator.getColumn("synapse_in_workspace");
-    if (column.isVisible()){
+  hideSynColumn(): void {
+    const column = this.tabulator.getColumn('synapse_in_workspace');
+    if (column.isVisible()) {
       column.hide();
     }
   }
@@ -175,29 +189,29 @@ export class ConnTable {
   /**
    * Add the synapse colummn if has synapse morphology
    */
-  showSynColumn(){
-    let column = this.tabulator.getColumn("synapse_in_workspace");
-    if (!column.isVisible()){
+  showSynColumn(): void {
+    const column = this.tabulator.getColumn('synapse_in_workspace');
+    if (!column.isVisible()) {
       column.show();
     }
   }
-
 
   /**
    * Schema for all columns.
    */
   readonly columns = [
     {
-      title: "Neuron",
-      field: "neuron_in_workspace",
-      hozAlign: "center",
+      title: 'Neuron',
+      field: 'neuron_in_workspace',
+      hozAlign: 'center',
       headerFilter: false,
-      headerSort:true,
+      headerSort: true,
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
-        let { n_rid, rid } = cell.getData();
-        if (!this.neu3d?.isInWorkspace(rid)) { // not in workspace
+        const { n_rid, rid } = cell.getData();
+        if (!this.neu3d?.isInWorkspace(rid)) {
+          // not in workspace
           this.neu3d?.addByRid(n_rid);
         } else {
           this.neu3d?.removeByRid(n_rid);
@@ -205,15 +219,16 @@ export class ConnTable {
       }
     },
     {
-      title: "Synapse",
-      field: "synapse_in_workspace",
-      hozAlign: "center",
-      headerSort:true,
+      title: 'Synapse',
+      field: 'synapse_in_workspace',
+      hozAlign: 'center',
+      headerSort: true,
       width: 55,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
-        let { s_rid, syn_rid } = cell.getData();
-        if (!this.neu3d?.isInWorkspace(syn_rid)) { // not in workspace
+        const { s_rid, syn_rid } = cell.getData();
+        if (!this.neu3d?.isInWorkspace(syn_rid)) {
+          // not in workspace
           this.neu3d?.addByRid(s_rid);
         } else {
           this.neu3d?.removeByRid(s_rid);
@@ -221,21 +236,21 @@ export class ConnTable {
       }
     },
     {
-      title: "Name",
-      field: "uname",
-      hozAlign: "center",
-      sorter:"alphanum",
+      title: 'Name',
+      field: 'uname',
+      hozAlign: 'center',
+      sorter: 'alphanum',
       headerFilter: true,
-      headerFilterPlaceholder: "filter name"
+      headerFilterPlaceholder: 'filter name'
     },
     {
-      title: "Number",
-      field: "number",
-      hozAlign: "center",
-      sorter:"number",
-      headerFilter: "number",
-      headerFilterPlaceholder: ">=",
-      headerFilterFunc: ">=",
+      title: 'Number',
+      field: 'number',
+      hozAlign: 'center',
+      sorter: 'number',
+      headerFilter: 'number',
+      headerFilterPlaceholder: '>=',
+      headerFilterFunc: '>=',
       width: 55
     }
   ];
@@ -250,20 +265,19 @@ export class ConnTable {
  * Element of Data in Tabulator
  */
 export interface IConnDataItem {
-  name: string,
-  uname: string,
-  syn_uname: string,
-  number: Number,
-  rid: string,   // neuron morphologyData node id
-  n_rid: string, // neuron node id
-  neuron_in_workspace: Boolean,
-  syn_rid: string, // synapse morphologyData node id
-  s_rid: string, // synapse node id
-  synapse_in_workspace: Boolean,
-  has_syn_morph: Boolean,
-  has_morph: Boolean
+  name: string;
+  uname: string;
+  syn_uname: string;
+  number: number;
+  rid: string; // neuron morphologyData node id
+  n_rid: string; // neuron node id
+  neuron_in_workspace: boolean;
+  syn_rid: string; // synapse morphologyData node id
+  s_rid: string; // synapse node id
+  synapse_in_workspace: boolean;
+  has_syn_morph: boolean;
+  has_morph: boolean;
 }
-
 
 /**
  * Conn Data sent by Neu3D Widget
@@ -272,23 +286,23 @@ export interface IConnData {
   pre?: {
     details?: Array<any>;
     summary?: {
-      profile?: object | any;
+      profile?: Record<string, unknown> | any;
       number?: number | any;
-    }
-  },
+    };
+  };
   post?: {
     details?: Array<any>;
     summary?: {
-      profile?: object | any;
+      profile?: Record<string, unknown> | any;
       number?: number | any;
-    }
-  }
+    };
+  };
 }
 
 /**
  * Fill Empty Connectivity Data
  */
 export const EmptyConnData: IConnData = {
-  pre: {details: [], summary: {profile: {}, number: 0}},
-  post: {details: [], summary: {profile: {}, number: 0}}
-}
+  pre: { details: [], summary: { profile: {}, number: 0 } },
+  post: { details: [], summary: { profile: {}, number: 0 } }
+};

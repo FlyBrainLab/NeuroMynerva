@@ -19,8 +19,8 @@ import {
   Dialog,
   SessionContext
 } from '@jupyterlab/apputils';
-import{ Kernel, Session } from '@jupyterlab/services';
-import { LabIcon } from '@jupyterlab/ui-components'
+import { Kernel, Session } from '@jupyterlab/services';
+import { LabIcon } from '@jupyterlab/ui-components';
 import { Widget } from '@lumino/widgets';
 import { INotification } from 'jupyterlab_toastify';
 import {
@@ -30,7 +30,13 @@ import {
 import { CodeCell, CodeCellModel } from '@jupyterlab/cells';
 
 // components from widgets
-import { fblIcon, neu3DIcon, neuGFXIcon, neuInfoIcon, masterIcon } from './icons';
+import {
+  fblIcon,
+  neu3DIcon,
+  neuGFXIcon,
+  neuInfoIcon,
+  masterIcon
+} from './icons';
 import { FFBOProcessor } from './ffboprocessor';
 import { MasterWidget } from './widgets/master-widget/index';
 import { IFBLWidget } from './widgets/template-widget/index';
@@ -61,6 +67,7 @@ const NEUGFXICON = neuGFXIcon;
  */
 export const SUPPORTED_FBLCLIENT_VERSION = '1.1.0';
 
+/* eslint-disable */
 declare global {
   interface Window {
     fbltrackers: any;
@@ -69,6 +76,7 @@ declare global {
     info: any;
   }
 }
+/* eslint-enable */
 
 export type FBLPanel = MainAreaWidget<IFBLWidget | Neu3DWidget | NeuGFXWidget>;
 export type IFBLTracker = IWidgetTracker<FBLPanel>;
@@ -76,10 +84,14 @@ export type FBLTracker = WidgetTracker<FBLPanel>;
 
 export interface IFBLWidgetTrackers {
   add(name: string, tracker: FBLTracker): void;
-  trackers:  {[name: string]: FBLTracker};
-  sessionsDict: {[sessionPath: string]: FBLPanel[] };
+  trackers: { [name: string]: FBLTracker };
+  sessionsDict: { [sessionPath: string]: FBLPanel[] };
   sessions: Session.ISessionConnection[];
-  addWidget(widget: MainAreaWidget<IFBLWidget>, ModuleName: string, status: ILabStatus): Promise<any>;
+  addWidget(
+    widget: MainAreaWidget<IFBLWidget>,
+    ModuleName: string,
+    status: ILabStatus
+  ): Promise<any>;
   saveState(): void;
   totalSize: number;
 }
@@ -97,10 +109,10 @@ export const IFBLWidgetTrackers = new Token<IFBLWidgetTrackers>(
  * Class for maintaining a list of FBLWidgetTrackers
  */
 export class FBLWidgetTrackers implements IFBLWidgetTrackers {
-  constructor(trackers?: {[name: string]: FBLTracker}){
-    if (trackers){
+  constructor(trackers?: { [name: string]: FBLTracker }) {
+    if (trackers) {
       this.trackers = trackers;
-    }else{
+    } else {
       this.trackers = {};
     }
   }
@@ -109,12 +121,16 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
    * @param tracker
    */
   add(name: string, tracker: FBLTracker): void {
-    if (!(name in this.trackers)){
+    if (!(name in this.trackers)) {
       this.trackers[name] = tracker;
     }
   }
 
-  addWidget(panel: MainAreaWidget<IFBLWidget>, ModuleName: string, status: ILabStatus): Promise<any> {
+  addWidget(
+    panel: MainAreaWidget<IFBLWidget>,
+    ModuleName: string,
+    status: ILabStatus
+  ): Promise<any> {
     if (!(ModuleName in this.trackers)) {
       console.warn(`[FBL Extension] Tracker ${ModuleName} not found`);
       return Promise.resolve(null);
@@ -129,7 +145,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
         if (!disposable) {
           disposable = status.setDirty();
         }
-        if (!(panel.title.className.includes(DIRTY_CLASS))) {
+        if (!panel.title.className.includes(DIRTY_CLASS)) {
           panel.title.className += ` ${DIRTY_CLASS}`;
         }
       } else {
@@ -147,7 +163,7 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
         disposable.dispose();
         disposable = null;
       }
-    })
+    });
 
     return this.trackers[ModuleName].add(panel);
   }
@@ -155,15 +171,17 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
   /**
    * Return alternate view of the trackers, keyed by session
    */
-  get sessionsDict(): {[sessionPath: string]: FBLPanel[] } {
-    let sessionsDict: {[sessionPath: string]: FBLPanel[] } = {};
-    for (const t of Object.values(this.trackers)){
-      t.forEach((panel)=>{
+  get sessionsDict(): { [sessionPath: string]: FBLPanel[] } {
+    const sessionsDict: { [sessionPath: string]: FBLPanel[] } = {};
+    for (const t of Object.values(this.trackers)) {
+      t.forEach(panel => {
         const widget = panel.content;
-        if (widget.sessionContext?.session){
-          if (!widget.sessionContext.isDisposed){
+        if (widget.sessionContext?.session) {
+          if (!widget.sessionContext.isDisposed) {
             if (!(widget.sessionContext.session.path in sessionsDict)) {
-              sessionsDict[widget.sessionContext.session.path] = new Array<FBLPanel>();
+              sessionsDict[
+                widget.sessionContext.session.path
+              ] = new Array<FBLPanel>();
             }
             sessionsDict[widget.sessionContext.session.path].push(panel);
           }
@@ -178,15 +196,15 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
    */
   get sessions(): Session.ISessionConnection[] {
     const sessions: Session.ISessionConnection[] = [];
-    for (const t of Object.values(this.trackers)){
-      t.forEach((panel)=>{
+    for (const t of Object.values(this.trackers)) {
+      t.forEach(panel => {
         const widget = panel.content;
-        if (widget.sessionContext?.session){
-          if (!widget.sessionContext.isDisposed){
+        if (widget.sessionContext?.session) {
+          if (!widget.sessionContext.isDisposed) {
             sessions.push(widget.sessionContext.session);
           }
         }
-      })
+      });
     }
     return Array.from(new Set(sessions));
   }
@@ -195,11 +213,11 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
    * Save the state of all the widgets
    */
   saveState(): void {
-    for (let key of Object.keys(this.trackers)) {
-      this.trackers[key].forEach((p) => {
+    for (const key of Object.keys(this.trackers)) {
+      this.trackers[key].forEach(p => {
         this.trackers[key].save(p);
         p.content.setDirty(false);
-      })
+      });
     }
   }
 
@@ -207,14 +225,14 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
    * Return total number of widgets in the ftracker
    */
   get totalSize(): number {
-    let size: number = 0;
-    for (let key of Object.keys(this.trackers)) {
+    let size = 0;
+    for (const key of Object.keys(this.trackers)) {
       size += this.trackers[key].size;
     }
     return size;
   }
 
-  trackers: {[name: string]: FBLTracker};
+  trackers: { [name: string]: FBLTracker };
 }
 
 /**
@@ -232,7 +250,6 @@ namespace CommandIDs {
   export const SaveNeu3DState = 'fbl-neu3d:save-state';
   export const SaveNeuGFXState = 'fbl-neugfx:save-state';
   export const SaveAllState = 'fbl:save-state';
-
 }
 
 /**
@@ -241,7 +258,14 @@ namespace CommandIDs {
 const extension: JupyterFrontEndPlugin<IFBLWidgetTrackers> = {
   id: '@flybrainlab/neuromynerva:plugin',
   autoStart: true,
-  requires: [ICommandPalette, ILauncher, ILayoutRestorer, ISettingRegistry, ILabStatus, ILabShell],
+  requires: [
+    ICommandPalette,
+    ILauncher,
+    ILayoutRestorer,
+    ISettingRegistry,
+    ILabStatus,
+    ILabShell
+  ],
   provides: IFBLWidgetTrackers,
   activate: activateFBL
 };
@@ -260,10 +284,15 @@ async function activateFBL(
   status: ILabStatus,
   labShell: ILabShell
 ): Promise<IFBLWidgetTrackers> {
+  console.debug('NeuroMynerva Extension Activated!');
   const fblWidgetTrackers = new FBLWidgetTrackers({
-    "Neu3D": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neu3d'}),
-    "NeuGFX": new WidgetTracker<MainAreaWidget<IFBLWidget>>({namespace: 'fbl-neugfx'})
-  })
+    Neu3D: new WidgetTracker<MainAreaWidget<IFBLWidget>>({
+      namespace: 'fbl-neu3d'
+    }),
+    NeuGFX: new WidgetTracker<MainAreaWidget<IFBLWidget>>({
+      namespace: 'fbl-neugfx'
+    })
+  });
 
   const { commands } = app;
 
@@ -279,7 +308,8 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
-        ffboProcessors: widget.content.ffboProcessors as unknown as ReadonlyPartialJSONObject,
+        ffboProcessors: (widget.content
+          .ffboProcessors as unknown) as ReadonlyPartialJSONObject,
         processor: widget.content.processor,
         clientId: widget.content.clientId,
         id: widget.content.id,
@@ -324,7 +354,6 @@ async function activateFBL(
   // all available processor settings
   let ffboProcessorSetting: ISettingRegistry.ISettings = undefined;
 
-
   // Wait for the application to be restored and
   // for the settings for this plugin to be loaded
   Promise.all([app.restored, settings.load(extension.id)])
@@ -332,7 +361,7 @@ async function activateFBL(
       // Read the settings
       ffboProcessorSetting = setting;
 
-      if (masterWidget === undefined){
+      if (masterWidget === undefined) {
         masterWidget = new MasterWidget(
           app.serviceManager.sessions,
           labShell,
@@ -342,31 +371,31 @@ async function activateFBL(
         masterWidget.id = 'FBL-Master';
         masterWidget.title.caption = 'FBL Widgets and Running Sessions';
         masterWidget.title.icon = masterIcon;
-            // add to last
+        // add to last
         if (restorer) {
           restorer.add(masterWidget, 'FBL-Master');
         }
-        app.shell.add(masterWidget, 'left', {rank: 1900});
+        app.shell.add(masterWidget, 'left', { rank: 1900 });
         window.master = masterWidget;
       } else {
         masterWidget.ffboProcessorSetting = ffboProcessorSetting;
       }
 
       let _settings = FBL.getProcessors(setting);
-      fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
-        w.content.ffboProcessors = _settings
-      });
-      fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
+      fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel) => {
         w.content.ffboProcessors = _settings;
-      })
+      });
+      fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel) => {
+        w.content.ffboProcessors = _settings;
+      });
 
       // Listen for your plugin setting changes using Signal
-      setting.changed.connect((setting)=>{
+      setting.changed.connect(setting => {
         _settings = FBL.getProcessors(setting);
-        fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel)=>{
+        fblWidgetTrackers.trackers.Neu3D.forEach((w: FBLPanel) => {
           w.content.ffboProcessors = _settings;
         });
-        fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel)=>{
+        fblWidgetTrackers.trackers.NeuGFX.forEach((w: FBLPanel) => {
           w.content.ffboProcessors = _settings;
         });
         masterWidget.ffboProcessorSetting = ffboProcessorSetting;
@@ -379,13 +408,18 @@ async function activateFBL(
     });
 
   // Ensure that the widgets' are aware of all processor settings when added
-  fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
-  }, extension);
-  fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect((tracker:FBLTracker, w:FBLPanel)=>{
-    w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
-  }, extension);
-
+  fblWidgetTrackers.trackers.Neu3D.widgetAdded.connect(
+    (tracker: FBLTracker, w: FBLPanel) => {
+      w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
+    },
+    extension
+  );
+  fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect(
+    (tracker: FBLTracker, w: FBLPanel) => {
+      w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
+    },
+    extension
+  );
 
   // add info panel
   infoWidget = new InfoWidget();
@@ -396,7 +430,7 @@ async function activateFBL(
   if (restorer) {
     restorer.add(infoWidget, 'FBL-Info');
   }
-  app.shell.add(infoWidget, 'left', {rank: 2000});
+  app.shell.add(infoWidget, 'left', { rank: 2000 });
   window.info = infoWidget;
 
   // Check FBLClient is installed and version matches
@@ -411,7 +445,9 @@ async function activateFBL(
   FBL.checkFBLClientAndVersions(app, version_check_toast_id);
 
   // Get the current widget of a given widget type and activate unless the args specify otherwise.
-  function getCurrent(args: ReadonlyPartialJSONObject): MainAreaWidget<IFBLWidget> | null {
+  function getCurrent(
+    args: ReadonlyPartialJSONObject
+  ): MainAreaWidget<IFBLWidget> | null {
     let widget = undefined;
     switch (args['widget']) {
       case 'neu3d':
@@ -420,8 +456,9 @@ async function activateFBL(
       case 'neugfx':
         widget = fblWidgetTrackers.trackers.NeuGFX.currentWidget;
         break;
-      default: // not understood
-        console.warn(`Cannot getCurrent widget of type ${args['widget']}.`)
+      default:
+        // not understood
+        console.warn(`Cannot getCurrent widget of type ${args['widget']}.`);
         return widget;
     }
     const activate = args['activate'] !== false;
@@ -434,14 +471,14 @@ async function activateFBL(
   commands.addCommand(CommandIDs.Neu3DCreate, {
     label: 'Create Neu3D Instance',
     icon: NEU3DICON,
-    execute: async (args) => {
+    execute: async args => {
       await FBL.createFBLWidget({
-        app:app,
-        Module:Neu3DWidget,
-        icon:NEU3DICON,
-        moduleArgs:{
-          processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
-          info:infoWidget,
+        app: app,
+        Module: Neu3DWidget,
+        icon: NEU3DICON,
+        moduleArgs: {
+          processor: (args.processor as string) ?? FFBOProcessor.NO_PROCESSOR,
+          info: infoWidget,
           ...args
         },
         fbltracker: fblWidgetTrackers,
@@ -453,14 +490,14 @@ async function activateFBL(
   commands.addCommand(CommandIDs.Neu3DOpen, {
     label: 'Open Neu3D Instance',
     icon: NEU3DICON,
-    execute: async (args) => {
+    execute: async args => {
       await FBL.createFBLWidget({
-        app:app,
-        Module:Neu3DWidget,
-        icon:NEU3DICON,
+        app: app,
+        Module: Neu3DWidget,
+        icon: NEU3DICON,
         moduleArgs: {
-          processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
-          info:infoWidget,
+          processor: (args.processor as string) ?? FFBOProcessor.NO_PROCESSOR,
+          info: infoWidget,
           ...args
         },
         fbltracker: fblWidgetTrackers,
@@ -473,40 +510,38 @@ async function activateFBL(
   commands.addCommand(CommandIDs.NeuGFXCreate, {
     label: 'Create NeuGFX Instance',
     icon: NEUGFXICON,
-    execute: async (args) => {
-      await FBL.createFBLWidget(
-        {
-          app:app,
-          Module:NeuGFXWidget,
-          icon:NEUGFXICON,
-          moduleArgs:{
-            processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
-            ...args
-          },
-          fbltracker: fblWidgetTrackers,
-          ModuleName: 'NeuGFX',
-          status: status
-        });
+    execute: async args => {
+      await FBL.createFBLWidget({
+        app: app,
+        Module: NeuGFXWidget,
+        icon: NEUGFXICON,
+        moduleArgs: {
+          processor: (args.processor as string) ?? FFBOProcessor.NO_PROCESSOR,
+          ...args
+        },
+        fbltracker: fblWidgetTrackers,
+        ModuleName: 'NeuGFX',
+        status: status
+      });
     }
   });
 
   commands.addCommand(CommandIDs.NeuGFXOpen, {
     label: 'Open Existing NeuGFX Instance',
     icon: NEUGFXICON,
-    execute: async (args) => {
-      await FBL.createFBLWidget(
-        {
-          app:app,
-          Module:NeuGFXWidget,
-          icon:NEUGFXICON,
-          moduleArgs:{
-            processor: args.processor as string ?? FFBOProcessor.NO_PROCESSOR,
-            ...args
-          },
-          fbltracker: fblWidgetTrackers,
-          ModuleName: 'NeuGFX',
-          status: status
-        });
+    execute: async args => {
+      await FBL.createFBLWidget({
+        app: app,
+        Module: NeuGFXWidget,
+        icon: NEUGFXICON,
+        moduleArgs: {
+          processor: (args.processor as string) ?? FFBOProcessor.NO_PROCESSOR,
+          ...args
+        },
+        fbltracker: fblWidgetTrackers,
+        ModuleName: 'NeuGFX',
+        status: status
+      });
     }
   });
 
@@ -514,27 +549,34 @@ async function activateFBL(
     label: 'Create Console for Neu3D Widget',
     icon: NEU3DICON,
     execute: args => {
-      const current = getCurrent({ ...args, widget:'neu3d', activate:false});
-      if (!current) { return; }
+      const current = getCurrent({ ...args, widget: 'neu3d', activate: false });
+      if (!current) {
+        return;
+      }
       FBL.createConsole(app, current, args);
     },
-    isEnabled: ()=>{
-      const current = getCurrent({widget:'neu3d', activate: false});
+    isEnabled: () => {
+      const current = getCurrent({ widget: 'neu3d', activate: false });
       return FBL.hasRunningSession(current);
     }
   });
-
 
   commands.addCommand(CommandIDs.NeuGFXCreateConsole, {
     label: 'Create Console for NeuGFX Widget',
     icon: NEUGFXICON,
     execute: args => {
-      const current = getCurrent({ ...args, widget:'neugfx', activate:false});
-      if (!current) { return; }
+      const current = getCurrent({
+        ...args,
+        widget: 'neugfx',
+        activate: false
+      });
+      if (!current) {
+        return;
+      }
       FBL.createConsole(app, current, args);
     },
-    isEnabled: ()=>{
-      const current = getCurrent({widget:'neu3d', activate: false});
+    isEnabled: () => {
+      const current = getCurrent({ widget: 'neu3d', activate: false });
       return FBL.hasRunningSession(current);
     }
   });
@@ -543,73 +585,71 @@ async function activateFBL(
   commands.addCommand(CommandIDs.CreateWorkspace, {
     label: 'Create FBL Workspace',
     icon: fblIcon,
-    execute: async (args) => {
+    execute: async args => {
       let processor: string = FFBOProcessor.NO_PROCESSOR;
-      let abort: boolean = false;
+      let abort = false;
       await showDialog({
         title: 'Change Processor',
         body: new FBL.ProcessorSelector(ffboProcessorSetting),
         buttons: [
           Dialog.cancelButton(),
-          Dialog.warnButton({label: FFBOProcessor.NO_PROCESSOR}),
-          Dialog.okButton({label: 'Select'})
+          Dialog.warnButton({ label: FFBOProcessor.NO_PROCESSOR }),
+          Dialog.okButton({ label: 'Select' })
         ]
-      }).then(result =>{
-        if (result.button.accept){
-          if (result.button.displayType === 'warn'){
+      }).then(result => {
+        if (result.button.accept) {
+          if (result.button.displayType === 'warn') {
             processor = FFBOProcessor.NO_PROCESSOR;
           } else {
             processor = result.value;
           }
-        } else{
+        } else {
           abort = true;
         }
       });
 
-      if (abort) { // cancel triggers abort
+      if (abort) {
+        // cancel triggers abort
         return;
       }
 
-      let notebook_panel = await commands.execute(
-        'notebook:create-new',
-        { kernelName: 'python3' }
-      )
+      const notebook_panel = await commands.execute('notebook:create-new', {
+        kernelName: 'python3'
+      });
 
       // 2. create neu3d
-      let neu3d_panel = await FBL.createFBLWidget(
-        {
-          app: app,
-          Module:Neu3DWidget,
-          icon:NEU3DICON,
-          moduleArgs: {
-            info: infoWidget,
-            processor: processor,
-            sessionContext: notebook_panel.sessionContext,
-            ...args
-          },
-          fbltracker: fblWidgetTrackers,
-          ModuleName: 'Neu3D',
-          status: status,
-          add_widget_options:{ref: notebook_panel.id, mode: 'split-left'}
-        });
+      const neu3d_panel = await FBL.createFBLWidget({
+        app: app,
+        Module: Neu3DWidget,
+        icon: NEU3DICON,
+        moduleArgs: {
+          info: infoWidget,
+          processor: processor,
+          sessionContext: notebook_panel.sessionContext,
+          ...args
+        },
+        fbltracker: fblWidgetTrackers,
+        ModuleName: 'Neu3D',
+        status: status,
+        add_widget_options: { ref: notebook_panel.id, mode: 'split-left' }
+      });
 
       // 2. create neugfx with the same client id
-      await FBL.createFBLWidget(
-        {
-          app: app,
-          Module:NeuGFXWidget,
-          icon:NEUGFXICON,
-          moduleArgs: {
-            clientId: neu3d_panel.content.clientId,
-            processor: processor,
-            sessionContext: notebook_panel.sessionContext,
-            ...args
-          },
-          fbltracker: fblWidgetTrackers,
-          ModuleName: 'NeuGFX',
-          status: status,
-          add_widget_options:{ref: neu3d_panel.id, mode: 'split-bottom'}
-        });
+      await FBL.createFBLWidget({
+        app: app,
+        Module: NeuGFXWidget,
+        icon: NEUGFXICON,
+        moduleArgs: {
+          clientId: neu3d_panel.content.clientId,
+          processor: processor,
+          sessionContext: notebook_panel.sessionContext,
+          ...args
+        },
+        fbltracker: fblWidgetTrackers,
+        ModuleName: 'NeuGFX',
+        status: status,
+        add_widget_options: { ref: neu3d_panel.id, mode: 'split-bottom' }
+      });
     }
   });
 
@@ -617,8 +657,10 @@ async function activateFBL(
     label: 'Save the State of a Neu3D Widget For Restoration',
     icon: NEU3DICON,
     execute: args => {
-      const current = getCurrent({ ...args, widget:'neu3d', activate:false});
-      if (!current) { return; }
+      const current = getCurrent({ ...args, widget: 'neu3d', activate: false });
+      if (!current) {
+        return;
+      }
       fblWidgetTrackers.trackers['Neu3D'].save(current);
       current.content.setDirty(false);
     },
@@ -635,13 +677,19 @@ async function activateFBL(
     label: 'Save the State of a NeuGFX Widget For Restoration',
     icon: NEUGFXICON,
     execute: args => {
-      const current = getCurrent({ ...args, widget:'neugfx', activate:false});
-      if (!current) { return; }
+      const current = getCurrent({
+        ...args,
+        widget: 'neugfx',
+        activate: false
+      });
+      if (!current) {
+        return;
+      }
       fblWidgetTrackers.trackers['NeuGFX'].save(current);
       current.content.setDirty(false);
     },
     isEnabled: () => {
-      const current = getCurrent({widget:'neugfx', activate: false});
+      const current = getCurrent({ widget: 'neugfx', activate: false });
       if (current?.content?.isDirty) {
         return true;
       }
@@ -661,7 +709,7 @@ async function activateFBL(
   });
 
   // Add the widget to launcher
-  if (launcher){
+  if (launcher) {
     launcher.add({
       command: CommandIDs.CreateWorkspace,
       category: 'FlyBrainLab',
@@ -677,7 +725,6 @@ async function activateFBL(
       category: 'FlyBrainLab',
       rank: 0
     });
-
   }
 
   /**
@@ -705,7 +752,6 @@ async function activateFBL(
     selector: NEUGFX_CLASS_NAME,
     rank: Infinity
   });
-
 
   /**
    * Add keyboard shortcuts to save the widget states.
@@ -741,26 +787,28 @@ async function activateFBL(
     CommandIDs.SaveNeu3DState,
     CommandIDs.SaveNeuGFXState,
     CommandIDs.SaveAllState
-  ].forEach(command=>{
-    palette.addItem({command, category: 'FlyBrainLab' });
-  })
+  ].forEach(command => {
+    palette.addItem({ command, category: 'FlyBrainLab' });
+  });
 
-  return Promise.resolve(
-    fblWidgetTrackers
-  );
+  return Promise.resolve(fblWidgetTrackers);
 }
 
 /**
  * FBL Namespace with helper functions
  */
 export namespace FBL {
-  export function getProcessors(setting?: ISettingRegistry.ISettings): FFBOProcessor.IProcessors {
+  export function getProcessors(
+    setting?: ISettingRegistry.ISettings
+  ): FFBOProcessor.IProcessors {
     if (!setting) {
       return {};
     }
-    return FFBOProcessor.arrToDict(setting.get('fbl-processors').composite as any as FFBOProcessor.ISettings[]);
+    return FFBOProcessor.arrToDict(
+      (setting.get('fbl-processors')
+        .composite as any) as FFBOProcessor.ISettings[]
+    );
   }
-
 
   /**
    * A widget that provides a processor selection.
@@ -772,21 +820,21 @@ export namespace FBL {
     constructor(setting: ISettingRegistry.ISettings) {
       const body = document.createElement('div');
       const text = document.createElement('label');
-      text.textContent = `Select processor for FBL Workspace`;
+      text.textContent = 'Select processor for FBL Workspace';
       body.appendChild(text);
 
       const selector = document.createElement('select');
 
-      let all_processors = Object.keys(FBL.getProcessors(setting));
+      const all_processors = Object.keys(FBL.getProcessors(setting));
       all_processors.push(FFBOProcessor.NO_PROCESSOR);
-      for (const name of all_processors){
+      for (const name of all_processors) {
         const option = document.createElement('option');
         option.text = name;
         option.value = name;
         selector.appendChild(option);
       }
       body.appendChild(selector);
-      super({node: body});
+      super({ node: body });
     }
 
     /**
@@ -798,18 +846,20 @@ export namespace FBL {
     }
   }
 
-
   /**
    * Check if a given widget has a running session
    * @param args
    */
-  export function hasRunningSession(widget: MainAreaWidget<IFBLWidget>): boolean {
-    if (!widget){
+  export function hasRunningSession(
+    widget: MainAreaWidget<IFBLWidget>
+  ): boolean {
+    if (!widget) {
       return false;
     }
-    try{
-      if (widget.content.sessionContext.isReady){
-        if (widget.content.sessionContext.session) { // check if has kenrel
+    try {
+      if (widget.content.sessionContext.isReady) {
+        if (widget.content.sessionContext.session) {
+          // check if has kenrel
           return true;
         }
       }
@@ -828,25 +878,25 @@ export namespace FBL {
    */
   export async function isFBLKernel(
     kernel: Kernel.IKernelConnection
-  ): Promise<string|null> {
+  ): Promise<string | null> {
     let targetCandidates = new Array<any>();
     // interrogate kernel as Kernel class
-    let msg = await kernel.requestCommInfo({});
-    if (!kernel.handleComms){
+    const msg = await kernel.requestCommInfo({});
+    if (!kernel.handleComms) {
       // force kernel to handleComms
       kernel.handleComms = true;
     }
-    if (msg.content && msg.content?.status == 'ok') {
-      for (let c of Object.values(msg.content.comms)) {
+    if (msg.content && msg.content?.status === 'ok') {
+      for (const c of Object.values(msg.content.comms)) {
         if (c.target_name.includes('FBL')) {
           targetCandidates.push(c.target_name);
-        };
+        }
       }
-    } else{
+    } else {
       return Promise.resolve(null);
     }
 
-    if (targetCandidates.length == 0) {
+    if (targetCandidates.length === 0) {
       return Promise.resolve(null);
     }
 
@@ -856,45 +906,55 @@ export namespace FBL {
   }
 
   export async function createFBLWidget(options: {
-    app: JupyterFrontEnd,
-    Module: any,
-    icon: LabIcon,
-    moduleArgs: Partial<FBLWidget.IOptions>,
-    fbltracker: FBLWidgetTrackers,
-    ModuleName: 'Neu3D' | 'NeuGFX' | string,
-    status: ILabStatus,
-    add_widget_options?: DocumentRegistry.IOpenOptions
-  }) : Promise<MainAreaWidget<IFBLWidget>> {
-    let widget: IFBLWidget;
+    app: JupyterFrontEnd;
+    Module: any;
+    icon: LabIcon;
+    moduleArgs: Partial<FBLWidget.IOptions>;
+    fbltracker: FBLWidgetTrackers;
+    ModuleName: 'Neu3D' | 'NeuGFX' | string;
+    status: ILabStatus;
+    add_widget_options?: DocumentRegistry.IOpenOptions;
+  }): Promise<MainAreaWidget<IFBLWidget>> {
     const {
-      app, Module, icon, moduleArgs, fbltracker, ModuleName, status, add_widget_options
+      app,
+      Module,
+      icon,
+      moduleArgs,
+      fbltracker,
+      ModuleName,
+      status,
+      add_widget_options
     } = options;
 
+    const sessionContext =
+      moduleArgs.sessionContext ??
+      fbltracker.trackers[ModuleName].currentWidget?.content?.sessionContext;
 
-    let sessionContext = moduleArgs.sessionContext ?? fbltracker.trackers[ModuleName].currentWidget?.content?.sessionContext;
-
-    if (sessionContext === undefined){
+    if (sessionContext === undefined) {
       moduleArgs['kernelPreference'] = {
         shouldStart: false,
         canStart: true,
         name: 'No Kernel'
-      }
+      };
     }
-    widget = new Module({
+    const widget = new Module({
       app: app,
       icon: icon,
       sessionContext: sessionContext,
-      ...moduleArgs,
+      ...moduleArgs
     });
 
-    let panel = new MainAreaWidget({ content: widget, toolbar: widget.toolbar });
+    const panel = new MainAreaWidget({
+      content: widget,
+      toolbar: widget.toolbar
+    });
     panel.node.classList.add(FBL_CLASS_NAME);
 
     if (!fbltracker.trackers[ModuleName].has(panel)) {
       await fbltracker.addWidget(panel, ModuleName, status);
       // await fbltracker.trackers[ModuleName].add(panel);
     }
-    widget.sessionContext.propertyChanged.connect(()=>{
+    widget.sessionContext.propertyChanged.connect(() => {
       void fbltracker.trackers[ModuleName].save(panel);
     });
 
@@ -912,18 +972,16 @@ export namespace FBL {
   }
 
   export function createConsole(
-    app:JupyterFrontEnd,
-    panel:MainAreaWidget<IFBLWidget>,
+    app: JupyterFrontEnd,
+    panel: MainAreaWidget<IFBLWidget>,
     args: any
-  ) {
-    app.commands.execute(
-      'console:create',
-      {
-        path: panel.content.sessionContext.path,
-        ref: panel.id,
-        insertMode: args['insertMode'] ?? 'split-right',
-        activate: args['activate'] as boolean
-      });
+  ): void {
+    app.commands.execute('console:create', {
+      path: panel.content.sessionContext.path,
+      ref: panel.id,
+      insertMode: args['insertMode'] ?? 'split-right',
+      activate: (args['activate'] as unknown) as boolean
+    });
   }
 
   /**
@@ -935,21 +993,29 @@ export namespace FBL {
     app: JupyterFrontEnd,
     toastProgressId?: string | number
   ): Promise<boolean> {
-
     // check fbl installed
     const client_check_code = `
 import flybrainlab as fbl
-    `
-    let clientRes = await executeCodeInCodeCell(app, client_check_code, null, false);
+    `;
+    const clientRes = await executeCodeInCodeCell(
+      app,
+      client_check_code,
+      null,
+      false
+    );
     const session = clientRes.session;
-    const clientBtns = [{
-      'label': 'Call Stack', callback: ()=> showDialog({
-        title: 'FBLClient Not Installed!',
-        body: clientRes.codeCell
-      })
-    }];
+    const clientBtns = [
+      {
+        label: 'Call Stack',
+        callback: () =>
+          showDialog({
+            title: 'FBLClient Not Installed!',
+            body: clientRes.codeCell
+          })
+      }
+    ];
     if (clientRes.executeReply.content.status !== 'ok') {
-      if (toastProgressId){
+      if (toastProgressId) {
         INotification.update({
           toastId: toastProgressId,
           message: 'FBLClient Not Installed!',
@@ -958,10 +1024,12 @@ import flybrainlab as fbl
           buttons: clientBtns
         });
       } else {
-        INotification.error('FBLClient Not Installed!',{ buttons: clientBtns });
+        INotification.error('FBLClient Not Installed!', {
+          buttons: clientBtns
+        });
       }
       app.serviceManager.sessions.shutdown(session.session.id);
-      session.dispose()
+      session.dispose();
       return Promise.resolve(false);
     } else {
       clientRes.codeCell.dispose();
@@ -971,9 +1039,12 @@ import flybrainlab as fbl
     const client_version_code = `
 import flybrainlab as fbl
 fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
-    `
-    let clientVersionRes = await executeCodeInCodeCell(
-      app, client_version_code, session, false
+    `;
+    const clientVersionRes = await executeCodeInCodeCell(
+      app,
+      client_version_code,
+      session,
+      false
     );
 
     if (clientVersionRes.executeReply.content.status === 'error') {
@@ -981,13 +1052,17 @@ fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
       FBLClient Version Check Failed!
       Error: ${clientVersionRes.executeReply.content.evalue}
       `;
-      const clientVersionBtns = [{
-        'label': 'Call Stack', callback: ()=> showDialog({
-          title: errMessage,
-          body: clientVersionRes.codeCell
-        })
-      }];
-      if (toastProgressId){
+      const clientVersionBtns = [
+        {
+          label: 'Call Stack',
+          callback: () =>
+            showDialog({
+              title: errMessage,
+              body: clientVersionRes.codeCell
+            })
+        }
+      ];
+      if (toastProgressId) {
         INotification.update({
           toastId: toastProgressId,
           message: errMessage,
@@ -996,7 +1071,7 @@ fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
           buttons: clientVersionBtns
         });
       } else {
-        INotification.error( errMessage, { buttons: clientVersionBtns } );
+        INotification.error(errMessage, { buttons: clientVersionBtns });
       }
       app.serviceManager.sessions.shutdown(session.session.id);
       session.dispose();
@@ -1009,15 +1084,18 @@ fbl.check_FBLClient_version('${SUPPORTED_FBLCLIENT_VERSION}')
     const client_update_code = `
 import flybrainlab as fbl
 fbl.check_for_update()
-    `
-    let clientUpdateRes = await executeCodeInCodeCell(
-      app, client_update_code, session, false
+    `;
+    const clientUpdateRes = await executeCodeInCodeCell(
+      app,
+      client_update_code,
+      session,
+      false
     );
     if (clientUpdateRes.executeReply.content.status === 'error') {
       const msg = clientUpdateRes.executeReply.content;
-      if (msg.ename === 'FlyBrainLabVersionUpgradeException'){
+      if (msg.ename === 'FlyBrainLabVersionUpgradeException') {
         const errMessage = clientUpdateRes.executeReply.content.evalue;
-        INotification.info(errMessage, {autoClose: null});
+        INotification.info(errMessage, { autoClose: null });
       }
     }
     clientUpdateRes.codeCell.dispose();
@@ -1026,23 +1104,29 @@ fbl.check_for_update()
     const NM_version_code = `
 import flybrainlab as fbl
 fbl.check_NeuroMynerva_version()
-    `
-    let NMVersionRes = await executeCodeInCodeCell(
-      app, NM_version_code, session, false
+    `;
+    const NMVersionRes = await executeCodeInCodeCell(
+      app,
+      NM_version_code,
+      session,
+      false
     );
-    if (NMVersionRes.executeReply.content.status  === 'error') {
-
+    if (NMVersionRes.executeReply.content.status === 'error') {
       const errMessage = `
       NeuroMynerva Version Check Failed!
       Error: ${NMVersionRes.executeReply.content.evalue}
       `;
-      const NMVersionBtns = [{
-        'label': 'Details', callback: ()=> showDialog({
-          title: errMessage,
-          body: NMVersionRes.codeCell
-        })
-      }];
-      if (toastProgressId){
+      const NMVersionBtns = [
+        {
+          label: 'Details',
+          callback: () =>
+            showDialog({
+              title: errMessage,
+              body: NMVersionRes.codeCell
+            })
+        }
+      ];
+      if (toastProgressId) {
         INotification.update({
           toastId: toastProgressId,
           message: errMessage,
@@ -1079,44 +1163,50 @@ fbl.check_NeuroMynerva_version()
    * @param app
    * @param code
    */
-  async function executeCodeInCodeCell(
+  export async function executeCodeInCodeCell(
     app: JupyterFrontEnd,
     code: string,
     sessionContext?: SessionContext,
-    closeSession=true
+    closeSession = true
   ): Promise<{
-    codeCell: CodeCell,
-    executeReply:any,
-    session: SessionContext
+    codeCell: CodeCell;
+    executeReply: any;
+    session: SessionContext;
   }> {
-    sessionContext = sessionContext ?? new SessionContext({
-      sessionManager: app.serviceManager.sessions,
-      specsManager: app.serviceManager.kernelspecs,
-      path: `NeuroMynerva-Version-Check`,
-      name: 'NeuroMnyerva-Version-Check',
-      type: 'console',
-      kernelPreference: {
-        shouldStart: true,
-        canStart: true,
-        name: 'python3'
-      }
-    });
+    sessionContext =
+      sessionContext ??
+      new SessionContext({
+        sessionManager: app.serviceManager.sessions,
+        specsManager: app.serviceManager.kernelspecs,
+        path: 'NeuroMynerva-Version-Check',
+        name: 'NeuroMnyerva-Version-Check',
+        type: 'console',
+        kernelPreference: {
+          shouldStart: true,
+          canStart: true,
+          name: 'python3'
+        }
+      });
 
     await sessionContext.initialize();
     const model = new CodeCellModel({});
     model.value.text = code;
     const rendermime = new RenderMimeRegistry({ initialFactories });
     const widget = new CodeCell({
-      model:model,
+      model: model,
       rendermime: rendermime
     });
     widget.readOnly = true;
-    widget.initializeState()
+    widget.initializeState();
     const executeReply = await CodeCell.execute(widget, sessionContext);
     if (closeSession) {
       app.serviceManager.sessions.shutdown(sessionContext.session.id);
       sessionContext.dispose();
     }
-    return {codeCell: widget, executeReply:executeReply, session: sessionContext};
+    return {
+      codeCell: widget,
+      executeReply: executeReply,
+      session: sessionContext
+    };
   }
 }
