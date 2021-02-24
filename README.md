@@ -1,6 +1,9 @@
 **[Get Started](#get-started)** |
-**[Installation](#installation)** |
-**[Develop](#develop-neuromynerva)** |
+**[Full FlyBrainLab Install](#full)** |
+**[Installation JupyterLab 3.x](#jlab3-install)** |
+**[Develop JupyterLab 3.x](#jlab3-develop)** |
+**[Installation JupyterLab 2.x](#jlab2)** |
+**[Develop JupyterLab 2.x](#jlab2-develop)** |
 **[Getting help](#getting-help)**
 
 # NeuroMynerva _v2_ - [FlyBrainLab](http://fbl.fruitflybrain.org/)'s JupyterLab Extension
@@ -12,8 +15,8 @@ NeuroMynerva V2 is currently in _alpha_, most main user-facing features have bee
 
 _Note:_ Following JupyterLab 3.0's new extension system, NeuroMynerva is now distributed
 on PyPI and can be installed using your python installer.
-
-Please follow installation instruction detailed in [Installation](#installation) section.
+Please follow installation instruction detailed in [Installation](#installation) section
+for details on how to install and/or develop NeuroMynerva.
 
 ### Using NeuroMynerva and FlyBrainLab
 The best way to get started with NeuroMynerva is to look at the instructions on the [FlyBrainLab's page](https://github.com/FlyBrainLab/FlyBrainLab) and the [Wiki](https://github.com/FlyBrainLab/FlyBrainLab/wiki) therein.
@@ -32,22 +35,30 @@ NeuroMynerva front-end currently includes 4 key components:
 NeuroMynerva has the following requirements:
 
 - Python Version 3.6+
-- JupyterLab >= 3.0
+- JupyterLab >= 2.2.0 or JupyterLab >= 3.0.0
+    * Jupyter Lab 2.x and 3.x have different installation instructions.
+    See the sections below ([Jlab 2.x](#jlab2), [Jlab 3.x](#jlab3))
 - Packages:
     * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git) and packages required therein,
-    * [FBLClient](https://github.com/FlyBrainLab/FBLClient.git) and packages required therein.
+    * [flybrainlab](https://pypi.org/project/flybrainlab/) and packages required therein.
 
-### Installation of Full FlyBrainLab Eco-System
-Up-to-date installation instructions for the whole FlyBrainLab ecosystem are available at https://github.com/FlyBrainLab/FlyBrainLab#readme.
+---
+### <a id="full"></a> 1. Installation of Full FlyBrainLab Eco-System
+Up-to-date installation instructions for the whole FlyBrainLab ecosystem
+(NeuroMynerva + FlyBrainLab User-side and Server-side Backends)
+are available at https://github.com/FlyBrainLab/FlyBrainLab#readme.
 
-### Installation of NeuroMynerva
-You either install NeuroMynerva directly from PyPI via command line as
+---
+### <a id="jlab3"></a> 2. Install/Develop/Uninstall on **JupyterLab 3.x**
+
+#### <a id="jlab3-install"></a> **Installation of NeuroMynerva**
+JupyterLab 3.x supports installing NeuroMynerva as a python pacakge.
+You can install NeuroMynerva directly from PyPI via command line as
 ```bash
 pip install flybrainlab  # required package for communicating with backend
-pip install neuromynerva
+pip install neuromynerva # and refresh browser afterwards
 ```
-
-### Develop NeuroMynerva
+#### <a id="jlab3-develop"></a> **Develop NeuroMynerva**
 We use [Anaconda](https://www.anaconda.com/) to manage development environment, you are encouraged to first create a Conda environment
 
 ```bash
@@ -119,9 +130,61 @@ By default, the `jlpm run build` command generates the source maps for this exte
 jupyter lab build --minimize=False
 ```
 
-### Uninstall
+#### **Uninstall**
 ```bash
 pip uninstall neuromynerva
+```
+
+---
+### <a id="jlab2"></a> 3. Install/Develop/Uninstall on **JupyterLab 3.x**
+#### <a id="jlab2-install"></a> **Installation of NeuroMynerva**
+JupyterLab 2.x requires installing NeuroMynerva as an NPM pacakge.
+You can install NeuroMynerva directly from NPM via command line as
+```bash
+pip install flybrainlab  # required package for communicating with backend
+jupyter labextension install @flybrainlab/neuromynerva
+```
+
+#### <a id="jlab2-develop"></a> **Developing NeuroMynerva**
+We use [Anaconda](https://www.anaconda.com/) to manage development environment, you are encouraged to first create a Conda environment
+
+```bash
+# create conda environment and install python dependencies
+conda create -n fbl python=3.7 nodejs scipy pandas cookiecutter git yarn -c conda-forge -y
+conda activate fbl
+```
+
+You can then use the following script to setup the development environment.
+```bash
+# create conda environment and install python dependencies
+pip install jupyter jupyterlab==2.2.9
+pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx msgpack
+
+# if on Windows, execute the following:
+# pip install pypiwin32
+
+# install inhouse packages and NeuroMynerva
+git clone https://github.com/FlyBrainLab/NeuroMynerva.git
+git clone https://github.com/FlyBrainLab/Neuroballad.git
+git clone https://github.com/FlyBrainLab/FBLClient.git
+cd ./Neuroballad
+python setup.py develop
+cd ../FBLClient
+python setup.py develop
+cd ../NeuroMynerva
+jlpm
+jupyter labextension link .
+
+# # watch for source code changes in NeuroMynerva
+jlpm run watch:src
+
+# in a separate terminal
+jupyter lab --watch
+```
+
+#### **Uninstall**
+```bash
+jupyter labextension uninstall @flybrainlab/neuromynerva
 ```
 
 ## Getting Help
