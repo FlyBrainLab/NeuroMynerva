@@ -71,7 +71,7 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     install_requires=[
         "jupyterlab~=3.0",
-        "flybrainlab>=1.1.3"
+        # "flybrainlab>=1.1.3"
     ],
     zip_safe=False,
     include_package_data=True,
