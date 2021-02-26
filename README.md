@@ -99,12 +99,12 @@ The `jlpm` command is JupyterLab's pinned version of
 ```bash
 # assuming currently in FBLClient folder
 cd ../  # go back to parent folder on the same level as FBLClient and NeuroBallad
-git clone https://github.com/FlyBrainLab/NeuroMynerva.git
-cd ../NeuroMynerva
-git checkout jlab3-publish # switch to branch compatible with JupyterLab 3
 
 # Clone the repo to your local environment
 # Change directory to the neuromynerva directory
+git clone https://github.com/FlyBrainLab/NeuroMynerva.git
+cd ./NeuroMynerva
+
 # Install package in development mode
 pip install -e .
 # Link your development version of the extension with JupyterLab
