@@ -136,7 +136,7 @@ pip uninstall neuromynerva
 ```
 
 ---
-### <a id="jlab2"></a> 3. Install/Develop/Uninstall on **JupyterLab 3.x**
+### <a id="jlab2"></a> 3. Install/Develop/Uninstall on **JupyterLab 2.x**
 #### <a id="jlab2-install"></a> **Installation of NeuroMynerva**
 JupyterLab 2.x requires installing NeuroMynerva as an NPM pacakge.
 You can install NeuroMynerva directly from NPM via command line as
