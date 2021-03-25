@@ -1,5 +1,6 @@
 import { ISignal, Signal } from '@lumino/signaling';
 import { FBLWidgetModel, IFBLWidgetModel } from '../template-widget/index';
+import * as THREE from 'three';
 
 export interface IDataChangeArgs {
   event: string;
@@ -22,7 +23,7 @@ export interface IMeshDictBaseItem {
   opacity?: number;
   visibility?: boolean;
   background?: boolean;
-  color?: { r: number; g: number; b: number };
+  color?: number[];
   pinned?: boolean;
   type?: 'morphology_json' | 'general_json' | string; // type, used to keep track of morphology json objects
   morph_type?: 'swc' | 'mesh' | string; // specify mesh with faces and vertices enabled will parse background
@@ -112,6 +113,9 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
       return;
     }
     this.data[rid] = mesh;
+    this.states.color[rid] = mesh.color;
+    this.states.visibility[rid] = mesh.visibility;
+
     this._dataChanged.emit({
       event: oldValue ? 'change' : 'add',
       source: this.data,
@@ -135,6 +139,9 @@ export class Neu3DModel extends FBLWidgetModel implements INeu3DModel {
     if (oldValue) {
       // check if mesh exists
       delete this.data[rid];
+      delete this.states.color[rid];
+      delete this.states.visibility[rid];
+
       this._dataChanged.emit({
         event: 'remove',
         source: this.data,
@@ -332,6 +339,13 @@ namespace Private {
     return modelMeshDict;
   }
 
+  /**
+   * Parse Color to [r,g,b] array
+   */
+  export function parseColor(color: string | number | THREE.Color): number[] {
+    return new THREE.Color(color).toArray();
+  }
+
   export function parseSWC(mesh: any): IMeshDictSWCItem {
     return {
       orid: mesh['orid'],
@@ -342,7 +356,7 @@ namespace Private {
       opacity: mesh['opacity'],
       visibility: mesh['visibility'],
       background: mesh['background'],
-      // color: mesh['color'],
+      color: parseColor(mesh['color']),
       pinned: mesh['pinned'],
       sample: mesh['sample'],
       parent: mesh['parent'],
@@ -367,7 +381,7 @@ namespace Private {
       opacity: mesh['opacity'],
       visibility: mesh['visibility'],
       background: mesh['background'],
-      // color: mesh['color'],
+      color: parseColor(mesh['color']),
       pinned: mesh['pinned'],
       faces: mesh['faces'],
       vertices: mesh['vertices'],
@@ -402,7 +416,7 @@ namespace Private {
           opacity: mesh['opacity'],
           visibility: mesh['visibility'],
           background: mesh['background'],
-          // color: mesh['color'],
+          color: parseColor(mesh['color']),
           pinned: mesh['pinned'],
           filetype: mesh['filetype'],
           filename: mesh['filename']
@@ -417,7 +431,7 @@ namespace Private {
           opacity: mesh['opacity'],
           visibility: mesh['visibility'],
           background: mesh['background'],
-          // color: mesh['color'],
+          color: parseColor(mesh['color']),
           pinned: mesh['pinned'],
           filetype: mesh['filetype'],
           dataStr: mesh['dataStr']
@@ -437,7 +451,7 @@ namespace Private {
           opacity: mesh['opacity'],
           visibility: mesh['visibility'],
           background: mesh['background'],
-          // color: mesh['color'],
+          color: parseColor(mesh['color']),
           pinned: mesh['pinned'],
           sample: mesh['sample'],
           parent: mesh['parent'],
