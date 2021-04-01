@@ -212,9 +212,9 @@ export class ConnTable {
         const { n_rid, rid } = cell.getData();
         if (!this.neu3d?.isInWorkspace(rid)) {
           // not in workspace
-          this.neu3d?.addByRid(n_rid);
+          this.neu3d?.client.addByRid(n_rid);
         } else {
-          this.neu3d?.removeByRid(n_rid);
+          this.neu3d?.client.removeByRid(n_rid);
         }
       }
     },
@@ -229,9 +229,9 @@ export class ConnTable {
         const { s_rid, syn_rid } = cell.getData();
         if (!this.neu3d?.isInWorkspace(syn_rid)) {
           // not in workspace
-          this.neu3d?.addByRid(s_rid);
+          this.neu3d?.client.addByRid(s_rid);
         } else {
-          this.neu3d?.removeByRid(s_rid);
+          this.neu3d?.client.removeByRid(s_rid);
         }
       }
     },

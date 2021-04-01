@@ -171,7 +171,7 @@ export class InfoWidget extends ReactWidget {
   }
 
   /** Render the  ReactJS components */
-  protected render() {
+  protected render(): React.ReactElement {
     return (
       <div className={SECTION_CLASS}>
         <div className={SECTION_BTN_HEADER_CLASS}>
@@ -597,7 +597,7 @@ namespace Components {
         buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'ADD' })]
       }).then(result => {
         if (result.button.accept) {
-          this.props.neu3d.addByRid(change_ids.map(ids => ids.n_rid));
+          this.props.neu3d.client.addByRid(change_ids.map(ids => ids.n_rid));
         }
       });
     }
@@ -627,7 +627,7 @@ namespace Components {
         buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'REMOVE' })]
       }).then(result => {
         if (result.button.accept) {
-          this.props.neu3d.removeByRid(change_ids.map(ids => ids.n_rid));
+          this.props.neu3d.client.removeByRid(change_ids.map(ids => ids.n_rid));
         }
       });
     }
@@ -657,7 +657,7 @@ namespace Components {
         buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'ADD' })]
       }).then(result => {
         if (result.button.accept) {
-          this.props.neu3d.addByRid(change_ids.map(ids => ids.s_rid));
+          this.props.neu3d.client.addByRid(change_ids.map(ids => ids.s_rid));
         }
       });
     }
@@ -687,7 +687,7 @@ namespace Components {
         buttons: [Dialog.cancelButton(), Dialog.okButton({ label: 'REMOVE' })]
       }).then(result => {
         if (result.button.accept) {
-          this.props.neu3d.removeByRid(change_ids.map(ids => ids.s_rid));
+          this.props.neu3d.client.removeByRid(change_ids.map(ids => ids.s_rid));
         }
       });
     }

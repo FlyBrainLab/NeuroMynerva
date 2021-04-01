@@ -11,11 +11,12 @@ import {
 } from '@jupyterlab/apputils';
 import { LabIcon, settingsIcon } from '@jupyterlab/ui-components';
 import { INotification } from 'jupyterlab_toastify';
-import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
+import { Kernel, Session } from '@jupyterlab/services';
 import { Neu3DModel, INeu3DModel, IMeshDictItem } from './model';
 import { IFBLWidget, FBLWidget } from '../template-widget/index';
 import { InfoWidget } from '../info-widget/index';
 import { PRESETS, PRESETS_NAMES } from './presets';
+import { Neu3DClient } from './client';
 
 import * as Icons from '../../icons';
 import '../../../style/neu3d-widget/neu3d.css';
@@ -128,6 +129,16 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   }
 
   /**
+   * Create a new client instance
+   *
+   * This is exposed as  method so that the children classes can change the
+   * client class by overwriting this method
+   */
+  createClient(): Neu3DClient {
+    return new Neu3DClient(this);
+  }
+
+  /**
    * Block and unblock input field in neu3d when kernel is busy/not busy
    * @param sess
    * @param status
@@ -138,7 +149,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     if (status === 'busy') {
       queryBar.disabled = true;
     } else {
-      if (this.hasClient) {
+      if (this.client.isConnected) {
         queryBar.disabled = false;
       } else {
         queryBar.disabled = true;
@@ -192,13 +203,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       }
     }
     this.hideMeshes('Neuropil');
-
-    // if (change) {
-    //   this.neu3d.addJson({ ffbo_json: this.model.data });
-    // } else {
-    //   // complete reset
-    //   this.neu3d.addJson({ ffbo_json: this.model.data });
-    // }
   }
 
   /**
@@ -248,7 +252,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
    * Handle Command message from Comm from Kernel
    * @param message
    */
-  _receiveCommand(message: any): void {
+  parseCommCommand(message: any): void {
     if (!('commands' in message)) {
       return;
     }
@@ -307,15 +311,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
                 type: 'general_json'
               });
             }
-            // if (Object.keys(rawData)[0][0] == '#') {  // check if returned contain rids for neuron morphology data
-            //   // this.n3dlog.push(JSON.parse(JSON.stringify(rawData)));
-            //   let neu3Ddata = { ffbo_json: rawData, type: 'morphology_json' }
-            //   this.neu3d.addJson(neu3Ddata);
-            // }
-            // else {
-            //   let neu3Ddata = { ffbo_json: rawData, type: 'general_json' }
-            //   this.neu3d.addJson(neu3Ddata);
-            // }
           } else {
             // no-op
           }
@@ -337,7 +332,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         default: {
           console.debug('[NEU3D] RESET', thisMsg.data);
           // this.n3dlog = [];
-          this._receiveCommand(thisMsg.data);
+          this.parseCommCommand(thisMsg.data);
           break;
         }
       }
@@ -362,158 +357,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       return rid in this.model.data;
     }
     return false;
-  }
-
-  /**
-   * Return string for NA query that is aware of the right clientId
-   */
-  querySender(): string {
-    const code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNAquery(_fbl_query)
-    `;
-    return code;
-  }
-
-  /**
-   * Return string for NLP query that is aware of the right clientId
-   */
-  NLPquerySender(): string {
-    const code = `
-    _ = fbl.client_manager.clients['${this.clientId}']['client'].executeNLPquery(_fbl_query)
-    `;
-    return code;
-  }
-
-  // /**
-  //  * Method passed to info panel to ensure stateful data
-  //  *
-  //  * Addresses
-  //  * @param command
-  //  */
-  // infoCommandWrapper(command: any){
-
-  // }
-
-  /**
-   * Add an object into the workspace using Uname by Kernel Call.
-   *
-   * @param uname -  uname of target object (neuron/synapse)
-   */
-  async addByUname(uname: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'add'
-    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(
-      uname
-    )}}}},
-                    'object': {'class': ['Neuron', 'Synapse']}}]
-    `;
-    code = code + this.querySender();
-    const kernel = this.sessionContext.session.kernel;
-    const result = await kernel.requestExecute({ code: code }).done;
-    console.debug('addByUname', uname, result);
-    return result;
-  }
-
-  /**
-   * Remove an object into the workspace using Uname by Kernel Call.
-   *
-   * WARNING: Deprecated! Do not use addByUname since uname may no longer be unique.
-   *  Use addByRid instead
-   *
-   * @param uname -  uname of target object (neuron/synapse)
-   */
-  async removeByUname(uname: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'remove'
-    _fbl_query['query']= [{'action': {'method': {'query': {'uname': ${JSON.stringify(
-      uname
-    )}}}},
-                    'object': {'class': ['Neuron', 'Synapse']}}]
-    `;
-    code = code + this.querySender();
-    const kernel = this.sessionContext.session.kernel;
-    const result = await kernel.requestExecute({ code: code }).done;
-    console.debug('removeByUname', uname, result);
-    return result;
-  }
-
-  /**
-   * Add an object into the workspace using Rid by Kernel Call.
-   *
-   * @param rid -  rid of target object (neuron/synapse)
-   */
-  async addByRid(rid: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'add'
-    _fbl_query['query']= [{'action': {'method': {'query': {}}},
-                    'object': {'rid': ${JSON.stringify(rid)}}}]
-    _fbl_query['format'] = 'morphology'
-    `;
-    code = code + this.querySender();
-    const kernel = this.sessionContext.session.kernel;
-    const result = await kernel.requestExecute({ code: code }).done;
-    console.debug('addByRid', rid, result);
-    return result;
-  }
-
-  /**
-   * Remove an object from the workspace using Rid by Kernel Call.
-   *
-   * @param rid -  rid of target object (neuron/synapse)
-   */
-  async removeByRid(rid: string | Array<string>): Promise<any> {
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'remove'
-    _fbl_query['query']= [{'action': {'method': {'query': {}}},
-                    'object': {'rid': ${JSON.stringify(rid)}}}]
-    `;
-    code = code + this.querySender();
-    const kernel = this.sessionContext.session.kernel;
-    const result = await kernel.requestExecute({ code: code }).done;
-    console.debug('removeByRid', rid, result);
-    return result;
-  }
-
-  /**
-   * Send an NLP query.
-   *
-   * @param query -  query to send(text)
-   */
-  async executeNLPquery(query: string): Promise<boolean> {
-    let code = `
-    _fbl_query = '${query}'
-    `;
-    code = code + this.NLPquerySender();
-    const kernel = this.sessionContext.session.kernel;
-    const result = await kernel.requestExecute({ code: code }).done;
-    if (result.content.status === 'error') {
-      return Promise.resolve(false);
-    }
-    console.debug('NLPquery', result);
-    return Promise.resolve(true);
-  }
-
-  /**
-   * Get Info of a given neuron
-   * @param rid - rid of the neuron/synapse to query info about
-   * @return a promise that resolves to the reply message when done
-   */
-  executeInfoQuery(
-    rid: string
-  ): Kernel.IShellFuture<
-    KernelMessage.IExecuteRequestMsg,
-    KernelMessage.IExecuteReplyMsg
-  > {
-    const code_to_send = `
-    fbl.client_manager.clients[fbl.widget_manager.widgets['${this.id}'].client_id]['client'].getInfo('${rid}')
-    `;
-    return this.sessionContext.session.kernel.requestExecute({
-      code: code_to_send
-    });
   }
 
   /**
@@ -544,7 +387,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
 
     /** Get Neuron Information */
     this.neu3d.on('click', (e: INeu3DMessage) => {
-      this.executeInfoQuery(e.value);
+      this.client.executeInfoQuery(e.value);
     });
 
     /** Add Mesh */
@@ -707,9 +550,9 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       // this is called by the restart routine by default
       return; // no op
     }
-    if (this.hasClient) {
+    if (this.client.isConnected) {
       if ((this.neu3d as any).groups.back.children.length === 0) {
-        this.getMeshesfromDB().then(() => {
+        this.client.getMeshesfromDB().then(() => {
           this.hideMeshes('Neuropil');
         });
       }
@@ -799,11 +642,10 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
           settings = PRESETS[preset].neu3dSettings;
           placeholder = PRESETS[preset].searchPlaceholder;
         }
-        this.initClient().then(success => {
-          this.setHasClient(success); // can fail
+        this.client.init().then(success => {
           if (success && differentProcessor) {
             if ((this.neu3d as any).groups.back.children.length === 0) {
-              this.getMeshesfromDB().then(() => {
+              this.client.getMeshesfromDB().then(() => {
                 this.hideMeshes('Neuropil');
               });
             }
@@ -811,7 +653,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         });
       } else {
         placeholder = PRESETS.disconnected.searchPlaceholder;
-        this.setHasClient(false);
+        this.client.setConnection(false);
         console.warn(
           `[Neu3D-Widget] Processor (${this.processor}) not recognized. Disconnected`
         );
@@ -832,30 +674,6 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       // reset info panel - clear evrerything
       this.info.reset(true);
     });
-  }
-
-  /**
-   * Get Meshes from DB
-   */
-  async getMeshesfromDB(
-    type?: Private.MeshTypes
-  ): Promise<KernelMessage.IExecuteReplyMsg | null> {
-    type = type ?? ['Neuropil', 'Tract', 'Subregion', 'Tract', 'Subsystem'];
-    let code = `
-    _fbl_query = {}
-    _fbl_query['verb'] = 'add'
-    _fbl_query['format'] = 'morphology'
-    _fbl_query['query']= [{'action': {'method': {'query': {}}},
-                           'object': {'class': ${JSON.stringify(type)}}}]
-    `;
-    code = code + this.querySender();
-    if (!this.sessionContext?.session?.kernel) {
-      return null;
-    }
-    const kernel = this.sessionContext.session.kernel;
-    const result = await kernel.requestExecute({ code: code }).done;
-    console.debug('getMeshesfromDB', result);
-    return result;
   }
 
   /**
@@ -958,7 +776,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
             mesh => mesh.orid
           );
           if (this.sessionContext?.session?.kernel) {
-            this.removeByRid(orids);
+            this.client.removeByRid(orids);
           } else {
             this.neu3d.removeUnpinned();
           }
@@ -985,7 +803,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
         'Fetch Brain Meshes from NeuroArch',
         'jp-Neu3D-Btn jp-SearBar-updateMesh',
         () => {
-          this.getMeshesfromDB();
+          this.client.getMeshesfromDB();
           this.hideMeshes('Neuropil');
         }
       )
@@ -1004,6 +822,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
   private _workspaceChanged = new Signal<this, any>(this);
   model: Neu3DModel;
   info: InfoWidget; // info panel widget that this extension is connected to
+  client: Neu3DClient;
 }
 
 /**
@@ -1013,6 +832,11 @@ namespace Private {
   // The count is for managing the name of the widget every time a new one is added to the browser
   export let count = 1; // eslint-disable-line
 
+  /**
+   * Convert String or Array into Array
+   * @param string_or_array
+   * @returns
+   */
   export function asarray(
     string_or_array: string | Array<string>
   ): Array<string> | undefined {
@@ -1025,6 +849,9 @@ namespace Private {
     return string_or_array as Array<string>;
   }
 
+  /**
+   * All supported MeshTypes
+   */
   export type MeshTypes =
     | 'Neuropil'
     | 'Tract'
@@ -1033,6 +860,9 @@ namespace Private {
     | 'Subsystem'
     | Array<string>;
 
+  /**
+   * Process Meshes returned from Comm
+   */
   export function processMeshesFromCommData(dictOfMeshes: {
     [rid: string]: IMeshDictItem;
   }): {
@@ -1125,7 +955,7 @@ namespace Private {
     searchWrapper.appendChild(searchInput);
     searchWrapper.appendChild(searchButton);
 
-    neu3d.clientConnect.connect((_, hasClient) => {
+    neu3d.client.connectionChanged.connect((_, hasClient) => {
       if (hasClient) {
         searchInput.disabled = false;
         if (neu3d.processor in PRESETS) {
@@ -1148,15 +978,15 @@ namespace Private {
     });
 
     searchButton.onclick = () => {
-      if (searchInput.value && neu3d.hasClient) {
-        neu3d.executeNLPquery(searchInput.value);
+      if (searchInput.value && neu3d.client.isConnected) {
+        neu3d.client.executeNLPQuery(searchInput.value);
       }
       searchInput.value = '';
     };
     searchInput.addEventListener('keyup', ({ key }) => {
       if (key === 'Enter') {
-        if (searchInput.value && neu3d.hasClient) {
-          neu3d.executeNLPquery(searchInput.value);
+        if (searchInput.value && neu3d.client.isConnected) {
+          neu3d.client.executeNLPQuery(searchInput.value);
         }
         searchInput.value = '';
       }
@@ -1173,7 +1003,7 @@ namespace Private {
         const preset = neu3d.ffboProcessors[neu3d.processor].PRESETS.preset;
         hints = (PRESETS as any)[preset].hints;
       } else {
-        if (neu3d.hasClient) {
+        if (neu3d.client.isConnected) {
           hints = PRESETS.default.hints;
         } else {
           hints = PRESETS.disconnected.hints;

@@ -157,7 +157,7 @@ class SessionDialog extends ReactWidget {
                 <td>
                   <b>Comm Target</b>
                 </td>
-                <td>{this.widget._commTarget}</td>
+                <td>{this.widget.commTarget}</td>
               </tr>
               {commInfo}
             </tbody>

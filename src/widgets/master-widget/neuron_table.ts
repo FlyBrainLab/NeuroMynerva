@@ -178,7 +178,7 @@ export class Neu3DModelTable {
       .getData(active ? 'active' : '')
       .filter((r: any) => !r.pinned)
       .map((r: any) => r.orid);
-    this.neu3d.removeByRid(orids);
+    this.neu3d.client.removeByRid(orids);
   }
 
   /**
@@ -189,7 +189,7 @@ export class Neu3DModelTable {
     const orids: string[] = this.meshTabulator
       .getData(active ? 'active' : '')
       .map((r: any) => r.orid);
-    this.neu3d.removeByRid(orids);
+    this.neu3d.client.removeByRid(orids);
   }
 
   /**
@@ -352,7 +352,7 @@ export class Neu3DModelTable {
         return "<i class='fa fa-trash' > </i>";
       },
       cellClick: (e: any, cell: any) => {
-        this.neu3d.removeByRid(cell.getData().orid);
+        this.neu3d.client.removeByRid(cell.getData().orid);
       }
     },
     {
@@ -365,7 +365,7 @@ export class Neu3DModelTable {
         return "<i class='fa fa-info-circle' > </i>";
       },
       cellClick: (e: any, cell: any) => {
-        this.neu3d.executeInfoQuery(cell.getData().rid).done.then(() => {
+        this.neu3d.client.executeInfoQuery(cell.getData().rid).then(() => {
           this.labShell.activateById(this.neu3d.info.id);
         });
       }
@@ -403,7 +403,7 @@ export class Neu3DModelTable {
         return "<i class='fa fa-trash' > </i>";
       },
       cellClick: (e: any, cell: any) => {
-        this.neu3d.removeByRid(cell.getData().orid);
+        this.neu3d.client.removeByRid(cell.getData().orid);
       }
     },
     {

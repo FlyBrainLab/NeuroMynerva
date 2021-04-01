@@ -194,10 +194,6 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     );
   }
 
-  initFBLCode(): string {
-    return super.initFBLCode();
-  }
-
   initModel(model: Partial<INeuGFXModel>) {
     // create model
     this.model = new NeuGFXModel(model);
