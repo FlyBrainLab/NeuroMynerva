@@ -3,18 +3,20 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { Kernel, Session, KernelMessage } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 // import { PromiseDelegate } from '@lumino/coreutils';
-import { IDisposable } from '@lumino/disposable'
-// import { Message } from '@lumino/messaging';
+import { IDisposable } from '@lumino/disposable';
+import { Message } from '@lumino/messaging';
 import { PathExt, Time } from '@jupyterlab/coreutils';
 import { Widget } from '@lumino/widgets';
 import {
-  ISessionContext, SessionContext,
-  sessionContextDialogs, showDialog,
+  ISessionContext,
+  SessionContext,
+  sessionContextDialogs,
+  showDialog,
   ToolbarButton
 } from '@jupyterlab/apputils';
 import { Signal, ISignal } from '@lumino/signaling';
 import { Toolbar } from '@jupyterlab/apputils';
-import { INotification } from "jupyterlab_toastify";
+import { INotification } from 'jupyterlab_toastify';
 import { LabIcon } from '@jupyterlab/ui-components';
 
 import { fblIcon, syncConsoleIcon } from '../../icons';
@@ -28,6 +30,7 @@ import '../../../style/template-widget/template.css';
 import { InfoWidget } from '../info-widget';
 import { FBLClient } from './client';
 import { FFBOProcessor } from '../../ffboprocessor';
+import { SUPPORTED_FBLCLIENT_VERSION } from '../../extension';
 
 export interface IFBLWidget extends Widget {
   /**
@@ -94,7 +97,7 @@ export interface IFBLWidget extends Widget {
   /**
    * Name of Widget
    */
-  name: string
+  name: string;
 
   /**
    * targetname of the current comm
@@ -114,13 +117,12 @@ export interface IFBLWidget extends Widget {
   /**
    * Signal that emits model change
    */
-  modelChanged: ISignal<FBLWidget, object>;
+  modelChanged: ISignal<FBLWidget, any>;
 
   /**
    * Signal that emits the widget when it is getting disposed. Only fires once.
    */
-  gettingDisposed: ISignal<FBLWidget, object>;
-
+  gettingDisposed: ISignal<FBLWidget, FBLWidget>;
 
   /**
    * Icon associated with the widget
@@ -135,20 +137,17 @@ export interface IFBLWidget extends Widget {
    */
   toolbar: Toolbar<Widget>;
 
-
   /**
    * Id of FBLClient Id
    */
   clientId: string;
-
 
   /**
    * Reference to Info Widget
    *
    * Note: currently only required by Neu3D-Widget.
    */
-  info?: InfoWidget
-
+  info?: InfoWidget;
 
   /**
    * The dirty state of the widget reflects whether there is unsaved changes
@@ -161,7 +160,7 @@ export interface IFBLWidget extends Widget {
    * setDirty for `false` (clean) is typically emitted by the extension when the state changes
    * have been saved by the user to the layout restorer's stateDB.
    */
-  isDirty: boolean
+  isDirty: boolean;
   dirty: ISignal<FBLWidget, boolean>;
   setDirty(state: boolean): void;
 }
@@ -169,8 +168,8 @@ export interface IFBLWidget extends Widget {
 const TEMPLATE_COMM_TARGET = 'FBL-Comm';
 
 /**
-* An FBL Template Widget
-*/
+ * An FBL Template Widget
+ */
 export class FBLWidget extends Widget implements IFBLWidget {
   constructor(options: FBLWidget.IOptions) {
     super();
@@ -195,14 +194,13 @@ export class FBLWidget extends Widget implements IFBLWidget {
     // specify name, this is the display name of the widget
     this.name = name || `Template-${count}`;
 
-    // specify id of the widget, and
+    // specify id
+    let id = options.id ?? `${this.name}-${UUID.uuid4()}`;
     // make sure there is no conflic with existing widgets
-    // if the supplied `options.name` is found, append UUID
-    let id  = options.id ?? `${this.name}-${UUID.uuid4()}`;
-    let _widgets_iter = app.shell.widgets('main').iter();
+    const _widgets_iter = app.shell.widgets('main').iter();
     let _w = _widgets_iter.next();
-    while (_w){
-      if ((_w.id === id) || ((_w as any).content?.id === id)) {
+    while (_w) {
+      if (_w.id === id || (_w as any).content?.id === id) {
         id = `${this.name}-${UUID.uuid4()}`;
         break;
       }
@@ -241,7 +239,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       });
 
     // Create Toolbar (to be consumed by MainAreaWidget in `fbl-extension`);
-    const toolbar = this.toolbar = new Toolbar();
+    const toolbar = (this.toolbar = new Toolbar());
     toolbar.node.style.height = 'var(--jp-private-toolbar-height)';
     toolbar.node.classList.add('fbl-widget-toolbar');
     this.populateToolBar();
@@ -255,7 +253,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       if (value) {
         await sessionContextDialogs.selectKernel(this.sessionContext);
       }
-      if (this.sessionContext.session?.kernel){
+      if (this.sessionContext.session?.kernel) {
         // Force it to handle comms
         this.sessionContext.session.kernel.handleComms = true;
       }
@@ -265,7 +263,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
       // register Comm only when kernel is changed
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
-      this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
+      this.sessionContext.statusChanged.connect(
+        this.onKernelStatusChanged,
+        this
+      );
       // set processor after session is avaible, in case the setter needs the session
       this.setProcessor(processor, true);
       Private.updateTitle(this, this._connected);
@@ -276,7 +277,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
     // connect model changed signal to dirty state after initialization
     this.modelChanged.connect(() => {
       this.setDirty(true);
-    })
+    });
     // connect cient changed signal to dirty state after initialization
     this.client.connectionChanged.connect(() => {
       this.setDirty(true);
@@ -306,15 +307,15 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * Send model to the front-end
    * @param change
    */
-  sendModel(change?: Partial<IFBLWidgetModel>) {
+  sendModel(change?: Partial<IFBLWidgetModel>): void {
     this.comm.send({
       messageType: 'model',
       data: {
         data: change?.data ?? this.model.data,
         metadata: change?.metadata ?? this.model.metadata,
-        states: change?.states ?? this.model.states,
+        states: change?.states ?? this.model.states
       }
-    })
+    });
   }
 
   /**
@@ -322,7 +323,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * It is called in the constructor of the widget
    * @param model partial information of the model data
    */
-  initModel(model: Partial<IFBLWidgetModel>){
+  initModel(model: Partial<IFBLWidgetModel>): void {
     // create model
     this.model = new FBLWidgetModel(model);
     this.model.dataChanged.connect(this.onDataChanged, this);
@@ -335,41 +336,44 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overload by children
    * @param msg
    */
-  onCommMsg(msg: KernelMessage.ICommMsgMsg) {
-    let thisMsg = msg.content.data as any;
+  onCommMsg(msg: KernelMessage.ICommMsgMsg): void {
+    const thisMsg = msg.content.data as any;
     if (typeof thisMsg === 'undefined') {
       return;
     }
 
     switch (thisMsg.widget) {
-      // Popup window shown as dialog
-      case "popout": {
+      /** Popup window shown as dialog */
+      case 'popout': {
         showDialog({
-          title: `FBL Kernel Message`,
+          title: 'FBL Kernel Message',
           body: (
             <div>
-            <p>Widget: ${this.id}</p><br></br>
-            <p>{thisMsg.data}</p>
-            </div>)
-        }).then(()=>{
+              <p>Widget: ${this.id}</p>
+              <br></br>
+              <p>{thisMsg.data}</p>
+            </div>
+          )
+        }).then(() => {
           return Promise.resolve(void 0);
-        })
+        });
         break;
       }
       case 'toast': {
-        for (let [type, data] of Object.entries(thisMsg.data.info)){
+        for (const [type, data] of Object.entries(thisMsg.data.info)) {
           switch (type) {
             case 'success':
-              INotification.success(data, {'autoClose': 1500});
+              INotification.success(data, { autoClose: 1500 });
               break;
             case 'error':
-              INotification.error(data, {'autoClose': 5000});
+              INotification.error(data, { autoClose: 5000 });
               break;
             default:
-              INotification.info(data, {'autoClose': 2000});
+              INotification.info(data, { autoClose: 2000 });
               break;
           }
         }
+        break;
       }
       default: {
         // no-op
@@ -385,7 +389,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * To be overload by children
    * @param msg
    */
-  onCommClose(msg: KernelMessage.ICommCloseMsg) {
+  onCommClose(msg: KernelMessage.ICommCloseMsg): void {
     // no-op
     return;
   }
@@ -394,7 +398,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * Handle model.data Change in the widget side. should affect rendering
    * @param args
    */
-  onDataChanged(sender: IFBLWidgetModel, args: any){
+  onDataChanged(sender: IFBLWidgetModel, args: any): void {
+    // no-op
     // overload by child
     return;
   }
@@ -403,8 +408,8 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * Handle model.metadata Change in the widget side. should affect rendering
    * @param args
    */
-  onMetadataChanged(sender: IFBLWidgetModel, args: any){
-    // overload by child
+  onMetadataChanged(sender: IFBLWidgetModel, args: any): void {
+    // no-op
     return;
   }
 
@@ -412,18 +417,18 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * Handle model.states change in the widget side. should affect rendering
    * @param args
    */
-  onStatesChanged(sender: IFBLWidgetModel, args: any){
-    // overload by child
-    return
+  onStatesChanged(sender: IFBLWidgetModel, args: any): void {
+    // no-op
+    return;
   }
 
   /**
-  * Dispose the current session
-  *
-  * 1. comm dispose
-  * 2. model dispose
-  * 3. disconnect signal slots
-  */
+   * Dispose the current session
+   *
+   * 1. comm dispose
+   * 2. model dispose
+   * 3. disconnect signal slots
+   */
   dispose(): void {
     if (this._isDisposed === true) {
       return;
@@ -440,22 +445,22 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
-  * A method that handles changing sessionContext
-  */
- async onKernelChanged(
+   * A method that handles changing sessionContext
+   */
+  async onKernelChanged(
     context: ISessionContext,
     args: Session.ISessionConnection.IKernelChangedArgs
- ) {
-   console.debug('KERNEL Changed', args, context);
-   if (args.oldValue === null && args.newValue === null) {
-     // this is called by the restart routine by default
-     return; // no op
-   }
+  ): Promise<void> {
+    console.debug('KERNEL Changed', args, context);
+    if (args.oldValue === null && args.newValue === null) {
+      // this is called by the restart routine by default
+      return; // no op
+    }
 
     const newKernel: Kernel.IKernelConnection | null = args.newValue;
     this.setDirty(true);
     Private.updateTitle(this, this._connected);
-    if (newKernel === null){
+    if (newKernel === null) {
       this.comm?.dispose();
       this.client.setConnection(false);
       return;
@@ -468,7 +473,10 @@ export class FBLWidget extends Widget implements IFBLWidget {
 
       this.sessionContext.kernelChanged.connect(this.onKernelChanged, this);
       this.sessionContext.propertyChanged.connect(this.onPathChanged, this);
-      this.sessionContext.statusChanged.connect(this.onKernelStatusChanged, this);
+      this.sessionContext.statusChanged.connect(
+        this.onKernelStatusChanged,
+        this
+      );
       return;
     } else {
       this.client.setConnection(false);
@@ -484,13 +492,13 @@ export class FBLWidget extends Widget implements IFBLWidget {
    *
    * This function call is mainly for the purpose of detecting busy state of the kernel.
    */
-  onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status) {
+  onKernelStatusChanged(sess: ISessionContext, status: Kernel.Status): void {
     return;
   }
 
   /**
-  * A method that handles changing session Context
-  */
+   * A method that handles changing session Context
+   */
   onPathChanged(msg?: any): void {
     console.debug('PATH Changed', msg);
     this.setDirty(true);
@@ -502,7 +510,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
   /**
    * Return A signal that indicates model changed
    */
-  get modelChanged(): ISignal<this, object> {
+  get modelChanged(): ISignal<this, any> {
     return this._modelChanged;
   }
 
@@ -514,77 +522,24 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
 
-
-  // /**
-  //  * Initialize FBL
-  //  *
-  //  * This code does 2 things:
-  //  *   1. import `flybrainlab` into global `fbl` singleton if not found
-  //  *   2. add current widget to the `fbl.widget_manager`
-  //  */
-  // async initFBL(): Promise<boolean> {
-  //   let code = PyTemplate.initFBLCode(
-  //     this.id, this.clientId, this.constructor.name, this.commTarget
-  //   );
-  //   console.debug('initFBL Called', code);
-  //   const model = new OutputAreaModel();
-  //   const rendermime = new RenderMimeRegistry({ initialFactories });
-  //   const outputArea = new OutputArea({ model, rendermime });
-  //   outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
-  //   outputArea.node.style.display = 'block';
-  //   return outputArea.future.done.then((reply) => {
-  //     if (reply && reply.content.status === 'ok') {
-  //       outputArea.dispose();
-  //       return Promise.resolve(true);
-  //     } else {
-  //       showDialog({
-  //         title: `FBL Initialization Registration Failed`,
-  //         body: outputArea,
-  //       });
-  //       return Promise.resolve(false);
-  //     }
-  //   }, (failure) => {
-  //     outputArea.dispose();
-  //     return Promise.resolve(false);
-  //   });
-  // }
-
-  // /**
-  //  * Initialize Client Based on Current Processor Setting
-  //  *
-  //  * See `this.initClientCode` for detailed description of the code being executed.
-  //  *
-  //  * @param processorname of the processor setting to use, needs to be
-  //  *   an entry in `this.ffboProcessors` that reflects the FBL Schema
-  //  */
-  // async initClient(processor?: string): Promise<boolean> {
-  //   let code = PyTemplate.initClientCode(
-  //     processor, this.ffboProcessors, this.id, this.clientId
-  //   );
-  //   console.debug('initClient Called', code);
-  //   const model = new OutputAreaModel();
-  //   const rendermime = new RenderMimeRegistry({ initialFactories });
-  //   const outputArea = new OutputArea({ model, rendermime });
-
-  //   // immediately resolve to false if no kernel is found
-  //   if (!this.sessionContext?.session?.kernel) {
-  //     return Promise.resolve(false);
-  //   }
-
-  //   outputArea.future = this.sessionContext.session.kernel.requestExecute({ code });
-  //   outputArea.node.style.display = 'block';
-  //   let reply = await this.sessionContext.session.kernel.requestExecute({ code: code }).done;
-  //   if (reply && reply.content.status === 'ok') {
-  //     // outputArea.dispose();
-  //     return Promise.resolve(true);
-  //   } else {
-  //     showDialog({
-  //       title: `FBLClient Initialization Registration Failed`,
-  //       body: outputArea,
-  //     });
-  //     return Promise.resolve(false);
-  //   }
-  // }
+  /**
+   * Run code in kernel to check if FBLClient version is compatible
+   */
+  async checkFBLClientVersion(): Promise<boolean> {
+    // immediately resolve to false if no kernel is found
+    if (!this.sessionContext?.session?.kernel) {
+      return Promise.resolve(false);
+    }
+    const code = `
+    _client = fbl.client_manager.get_client('${this.clientId}')
+    _client._set_NeuroMynerva_support('${SUPPORTED_FBLCLIENT_VERSION}')
+    _client.check_NeuroMynerva_version()
+    `;
+    const reply = await this.sessionContext.session.kernel.requestExecute({
+      code: code
+    }).done;
+    return Promise.resolve(reply && reply.content.status === 'ok');
+  }
 
   /**
    * Create Comm if none exist
@@ -611,18 +566,16 @@ export class FBLWidget extends Widget implements IFBLWidget {
     const kernel = this.sessionContext.session.kernel;
 
     // Force Comm handling
-    // FIXME: From the JupyterLab core developers, having multiple KernelConnections
-    //  handling comms could lead to difficult to fix bugs. It has not caused any
-    //  noticeable issues yet but will need to double check to be sure and potentially
-    //  find an alternative.
-    if (!kernel.handleComms){
+    if (!kernel.handleComms) {
       kernel.handleComms = true;
     }
 
     // register comm and callback
-    kernel.registerCommTarget(this.commTarget, (comm, commMsg) => {
-      if (commMsg.content.target_name !== this.commTarget) {
-        return Promise.resolve(void 0);
+    // const commRegistered = new PromiseDelegate<void>();
+    kernel.registerCommTarget(this._commTarget, (comm, commMsg) => {
+      if (commMsg.content.target_name !== this._commTarget) {
+        // commRegistered.resolve(void 0);
+        return;
       }
       this.comm = comm;
       comm.onMsg = (msg: KernelMessage.ICommMsgMsg) => {
@@ -631,9 +584,45 @@ export class FBLWidget extends Widget implements IFBLWidget {
       comm.onClose = (msg: KernelMessage.ICommCloseMsg) => {
         this.onCommClose(msg);
       };
-      return Promise.resolve(void 0);
+      // commRegistered.resolve(void 0);
     });
-    return Promise.resolve(void 0);
+
+    // await commRegistered.promise;
+
+    // import flybrainlab and add current widget to widget_manager in kernel
+    const initFBLSuccess = await this.initFBL();
+    if (!initFBLSuccess) {
+      INotification.error(`
+        FBL Initialization Failed. This is most likely because the flybrainlab python package
+        cannot be found.
+      `);
+      this.setHasClient(false);
+      return Promise.resolve(false);
+    }
+
+    // on startup, initClient is false since there may already be a client in workspace
+    // that is connected to the current widget
+    if (initClient === false) {
+      const hasClient = await this.checkForClient();
+      this.setHasClient(hasClient);
+      return Promise.resolve(true);
+    }
+
+    if (this.processor === FFBOProcessor.NO_PROCESSOR) {
+      this.setHasClient(false);
+      return Promise.resolve(false);
+    }
+
+    // create fblclient instance with a processor connection.
+    const initClientSuccess = await this.initClient();
+    if (!initClientSuccess) {
+      this.setHasClient(false);
+      return Promise.resolve(false);
+    }
+
+    this.setHasClient(true);
+    // resolves to true. Client connected
+    return Promise.resolve(true);
   }
 
   // /**
@@ -700,14 +689,29 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this.toolbar.addItem('spacer', Toolbar.createSpacerItem());
     this.toolbar.addItem('Processor Changer', createProcessorButton(this));
     this.toolbar.addItem('Session Dialog', createSessionDialogButton(this));
-    this.toolbar.addItem('Send Data to Kernel', new ToolbarButton({
-      icon: syncConsoleIcon,
-      onClick: this.sendModel.bind(this)
-    }));
-    this.toolbar.addItem('restart', Toolbar.createRestartButton(this.sessionContext));
-    this.toolbar.addItem('stop', Toolbar.createInterruptButton(this.sessionContext));
-    this.toolbar.addItem('kernelName', Toolbar.createKernelNameItem(this.sessionContext));
-    this.toolbar.addItem('kernelStatus', Toolbar.createKernelStatusItem(this.sessionContext));
+    this.toolbar.addItem(
+      'Send Data to Kernel',
+      new ToolbarButton({
+        icon: syncConsoleIcon,
+        onClick: this.sendModel.bind(this)
+      })
+    );
+    this.toolbar.addItem(
+      'restart',
+      Toolbar.createRestartButton(this.sessionContext)
+    );
+    this.toolbar.addItem(
+      'stop',
+      Toolbar.createInterruptButton(this.sessionContext)
+    );
+    this.toolbar.addItem(
+      'kernelName',
+      Toolbar.createKernelNameItem(this.sessionContext)
+    );
+    this.toolbar.addItem(
+      'kernelStatus',
+      Toolbar.createKernelStatusItem(this.sessionContext)
+    );
   }
 
   /**
@@ -720,18 +724,18 @@ export class FBLWidget extends Widget implements IFBLWidget {
    * @param startUp optional argument for check if the setProcessor is
    *  called at startup
    */
-  setProcessor(newProcessor: string, startUp=false) {
+  setProcessor(newProcessor: string, startUp = false): void {
     if (newProcessor === this._processor) {
       return;
     }
-    if (newProcessor === FFBOProcessor.NO_PROCESSOR){
+    if (newProcessor === FFBOProcessor.NO_PROCESSOR) {
       this._processorChanged.emit(newProcessor);
       this._processor = newProcessor;
       this.client.disconnect();
       this.setDirty(true);
       return;
     }
-    if (!(newProcessor in this.ffboProcessors)){
+    if (!(newProcessor in this.ffboProcessors)) {
       return;
     }
 
@@ -740,13 +744,21 @@ export class FBLWidget extends Widget implements IFBLWidget {
     this.setDirty(true);
   }
 
+  set processor(newProcessor: string) {
+    this.setProcessor(newProcessor);
+  }
+
   /**
    * Returns processor
    * Note: setter/getter for processor need to be redefined in child class
    * See reference: https://github.com/microsoft/TypeScript/issues/338
    */
   get processor(): string {
-    return this._processor
+    return this._processor;
+  }
+
+  get gettingDisposed(): ISignal<this, this> {
+    return this._gettingDisposed;
   }
 
   /**
@@ -779,14 +791,13 @@ export class FBLWidget extends Widget implements IFBLWidget {
    *
    * @param state dirty state, `true` means it's dirty
    */
-  setDirty(state: boolean) {
+  setDirty(state: boolean): void {
     if (state === true) {
-      // if new state is dirty, always emit signal
+      // whenever it's dirty
       this._dirty.emit(true);
     } else {
-
       if (state !== this._isDirty) {
-        // if new state is not dirty but used to be dirty then emit
+        // not dirty but used to be
         this._dirty.emit(false);
       }
     }
@@ -800,6 +811,11 @@ export class FBLWidget extends Widget implements IFBLWidget {
     return this._ffboProcessors;
   }
 
+  /** Set the hasClient value and trigger a event */
+  setHasClient(has: boolean): void {
+    this._hasClient = has;
+    this._clientConnect.emit(has);
+  }
 
   /**
    * Allow NM Extension to overwrite the processor values
@@ -810,14 +826,14 @@ export class FBLWidget extends Widget implements IFBLWidget {
   }
 
   /**
-  * The Elements associated with the widget.
-  */
-  private _ffboProcessors: FFBOProcessor.IProcessors;
+   * The Elements associated with the widget.
+   */
+  ffboProcessors: FFBOProcessor.IProcessors;
   protected _connected: Date;
   protected _isDisposed = false;
-  protected _modelChanged = new Signal<this, object>(this);
+  protected _modelChanged = new Signal<this, any>(this);
   protected _processorChanged = new Signal<this, string>(this);
-  protected _gettingDisposed = new Signal<this, object>(this);
+  protected _gettingDisposed = new Signal<this, this>(this);
   toolbar: Toolbar<Widget>;
   commTarget: string; // cannot be private because we need it in `Private` namespace to update widget title
   private _isDirty = false;
@@ -877,12 +893,10 @@ export namespace FBLWidget {
      */
     setBusy?: () => IDisposable;
 
-
     /**
      * Existing model to be loaded into widget
      */
     model?: IFBLWidgetModel;
-
 
     /**
      * Icon associated with this widget, default to fblIcon
@@ -892,13 +906,12 @@ export namespace FBLWidget {
     /**
      * Optionally Specify Widget Id
      */
-    id?: string
-
+    id?: string;
 
     /**
      * Client Id
-    */
-    clientId?: string
+     */
+    clientId?: string;
 
     /**
      * Info panel widget
@@ -914,11 +927,9 @@ export namespace FBLWidget {
      * Tracker instance to see how many widgets of the same kind already exist in the
      * current workspace
      */
-    _count?: number
+    _count?: number;
   }
-
 }
-
 
 /**
  * A namespace for private data.
@@ -927,16 +938,16 @@ namespace Private {
   /**
    * The counter for new consoles.
    */
-  export let count = 1;
+  export let count = 1; // eslint-disable-line
 
   /**
    * Update the title of a console panel.
    */
   export function updateTitle(
     widget: FBLWidget,
-    connected: Date | null,
+    connected: Date | null
     // executed: Date | null
-  ) {
+  ): void {
     const sessionContext = widget.sessionContext.session;
     if (sessionContext) {
       let caption =

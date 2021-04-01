@@ -67,9 +67,9 @@ export const webIcon = new LabIcon({
 });
 
 export const fblSettingIcon = new LabIcon({
-    name: 'fbl:setting',
-    svgstr: fblSettingIconStr
-  });
+  name: 'fbl:setting',
+  svgstr: fblSettingIconStr
+});
 
 export const chartAreaIcon = new LabIcon({
   name: 'fbl:chart-area',
