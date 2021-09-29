@@ -72,7 +72,7 @@ You can then use the following script to setup the development environment.
 ```bash
 # create conda environment and install python dependencies
 pip install jupyter jupyterlab>=3
-pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx msgpack
+pip install txaio twisted autobahn crochet service_identity autobahn-sync matplotlib h5py seaborn fastcluster networkx msgpack jupyter-packaging
 
 # if on Windows, execute the following:
 # pip install pypiwin32
