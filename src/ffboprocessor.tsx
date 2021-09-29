@@ -77,9 +77,9 @@ export class FFBOProcessor extends Widget {
     });
     this.editor.on('addRow', (editor: any) => {
       if (!editor) {
-        const all_processors: Array<any> = (this.editor.editors[
-          'root.fbl-processors'
-        ] as any).rows;
+        const all_processors: Array<any> = (
+          this.editor.editors['root.fbl-processors'] as any
+        ).rows;
         editor = all_processors[all_processors.length - 1];
       }
       const buttons = editor.container.getElementsByTagName('button');

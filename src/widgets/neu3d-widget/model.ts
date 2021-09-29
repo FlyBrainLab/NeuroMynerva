@@ -322,9 +322,9 @@ namespace Private {
    * Convert Neu3D's raw meshDict object to what we have
    * @param meshDict Neu3D's raw meshDict object
    */
-  export function loadNeu3DMeshDict(
-    meshDict: any
-  ): { [rid: string]: IMeshDictItem } {
+  export function loadNeu3DMeshDict(meshDict: any): {
+    [rid: string]: IMeshDictItem;
+  } {
     const modelMeshDict: { [rid: string]: IMeshDictItem } = {};
     for (const rid of Object.keys(meshDict)) {
       if (meshDict[rid].background) {

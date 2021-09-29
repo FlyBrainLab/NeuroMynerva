@@ -770,9 +770,8 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       } = null;
       // let meshes: any = null;
       let placeholder = PRESETS.disconnected.searchPlaceholder;
-      const inputQueryBar: HTMLInputElement = this._neu3dFooter.getElementsByTagName(
-        'input'
-      )[0];
+      const inputQueryBar: HTMLInputElement =
+        this._neu3dFooter.getElementsByTagName('input')[0];
       // return the corresponding preset in schema if found
       if (this.processor in this.ffboProcessors) {
         const schemaProcessor = this.ffboProcessors[this.processor];

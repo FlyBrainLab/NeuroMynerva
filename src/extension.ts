@@ -179,9 +179,8 @@ export class FBLWidgetTrackers implements IFBLWidgetTrackers {
         if (widget.sessionContext?.session) {
           if (!widget.sessionContext.isDisposed) {
             if (!(widget.sessionContext.session.path in sessionsDict)) {
-              sessionsDict[
-                widget.sessionContext.session.path
-              ] = new Array<FBLPanel>();
+              sessionsDict[widget.sessionContext.session.path] =
+                new Array<FBLPanel>();
             }
             sessionsDict[widget.sessionContext.session.path].push(panel);
           }
@@ -308,8 +307,8 @@ async function activateFBL(
           metadata: widget.content.model?.metadata,
           states: widget.content.model?.states
         },
-        ffboProcessors: (widget.content
-          .ffboProcessors as unknown) as ReadonlyPartialJSONObject,
+        ffboProcessors: widget.content
+          .ffboProcessors as unknown as ReadonlyPartialJSONObject,
         processor: widget.content.processor,
         clientId: widget.content.clientId,
         id: widget.content.id,
@@ -805,8 +804,8 @@ export namespace FBL {
       return {};
     }
     return FFBOProcessor.arrToDict(
-      (setting.get('fbl-processors')
-        .composite as any) as FFBOProcessor.ISettings[]
+      setting.get('fbl-processors')
+        .composite as any as FFBOProcessor.ISettings[]
     );
   }
 
@@ -980,7 +979,7 @@ export namespace FBL {
       path: panel.content.sessionContext.path,
       ref: panel.id,
       insertMode: args['insertMode'] ?? 'split-right',
-      activate: (args['activate'] as unknown) as boolean
+      activate: args['activate'] as unknown as boolean
     });
   }
 
