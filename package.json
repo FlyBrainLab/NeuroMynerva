@@ -68,7 +68,7 @@
     "neu3d": "git+https://github.com/fruitflybrain/neu3d.git#fbl",
     "recharts": "^1.8.5",
     "tabulator-tables": "^4.7.2",
-    "three": "^0.126.1"
+    "three": "^0.137.0"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^3.0.0",
