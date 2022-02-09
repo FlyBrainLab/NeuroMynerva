@@ -36,7 +36,7 @@ NeuroMynerva has the following requirements:
 
 - Python Version 3.6+
 - JupyterLab >= 2.2.0 or JupyterLab >= 3.0.0
-    * Jupyter Lab 2.x and 3.x have different installation instructions.
+    * JupyterLab 2.x and 3.x have different installation instructions.
     See the sections below ([Jlab 2.x](#jlab2), [Jlab 3.x](#jlab3))
 - Packages:
     * [Neuroballad](https://github.com/FlyBrainLab/Neuroballad.git) and packages required therein,
@@ -52,9 +52,10 @@ are available at https://github.com/FlyBrainLab/FlyBrainLab#readme.
 ### <a id="jlab3"></a> 2. Install/Develop/Uninstall on **JupyterLab 3.x**
 
 #### <a id="jlab3-install"></a> **Installation of NeuroMynerva**
-JupyterLab 3.x supports installing NeuroMynerva as a python pacakge.
+JupyterLab 3.x supports installing NeuroMynerva as a python package.
 You can install NeuroMynerva directly from PyPI via command line as
 ```bash
+pip install git+https://github.com/mkturkcan/autobahn-sync.git git+https://github.com/FlyBrainLab/Neuroballad.git git+https://github.com/palash1992/GEM.git git+https://github.com/mkturkcan/nxcontrol # flybrainlab requirements
 pip install flybrainlab  # required package for communicating with backend
 pip install neuromynerva # and refresh browser afterwards
 ```
