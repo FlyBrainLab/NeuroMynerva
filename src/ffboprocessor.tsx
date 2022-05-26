@@ -169,9 +169,10 @@ export namespace FFBOProcessor {
       secret: string;
     };
     SERVER: {
-      IP: string;
+      URL: string;
       realm: string;
       dataset: string[];
+      NeuroGFX?: string;
     };
     DEBUG: {
       debug: boolean;

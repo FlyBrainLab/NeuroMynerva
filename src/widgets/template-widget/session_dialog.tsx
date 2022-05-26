@@ -90,9 +90,9 @@ class SessionDialog extends ReactWidget {
       processorInfo.push(
         <tr key={'processor-1'}>
           <td>
-            <b>IP</b>
+            <b>URL</b>
           </td>
-          <td> {processor.SERVER.IP} </td>
+          <td> {processor.SERVER.URL} </td>
         </tr>
       );
       processorInfo.push(

@@ -416,6 +416,13 @@ async function activateFBL(
   fblWidgetTrackers.trackers.NeuGFX.widgetAdded.connect(
     (tracker: FBLTracker, w: FBLPanel) => {
       w.content.ffboProcessors = FBL.getProcessors(ffboProcessorSetting);
+      const currentProcessor = w.content.ffboProcessors[w.content.processor];
+      const prefix = currentProcessor.AUTH.ssl ? "https://" : "http://";
+      let URL = currentProcessor.SERVER.NeuroGFX;
+      if (URL === "") {
+        URL = currentProcessor.SERVER.URL + '/neurogfx';
+      }
+      (w as MainAreaWidget<NeuGFXWidget>).content.iFrameSrc = prefix+URL;
     },
     extension
   );

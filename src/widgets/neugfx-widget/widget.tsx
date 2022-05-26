@@ -50,6 +50,7 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
     this._neugfxContainer.sandbox.add('allow-forms');
     this.node.appendChild(this._neugfxContainer);
 
+    this._processor = options.processor;
     this._iFrameSrc =
       iFrameSrc ?? 'https://ffbolab.neurogfx.fruitflybrain.org/';
     this._neugfxContainer.src = this._iFrameSrc;

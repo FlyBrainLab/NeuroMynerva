@@ -53,7 +53,8 @@
         },
         "SERVER": {
           "properties": {
-            "IP": {
+            "URL": {
+              "title": "URL of FFBO Processor",
               "type": "string"
             },
             "dataset": {
@@ -66,9 +67,13 @@
             "realm": {
               "description": "Do not change",
               "type": "string"
+            },
+            "NeuroGFX": {
+              "title": "URL of NeuroGFX",
+              "type": "string"
             }
           },
-          "required":["IP", "dataset", "realm"],
+          "required":["URL", "dataset", "realm"],
           "type": "object"
         },
         "DEBUG": {
@@ -152,9 +157,10 @@
             "secret": "guestpass"
           },
           "SERVER": {
-            "IP": "neuronlp.fruitflybrain.org",
+            "URL": "neuronlp.fruitflybrain.org",
             "dataset": ["default"],
-            "realm": "realm1"
+            "realm": "realm1",
+            "NeuroGFX": ""
           },
           "DEBUG": {
             "debug": false
@@ -188,9 +194,10 @@
             "secret": "jije83b3jJN*31"
           },
           "SERVER": {
-            "IP": "hemibrain.neuronlp.fruitflybrain.org",
+            "URL": "hemibrain.neuronlp.fruitflybrain.org",
             "dataset": ["default"],
-            "realm": "realm1"
+            "realm": "realm1",
+            "NeuroGFX": ""
           },
           "DEBUG": {
             "debug": false
@@ -229,9 +236,10 @@
             "secret": "FENIjf983nFi9*12"
           },
           "SERVER": {
-            "IP": "larva.neuronlp.fruitflybrain.org",
+            "URL": "larva.neuronlp.fruitflybrain.org",
             "dataset": ["l1em"],
-            "realm": "realm1"
+            "realm": "realm1",
+            "NeuroGFX": ""
           },
           "DEBUG": {
             "debug": false
@@ -270,9 +278,10 @@
             "secret": "jf81NF*3n28!ljief"
           },
           "SERVER": {
-            "IP": "medula.neuronlp.fruitflybrain.org",
+            "URL": "medula.neuronlp.fruitflybrain.org",
             "dataset": ["medulla"],
-            "realm": "realm1"
+            "realm": "realm1",
+            "NeuroGFX": ""
           },
           "DEBUG": {
             "debug": false

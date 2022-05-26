@@ -667,7 +667,7 @@ export class FBLWidget extends Widget implements IFBLWidget {
       currentProcessor = this.ffboProcessors[processor];
     }
     const websocket = currentProcessor.AUTH.ssl === true ? 'wss' : 'ws';
-    const url = `${websocket}://${currentProcessor.SERVER.IP}/ws`;
+    const url = `${websocket}://${currentProcessor.SERVER.URL}/ws`;
 
     // DEBUG: ssl=True won't work for now, force to be False (default)
     let args = `

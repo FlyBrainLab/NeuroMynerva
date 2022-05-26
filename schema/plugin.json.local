@@ -12,9 +12,10 @@
                 "secret": "guestpass"
             },
             "SERVER": {
-                "IP": "localhost:8081",
+                "URL": "localhost:8081",
                 "dataset": ["l1em"],
-                "realm": "realm1"
+                "realm": "realm1",
+                "NeuroGFX": ""
             },
             "DEBUG": {
                 "debug": false
@@ -53,9 +54,10 @@
                 "secret": "guestpass"
             },
             "SERVER": {
-                "IP": "localhost:8081",
+                "URL": "localhost:8081",
                 "dataset": ["flycircuit"],
-                "realm": "realm1"
+                "realm": "realm1",
+                "NeuroGFX": ""
             },
             "DEBUG": {
                 "debug": false
@@ -89,9 +91,10 @@
                 "secret": "guestpass"
             },
             "SERVER": {
-                "IP": "localhost:8081",
+                "URL": "localhost:8081",
                 "dataset": ["hemibrain"],
-                "realm": "realm1"
+                "realm": "realm1",
+                "NeuroGFX": ""
             },
             "DEBUG": {
                 "debug": false
@@ -130,9 +133,10 @@
                 "secret": "guestpass"
             },
             "SERVER": {
-                "IP": "localhost:8081",
+                "URL": "localhost:8081",
                 "dataset": ["medulla"],
-                "realm": "realm1"
+                "realm": "realm1",
+                "NeuroGFX": ""
             },
             "DEBUG": {
                 "debug": false
