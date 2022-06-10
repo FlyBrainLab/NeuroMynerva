@@ -185,13 +185,15 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
 
   onCommMsg(msg: any) {
     console.debug(msg);
-    this._neugfxContainer.contentWindow.postMessage(
-      {
-        messageType: msg.content.data.messageType,
-        data: msg.content.data.data
-      },
-      '*'
-    );
+    if (msg['widget'] === 'GFX') {
+      this._neugfxContainer.contentWindow.postMessage(
+        {
+          messageType: msg.content.data.messageType,
+          data: msg.content.data.data
+        },
+        '*'
+      );
+    }
   }
 
   initFBLCode(): string {
