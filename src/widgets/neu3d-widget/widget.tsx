@@ -634,6 +634,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
     );
 
     /** Callback when ToneMappingPass Settings Change */
+    /**
     this.neu3d.settings.toneMappingPass.on(
       'change',
       (e: any) => {
@@ -644,6 +645,7 @@ export class Neu3DWidget extends FBLWidget implements IFBLWidget {
       },
       'brightness'
     );
+    */
 
     /** Callback when Background Settings Change */
     this.neu3d.settings.on(
