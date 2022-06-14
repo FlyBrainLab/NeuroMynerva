@@ -365,7 +365,8 @@ async function activateFBL(
           app.serviceManager.sessions,
           labShell,
           fblWidgetTrackers,
-          ffboProcessorSetting
+          ffboProcessorSetting,
+          commands
         );
         masterWidget.id = 'FBL-Master';
         masterWidget.title.caption = 'FBL Widgets and Running Sessions';

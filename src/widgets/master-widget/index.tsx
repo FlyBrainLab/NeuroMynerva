@@ -9,7 +9,7 @@ import {
 } from '@jupyterlab/apputils';
 import { ILabShell, LabShell } from '@jupyterlab/application';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-
+import { CommandRegistry } from '@lumino/commands';
 import {
   LabIcon,
   closeIcon, //, fileIcon
@@ -98,7 +98,8 @@ export class MasterWidget extends ReactWidget {
     sessionManager: SessionManager,
     labShell: ILabShell,
     fbltrackers: IFBLWidgetTrackers,
-    ffboProcessorSetting: ISettingRegistry.ISettings
+    ffboProcessorSetting: ISettingRegistry.ISettings,
+    commands: CommandRegistry
   ) {
     console.debug('Master Widget Created');
     super();
@@ -108,6 +109,7 @@ export class MasterWidget extends ReactWidget {
     this.ffboProcessorSetting = ffboProcessorSetting;
     this.addClass(MASTER_CLASS_JLab);
     this.render();
+    this.commands = commands;
   }
 
   protected render(): JSX.Element {
@@ -117,6 +119,7 @@ export class MasterWidget extends ReactWidget {
         fbltrackers={this.fbltrackers}
         labShell={this.labShell}
         sessionManager={this.sessionManager}
+        commands={this.commands}
       />
     );
   }
@@ -127,6 +130,7 @@ export class MasterWidget extends ReactWidget {
   private fbltrackers: FBLWidgetTrackers;
   readonly labShell: ILabShell;
   readonly sessionManager: SessionManager;
+  readonly commands: CommandRegistry;
   ffboProcessorSetting: ISettingRegistry.ISettings;
 }
 
@@ -139,13 +143,18 @@ namespace FBLWidgetReact {
     settings: ISettingRegistry.ISettings;
     labShell: ILabShell;
     sessionManager: SessionManager;
+    commands: CommandRegistry;
   }): JSX.Element {
     const trackers_arr = Object.values(props.fbltrackers.trackers);
     const trackers_names = Object.keys(props.fbltrackers.trackers);
+
     return (
       <>
         <div className={SECTION_HEADER_CLASS}>
-          <FFBOProcessorButton settings={props.settings}></FFBOProcessorButton>
+          <FFBOProcessorButton
+            settings={props.settings}
+            commands={props.commands}
+          ></FFBOProcessorButton>
         </div>
         {trackers_arr.map((tracker, i) => (
           <Section
