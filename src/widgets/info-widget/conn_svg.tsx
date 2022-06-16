@@ -104,7 +104,7 @@ export function ConnSVG(props: { pre: any; post: any }): JSX.Element {
           <p>No Post</p>
         )}
         <Tooltip
-          formatter={(value, name, entry) => {
+          formatter={(value: any, name: any, entry: any) => {
             return `${(value as number).toFixed(2)} %`;
           }}
         />
