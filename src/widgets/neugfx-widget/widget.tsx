@@ -184,8 +184,10 @@ export class NeuGFXWidget extends FBLWidget implements IFBLWidget {
   }
 
   onCommMsg(msg: any) {
-    console.debug(msg);
-    if (msg['widget'] === 'GFX') {
+    const thisMsg = msg.content.data as any;
+    console.debug('GFX received message:', thisMsg);
+
+    if (thisMsg['widget'] === 'GFX') {
       this._neugfxContainer.contentWindow.postMessage(
         {
           messageType: msg.content.data.messageType,
