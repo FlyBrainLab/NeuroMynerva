@@ -6,6 +6,7 @@ import Tabulator from 'tabulator-tables';
 import 'tabulator-tables/dist/css/tabulator.min.css'; //import Tabulator stylesheet
 import { Neu3DWidget } from '../neu3d-widget';
 import { IDataChangeArgs, Neu3DModel } from '../neu3d-widget/model';
+import { numberFilter, combinedFilter } from '../../filter';
 
 export class ConnTable {
   constructor(props: {
@@ -241,16 +242,17 @@ export class ConnTable {
       hozAlign: 'center',
       sorter: 'alphanum',
       headerFilter: true,
-      headerFilterPlaceholder: 'filter name'
+      headerFilterPlaceholder: 'filter name',
+      headerFilterFunc: combinedFilter
     },
     {
       title: 'Number',
       field: 'number',
       hozAlign: 'center',
       sorter: 'number',
-      headerFilter: 'number',
-      headerFilterPlaceholder: '>=',
-      headerFilterFunc: '>=',
+      headerFilter: true,
+      headerFilterPlaceholder: '>= N',
+      headerFilterFunc: numberFilter,
       width: 55
     }
   ];

@@ -280,6 +280,7 @@ namespace FBLWidgetReact {
       this.sessionManager = props.sessionManager;
       if (this.widget instanceof Neu3DWidget) {
         this._neuronTableId = `Neu3D-Neuron-Table-${this.widget.id}`;
+        this._synapseTableId = `Neu3D-Synapse-Table-${this.widget.id}`;
         this._meshTableId = `Neu3D-Mesh-Table-${this.widget.id}`;
       }
     }
@@ -288,12 +289,15 @@ namespace FBLWidgetReact {
       if (this.widget instanceof Neu3DWidget) {
         this.neu3dTables = new Neu3DModelTable({
           neuronContainer: this._neuronTableId,
+          synapseContainer: this._synapseTableId,
           meshContainer: this._meshTableId,
           neu3dPanel: this.panel as FBLPanel,
           labShell: this.labShell
         });
         this.neu3dTables.neuronTabulator.redraw();
         this.neu3dTables.neuronTabulator.setPage(1);
+        this.neu3dTables.synapseTabulator.redraw();
+        this.neu3dTables.synapseTabulator.setPage(1);
         this.neu3dTables.meshTabulator.redraw();
         this.neu3dTables.meshTabulator.setPage(1);
       }
@@ -343,7 +347,7 @@ namespace FBLWidgetReact {
                     title={
                       <>
                         <span className={ITEM_LABEL_CLASS}>
-                          Neurons & Synapses
+                          Neurons
                         </span>
                         <div
                           className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`}
@@ -354,7 +358,7 @@ namespace FBLWidgetReact {
                             onClick={() => {
                               this.neu3dTables.showAllNeurons(true);
                             }}
-                            tooltip={'Show All Neurons & Synapses'}
+                            tooltip={'Show All Neurons'}
                           />
                           <ToolbarButtonComponent
                             key={1}
@@ -362,7 +366,7 @@ namespace FBLWidgetReact {
                             onClick={() => {
                               this.neu3dTables.hideAllNeurons(true);
                             }}
-                            tooltip={'Hide All Neurons & Synapses'}
+                            tooltip={'Hide All Neurons'}
                           />
                           <ToolbarButtonComponent
                             key={2}
@@ -370,7 +374,7 @@ namespace FBLWidgetReact {
                             onClick={() => {
                               this.neu3dTables.pinAllNeurons(true);
                             }}
-                            tooltip={'Pin All Neurons & Synapses'}
+                            tooltip={'Pin All Neurons'}
                           />
                           <ToolbarButtonComponent
                             key={3}
@@ -378,7 +382,7 @@ namespace FBLWidgetReact {
                             onClick={() => {
                               this.neu3dTables.unpinAllNeurons(true);
                             }}
-                            tooltip={'UnPin All Neurons & Synapses'}
+                            tooltip={'UnPin All Neurons'}
                           />
                           <ToolbarButtonComponent
                             key={4}
@@ -387,7 +391,7 @@ namespace FBLWidgetReact {
                               this.neu3dTables.removeAllNeurons(true);
                             }}
                             tooltip={
-                              'Remove All Active Unpinned Neurons & Synapses'
+                              'Remove All Active Unpinned Neurons'
                             }
                           />
                         </div>
@@ -397,6 +401,67 @@ namespace FBLWidgetReact {
                       <div
                         className={NEU3D_TABLE}
                         id={this._neuronTableId}
+                      ></div>
+                    }
+                  ></CollapsibleSection>
+                  <CollapsibleSection
+                    title={
+                      <>
+                        <span className={ITEM_LABEL_CLASS}>
+                          Synapses
+                        </span>
+                        <div
+                          className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`}
+                        >
+                          <ToolbarButtonComponent
+                            key={0}
+                            icon={Icons.eyeIcon}
+                            onClick={() => {
+                              this.neu3dTables.showAllSynapses(true);
+                            }}
+                            tooltip={'Show All Synapses'}
+                          />
+                          <ToolbarButtonComponent
+                            key={1}
+                            icon={Icons.eyeSlashIcon}
+                            onClick={() => {
+                              this.neu3dTables.hideAllSynapses(true);
+                            }}
+                            tooltip={'Hide All Synapses'}
+                          />
+                          <ToolbarButtonComponent
+                            key={2}
+                            icon={Icons.mapPinIcon}
+                            onClick={() => {
+                              this.neu3dTables.pinAllSynapses(true);
+                            }}
+                            tooltip={'Pin All Synapses'}
+                          />
+                          <ToolbarButtonComponent
+                            key={3}
+                            icon={Icons.mapUpinIcon}
+                            onClick={() => {
+                              this.neu3dTables.unpinAllSynapses(true);
+                            }}
+                            tooltip={'UnPin All Synapses'}
+                          />
+                          <ToolbarButtonComponent
+                            key={4}
+                            icon={Icons.trashIcon}
+                            onClick={() => {
+                              this.neu3dTables.removeAllSynapses(true);
+                            }}
+                            tooltip={
+                              'Remove All Active Unpinned Synapses'
+                            }
+                          />
+                        </div>
+                      </>
+                    }
+                    children={
+                      <div
+                        className={NEU3D_TABLE}
+                        id={this._synapseTableId}
                       ></div>
                     }
                   ></CollapsibleSection>
@@ -421,7 +486,7 @@ namespace FBLWidgetReact {
                             onClick={() => {
                               this.neu3dTables.hideAllMeshes(true);
                             }}
-                            tooltip={'Hide All Active  Meshes'}
+                            tooltip={'Hide All Active Meshes'}
                           />
                           <ToolbarButtonComponent
                             key={2}
@@ -483,6 +548,7 @@ namespace FBLWidgetReact {
     readonly labShell: LabShell;
     readonly sessionManager: SessionManager;
     private _neuronTableId = '';
+    private _synapseTableId = '';
     private _meshTableId = '';
     neu3dTables: Neu3DModelTable = null;
   }
