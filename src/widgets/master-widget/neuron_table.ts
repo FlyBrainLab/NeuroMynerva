@@ -36,8 +36,9 @@ export class Neu3DModelTable {
       data: this.neurons, //link data to table
       columns: this.neuronColumns, //define table columns
       tooltips: true,
-      pagination: 'local',
-      paginationSize: 15,
+      maxHeight: "250px",
+      //pagination: 'local',
+      //paginationSize: 15,
       initialSort: [{ column: 'label', dir: 'desc' }],
       layout: 'fitColumns',
       cellMouseOver: (e: any, cell: any) => {
@@ -60,9 +61,10 @@ export class Neu3DModelTable {
       data: this.synapses, //link data to table
       columns: this.synapseColumns, //define table columns
       tooltips: true,
-      pagination: 'local',
-      paginationSize: 15,
-      initialSort: [{ column: 'label', dir: 'desc' }],
+      maxHeight: "250px",
+      //pagination: 'local',
+      //paginationSize: 15,
+      initialSort: [{ column: 'N', dir: 'desc' }],
       layout: 'fitColumns',
       cellMouseOver: (e: any, cell: any) => {
         const { rid } = cell.getData();
@@ -85,8 +87,9 @@ export class Neu3DModelTable {
       data: this.meshes, //link data to table
       columns: this.neuropilColumns, //define table columns
       tooltips: true,
-      pagination: 'local',
-      paginationSize: 15,
+      maxHeight: "250px",
+      //pagination: 'local',
+      //paginationSize: 15,
       initialSort: [{ column: 'label', dir: 'desc' }],
       layout: 'fitColumns',
       cellMouseOver: (e: any, cell: any) => {
@@ -107,21 +110,21 @@ export class Neu3DModelTable {
     // debounce redraw commands
     this.delayedRedrawNeuron = _.debounce(() => {
       this.neuronTabulator.redraw();
-      this.neuronTabulator.setPage(this.neuronTabulator.getPage());
+      //this.neuronTabulator.setPage(this.neuronTabulator.getPage());
       this.neuronTabulator.restoreRedraw();
     }, 1000);
 
     // debounce redraw commands
     this.delayedRedrawSynapse = _.debounce(() => {
       this.synapseTabulator.redraw();
-      this.synapseTabulator.setPage(this.synapseTabulator.getPage());
+      //this.synapseTabulator.setPage(this.synapseTabulator.getPage());
       this.synapseTabulator.restoreRedraw();
     }, 1000);
 
     // debounce redraw commands
     this.delayedRedrawMesh = _.debounce(() => {
       this.meshTabulator.redraw();
-      this.meshTabulator.setPage(this.meshTabulator.getPage());
+      //this.meshTabulator.setPage(this.meshTabulator.getPage());
       this.meshTabulator.restoreRedraw();
     }, 1000);
 
@@ -447,9 +450,11 @@ export class Neu3DModelTable {
       field: 'label',
       hozAlign: 'center',
       sorter: 'alphanum',
+      minWidth: 80,
       headerFilter: true,
       headerFilterPlaceholder: 'filter name',
-      headerFilterFunc: combinedFilter
+      headerFilterFunc: combinedFilter,
+      frozen: true
     },
     {
       title: 'Class',
@@ -466,6 +471,7 @@ export class Neu3DModelTable {
       hozAlign: 'center',
       headerFilter: false,
       headerSort: true,
+      sorter: "boolean",
       width: 32,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -479,6 +485,7 @@ export class Neu3DModelTable {
       hozAlign: 'center',
       headerFilter: false,
       headerSort: true,
+      sorter: "boolean",
       width: 32,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -525,29 +532,33 @@ export class Neu3DModelTable {
       field: 'presynaptic',
       hozAlign: 'center',
       sorter: 'alphanum',
+      minWidth: 80,
       headerFilter: true,
       headerFilterPlaceholder: 'filter name',
       headerFilterFunc: combinedFilter,
+      //frozen: true
     },
     {
       title: 'Postsynaptic',
       field: 'postsynaptic',
       hozAlign: 'center',
+      minWidth: 80,
       sorter: 'alphanum',
       headerFilter: true,
       headerFilterPlaceholder: 'filter name',
-      headerFilterFunc: combinedFilter
+      headerFilterFunc: combinedFilter,
+      //frozen: true
     },
     {
-      title: 'N',
+      title: 'Number',
       field: 'N',
       hozAlign: 'center',
       sorter: 'number',
       width: 55,
       headerFilter: true,
-      editor: "alphanum",
       headerFilterPlaceholder: '>= N',
       headerFilterFunc: numberFilter,
+      //frozen: true
     },
     {
       title: 'Vis',
@@ -624,7 +635,7 @@ export class Neu3DModelTable {
       hozAlign: 'center',
       sorter: 'alphanum',
       headerFilter: true,
-      width: 65,
+      width: 55,
       headerFilterPlaceholder: 'filter class'
     },
     {
@@ -668,3 +679,4 @@ export class Neu3DModelTable {
   readonly delayedRedrawSynapse: any;
   readonly delayedRedrawMesh: any;
 }
+

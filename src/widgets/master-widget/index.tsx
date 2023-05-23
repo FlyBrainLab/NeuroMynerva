@@ -295,11 +295,11 @@ namespace FBLWidgetReact {
           labShell: this.labShell
         });
         this.neu3dTables.neuronTabulator.redraw();
-        this.neu3dTables.neuronTabulator.setPage(1);
+        //this.neu3dTables.neuronTabulator.setPage(1);
         this.neu3dTables.synapseTabulator.redraw();
-        this.neu3dTables.synapseTabulator.setPage(1);
+        //this.neu3dTables.synapseTabulator.setPage(1);
         this.neu3dTables.meshTabulator.redraw();
-        this.neu3dTables.meshTabulator.setPage(1);
+        //this.neu3dTables.meshTabulator.setPage(1);
       }
     }
 

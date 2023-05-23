@@ -24,8 +24,9 @@ export class ConnTable {
       data: this.data, //link data to table
       columns: this.columns, //define table columns
       tooltips: true,
-      pagination: 'local',
-      paginationSize: 8,
+      maxHeight: "200px",
+      //pagination: 'local',
+      //paginationSize: 8,
       // page: 3,
       initialSort: [{ column: 'number', dir: 'desc' }],
       layout: 'fitColumns',
@@ -207,6 +208,7 @@ export class ConnTable {
       hozAlign: 'center',
       headerFilter: false,
       headerSort: true,
+      sorter: "boolean",
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -224,7 +226,8 @@ export class ConnTable {
       field: 'synapse_in_workspace',
       hozAlign: 'center',
       headerSort: true,
-      width: 55,
+      sorter: "boolean",
+      width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
         const { s_rid, syn_rid } = cell.getData();
