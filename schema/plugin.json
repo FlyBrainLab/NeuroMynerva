@@ -270,7 +270,7 @@
             "secret": "jf81NF*3n28!ljief"
           },
           "SERVER": {
-            "IP": "medula.neuronlp.fruitflybrain.org",
+            "IP": "medulla.neuronlp.fruitflybrain.org",
             "dataset": ["medulla"],
             "realm": "realm1"
           },
