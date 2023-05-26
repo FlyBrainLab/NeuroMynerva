@@ -2,7 +2,7 @@
  * Connectivity table that uses tabulator class to render connectivity data object
  */
 import '@fortawesome/fontawesome-free/js/all.js';
-import Tabulator from 'tabulator-tables';
+import {TabulatorFull as Tabulator, ColumnDefinition, ColumnDefinitionAlign, Editor} from "tabulator-tables";
 import 'tabulator-tables/dist/css/tabulator.min.css'; //import Tabulator stylesheet
 import { Neu3DWidget } from '../neu3d-widget';
 import { IDataChangeArgs, Neu3DModel } from '../neu3d-widget/model';
@@ -23,7 +23,6 @@ export class ConnTable {
       reactiveData: true,
       data: this.data, //link data to table
       columns: this.columns, //define table columns
-      tooltips: true,
       maxHeight: "200px",
       //pagination: 'local',
       //paginationSize: 8,
@@ -50,8 +49,14 @@ export class ConnTable {
         this.neu3d.neu3d.highlight();
       }
     });
+    this.tabulator.on("tableBuilt", () => {
+      this.tabulator.initialized = true;
+    });
+
     if (!this.hasSynMorph(this.data)) {
-      this.tabulator.hideColumn('synapse_in_workspace');
+      this.tabulator.on("tableBuilt", () => {
+        this.tabulator.hideColumn('synapse_in_workspace');
+      });
     }
     this.neu3d?.model.dataChanged.connect(this.handleDataChanged.bind(this));
   }
@@ -201,14 +206,16 @@ export class ConnTable {
   /**
    * Schema for all columns.
    */
-  readonly columns = [
+  readonly columns: ColumnDefinition[] = [
     {
       title: 'Neuron',
       field: 'neuron_in_workspace',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Toggle to add the synaptic partner\n.Hover to highlight existing neurons in workspace',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: true,
-      sorter: "boolean",
+      sorter: 'boolean',
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -219,14 +226,16 @@ export class ConnTable {
         } else {
           this.neu3d?.removeByRid(n_rid);
         }
-      }
+      },
     },
     {
       title: 'Synapse',
       field: 'synapse_in_workspace',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Toggle to add the group of synapses\n.Hover to highlight this groups of synapses in workspace if exists',
+      tooltip: true,
       headerSort: true,
-      sorter: "boolean",
+      sorter: 'boolean',
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -237,27 +246,31 @@ export class ConnTable {
         } else {
           this.neu3d?.removeByRid(s_rid);
         }
-      }
+      },
     },
     {
       title: 'Name',
       field: 'uname',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'The unique name of the synaptic partner',
+      tooltip: true,
       sorter: 'alphanum',
-      headerFilter: true,
+      headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
-      headerFilterFunc: combinedFilter
+      headerFilterFunc: combinedFilter,
     },
     {
       title: 'Number',
       field: 'number',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Number of synapses',
+      tooltip: true,
       sorter: 'number',
-      headerFilter: true,
+      headerFilter: true as Editor,
       headerFilterPlaceholder: '>= N',
       headerFilterFunc: numberFilter,
-      width: 55
-    }
+      width: 55,
+    },
   ];
 
   data: IConnDataItem[];

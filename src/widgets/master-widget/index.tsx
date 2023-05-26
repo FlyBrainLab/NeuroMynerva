@@ -294,11 +294,29 @@ namespace FBLWidgetReact {
           neu3dPanel: this.panel as FBLPanel,
           labShell: this.labShell
         });
-        this.neu3dTables.neuronTabulator.redraw();
+        if (this.neu3dTables.neuronTabulator.initialized) {
+          this.neu3dTables.neuronTabulator.redraw();
+        } else {
+          this.neu3dTables.neuronTabulator.on("tableBuilt", () => {
+            this.neu3dTables.neuronTabulator.redraw();
+          });
+        }
         //this.neu3dTables.neuronTabulator.setPage(1);
-        this.neu3dTables.synapseTabulator.redraw();
+        if (this.neu3dTables.synapseTabulator.initialized) {
+          this.neu3dTables.synapseTabulator.redraw();
+        } else {
+          this.neu3dTables.synapseTabulator.on("tableBuilt", () => {
+            this.neu3dTables.synapseTabulator.redraw();
+          });
+        }
         //this.neu3dTables.synapseTabulator.setPage(1);
-        this.neu3dTables.meshTabulator.redraw();
+        if (this.neu3dTables.meshTabulator.initialized) {
+          this.neu3dTables.meshTabulator.redraw();
+        } else {
+          this.neu3dTables.meshTabulator.on("tableBuilt", () => {
+            this.neu3dTables.meshTabulator.redraw();
+          });
+        }
         //this.neu3dTables.meshTabulator.setPage(1);
       }
     }

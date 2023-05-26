@@ -2,7 +2,7 @@
 // in a table format
 import * as _ from 'lodash';
 import '@fortawesome/fontawesome-free/js/all.js';
-import Tabulator from 'tabulator-tables';
+import {TabulatorFull as Tabulator, ColumnDefinition, ColumnDefinitionAlign, Editor} from "tabulator-tables";
 import 'tabulator-tables/dist/css/tabulator.min.css'; //import Tabulator stylesheet
 import { numberFilter, combinedFilter } from '../../filter';
 import { Neu3DWidget } from '../neu3d-widget';
@@ -35,7 +35,6 @@ export class Neu3DModelTable {
       reactiveData: true, //enable reactive data
       data: this.neurons, //link data to table
       columns: this.neuronColumns, //define table columns
-      tooltips: true,
       maxHeight: "250px",
       //pagination: 'local',
       //paginationSize: 15,
@@ -55,12 +54,15 @@ export class Neu3DModelTable {
         this.labShell.activateById(this.panel.id);
       }
     });
+    this.neuronTabulator.on("tableBuilt", () => {
+      this.neuronTabulator.initialized = true;
+    });
+
 
     this.synapseTabulator = new Tabulator(`#${props.synapseContainer}`, {
       reactiveData: true, //enable reactive data
       data: this.synapses, //link data to table
       columns: this.synapseColumns, //define table columns
-      tooltips: true,
       maxHeight: "250px",
       //pagination: 'local',
       //paginationSize: 15,
@@ -80,13 +82,15 @@ export class Neu3DModelTable {
         this.labShell.activateById(this.panel.id);
       }
     });
+    this.synapseTabulator.on("tableBuilt", () => {
+      this.synapseTabulator.initialized = true;
+    });
 
 
     this.meshTabulator = new Tabulator(`#${props.meshContainer}`, {
       reactiveData: true, //enable reactive data
       data: this.meshes, //link data to table
       columns: this.neuropilColumns, //define table columns
-      tooltips: true,
       maxHeight: "250px",
       //pagination: 'local',
       //paginationSize: 15,
@@ -106,26 +110,51 @@ export class Neu3DModelTable {
         this.labShell.activateById(this.panel.id);
       }
     });
+    this.meshTabulator.on("tableBuilt", () => {
+      this.meshTabulator.initialized = true;
+    });
 
     // debounce redraw commands
     this.delayedRedrawNeuron = _.debounce(() => {
-      this.neuronTabulator.redraw();
-      //this.neuronTabulator.setPage(this.neuronTabulator.getPage());
-      this.neuronTabulator.restoreRedraw();
+      if (this.neuronTabulator.initialized) {
+        this.neuronTabulator.redraw();
+        //this.neuronTabulator.setPage(this.neuronTabulator.getPage());
+        this.neuronTabulator.restoreRedraw();
+      } else {
+        this.neuronTabulator.on("tableBuilt", () => {
+          this.neuronTabulator.redraw();
+          //this.neuronTabulator.setPage(this.neuronTabulator.getPage());
+          this.neuronTabulator.restoreRedraw();
+        });
+      }
     }, 1000);
 
     // debounce redraw commands
     this.delayedRedrawSynapse = _.debounce(() => {
-      this.synapseTabulator.redraw();
-      //this.synapseTabulator.setPage(this.synapseTabulator.getPage());
-      this.synapseTabulator.restoreRedraw();
+      if (this.synapseTabulator.initialized) {
+        this.synapseTabulator.redraw();
+        this.synapseTabulator.restoreRedraw();
+      } else {
+        this.synapseTabulator.on("tableBuilt", () => {
+          this.synapseTabulator.redraw();
+          //this.synapseTabulator.setPage(this.synapseTabulator.getPage());
+          this.synapseTabulator.restoreRedraw();
+        });
+      }
     }, 1000);
 
     // debounce redraw commands
     this.delayedRedrawMesh = _.debounce(() => {
-      this.meshTabulator.redraw();
-      //this.meshTabulator.setPage(this.meshTabulator.getPage());
-      this.meshTabulator.restoreRedraw();
+      if (this.meshTabulator.initialized) {
+        this.meshTabulator.redraw();
+        this.meshTabulator.restoreRedraw();
+      } else {
+        this.meshTabulator.on("tableBuilt", () => {
+          this.meshTabulator.redraw();
+          //this.meshTabulator.setPage(this.meshTabulator.getPage());
+          this.meshTabulator.restoreRedraw();
+        });
+      }
     }, 1000);
 
     this.neu3d.model.dataChanged.connect((caller, change) => {
@@ -444,14 +473,16 @@ export class Neu3DModelTable {
   /**
    * Schema for all columns.
    */
-  readonly neuronColumns = [
+  readonly neuronColumns: ColumnDefinition[] = [
     {
       title: 'Name',
       field: 'label',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'The unique name of each neuron',
       sorter: 'alphanum',
+      tooltip: true,
       minWidth: 80,
-      headerFilter: true,
+      headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
       headerFilterFunc: combinedFilter,
       frozen: true
@@ -459,17 +490,21 @@ export class Neu3DModelTable {
     {
       title: 'Class',
       field: 'class',
-      hozAlign: 'center',
+      hozAlign: 'center'as ColumnDefinitionAlign,
+      headerTooltip: 'The type of morphology. Either Neuron or NeuronFragment',
+      tooltip: true,
       sorter: 'alphanum',
-      headerFilter: true,
+      headerFilter: true as Editor,
       width: 55,
       headerFilterPlaceholder: 'filter class'
     },
     {
       title: 'Vis',
       field: 'visibility',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center'as ColumnDefinitionAlign,
+      headerTooltip: 'Visibility',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: true,
       sorter: "boolean",
       width: 32,
@@ -482,8 +517,10 @@ export class Neu3DModelTable {
     {
       title: 'Pin',
       field: 'pinned',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center'as ColumnDefinitionAlign,
+      headerTooltip: 'Pin',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: true,
       sorter: "boolean",
       width: 32,
@@ -495,8 +532,10 @@ export class Neu3DModelTable {
     },
     {
       title: 'Remove',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center'as ColumnDefinitionAlign,
+      headerTooltip: 'Remove from workspace',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: false,
       width: 32,
       formatter: (cell: any, formatterParams: any) => {
@@ -508,8 +547,10 @@ export class Neu3DModelTable {
     },
     {
       title: 'Info',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center'as ColumnDefinitionAlign,
+      headerTooltip: 'Get more detailed info of the neuron',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: false,
       width: 32,
       formatter: (cell: any, formatterParams: any) => {
@@ -526,14 +567,16 @@ export class Neu3DModelTable {
   /**
    * Schema for all columns.
    */
-  readonly synapseColumns = [
+  readonly synapseColumns : ColumnDefinition[] = [
     {
       title: 'Presynaptic',
       field: 'presynaptic',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'The unique name of the presynaptic item.',
+      tooltip: true,
       sorter: 'alphanum',
       minWidth: 80,
-      headerFilter: true,
+      headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
       headerFilterFunc: combinedFilter,
       //frozen: true
@@ -541,10 +584,12 @@ export class Neu3DModelTable {
     {
       title: 'Postsynaptic',
       field: 'postsynaptic',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'The unique name of the postsynaptic item.',
+      tooltip: true,
       minWidth: 80,
       sorter: 'alphanum',
-      headerFilter: true,
+      headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
       headerFilterFunc: combinedFilter,
       //frozen: true
@@ -552,10 +597,12 @@ export class Neu3DModelTable {
     {
       title: 'Number',
       field: 'N',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'The number of synapses between presynaptic and postsynaptic item.',
+      tooltip: true,
       sorter: 'number',
       width: 55,
-      headerFilter: true,
+      headerFilter: true as Editor,
       headerFilterPlaceholder: '>= N',
       headerFilterFunc: numberFilter,
       //frozen: true
@@ -563,8 +610,10 @@ export class Neu3DModelTable {
     {
       title: 'Vis',
       field: 'visibility',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Visibility',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: true,
       width: 32,
       formatter: 'tickCross',
@@ -576,8 +625,10 @@ export class Neu3DModelTable {
     {
       title: 'Pin',
       field: 'pinned',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Pin',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: true,
       width: 32,
       formatter: 'tickCross',
@@ -588,8 +639,10 @@ export class Neu3DModelTable {
     },
     {
       title: 'Remove',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Remove from workspace',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: false,
       width: 32,
       formatter: (cell: any, formatterParams: any) => {
@@ -601,8 +654,10 @@ export class Neu3DModelTable {
     },
     {
       title: 'Info',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Get detailed info about the item',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: false,
       width: 32,
       formatter: (cell: any, formatterParams: any) => {
@@ -619,29 +674,35 @@ export class Neu3DModelTable {
   /**
    * Schema for all columns.
    */
-  readonly neuropilColumns = [
+  readonly neuropilColumns : ColumnDefinition[] = [
     {
       title: 'Name',
       field: 'label',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'The name of the region',
+      tooltip: true,
       sorter: 'alphanum',
-      headerFilter: true,
+      headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
       headerFilterFunc: combinedFilter
     },
     {
       title: 'Class',
       field: 'class',
-      hozAlign: 'center',
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'The type of region, Neuropil, Subregion or Subsystem',
+      tooltip: true,
       sorter: 'alphanum',
-      headerFilter: true,
+      headerFilter: true as Editor,
       width: 55,
       headerFilterPlaceholder: 'filter class'
     },
     {
       title: 'Remove',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Remove from workspace',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: false,
       width: 32,
       formatter: (cell: any, formatterParams: any) => {
@@ -654,8 +715,10 @@ export class Neu3DModelTable {
     {
       title: 'Vis',
       field: 'visibility',
-      hozAlign: 'center',
-      headerFilter: false,
+      hozAlign: 'center' as ColumnDefinitionAlign,
+      headerTooltip: 'Visibility',
+      tooltip: true,
+      headerFilter: undefined,
       headerSort: true,
       width: 32,
       formatter: 'tickCross',
