@@ -8,6 +8,9 @@ import { Neu3DWidget } from '../neu3d-widget';
 import { IDataChangeArgs, Neu3DModel } from '../neu3d-widget/model';
 import { numberFilter, combinedFilter } from '../../filter';
 
+let singleClickTimeout: number | null = null;
+let synapseSingleClickTimeout: number | null = null;
+
 export class ConnTable {
   constructor(props: {
     container: HTMLElement;
@@ -29,26 +32,12 @@ export class ConnTable {
       // page: 3,
       initialSort: [{ column: 'number', dir: 'desc' }],
       layout: 'fitColumns',
-      cellMouseOver: (e: any, cell: any) => {
-        const { rid, syn_rid } = cell.getData();
-        switch (cell.getColumn().getField()) {
-          case 'synapse_in_workspace':
-            if (this.neu3d?.isInWorkspace(syn_rid)) {
-              this.neu3d.neu3d.highlight(syn_rid);
-            }
-            break;
-          default:
-            if (this.neu3d?.isInWorkspace(rid)) {
-              this.neu3d.neu3d.highlight(rid);
-            }
-            break;
-        }
-      },
-      rowMouseOut: (e: any, row: any) => {
-        // reset highlight
-        this.neu3d.neu3d.highlight();
-      }
     });
+    this.tabulator.on("rowMouseOut", (e: any, row: any) => {
+      // reset highlight
+      this.neu3d.neu3d.highlight();
+    });
+
     this.tabulator.on("tableBuilt", () => {
       this.tabulator.initialized = true;
     });
@@ -211,20 +200,47 @@ export class ConnTable {
       title: 'Neuron',
       field: 'neuron_in_workspace',
       hozAlign: 'center' as ColumnDefinitionAlign,
-      headerTooltip: 'Toggle to add the synaptic partner\n.Hover to highlight existing neurons in workspace',
-      tooltip: true,
+      headerTooltip: 'Toggle to add the synaptic partner. Hover to highlight existing neurons in workspace. Double Click to pin.',
       headerFilter: undefined,
       headerSort: true,
       sorter: 'boolean',
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
-        const { n_rid, rid } = cell.getData();
-        if (!this.neu3d?.isInWorkspace(rid)) {
-          // not in workspace
-          this.neu3d?.addByRid(n_rid);
-        } else {
-          this.neu3d?.removeByRid(n_rid);
+
+        if (singleClickTimeout) {
+          // Second click (double click) registered
+          clearTimeout(singleClickTimeout);
+          singleClickTimeout = null;
+          return;
+        }
+      
+        // First click
+        singleClickTimeout = setTimeout(() => {
+          singleClickTimeout = null;
+          // Single click event handling code
+          console.log('Single click event triggered');
+          const { n_rid, rid } = cell.getData();
+          if (!this.neu3d?.isInWorkspace(rid)) {
+            // not in workspace
+            this.neu3d?.addByRid(n_rid);
+          } else {
+            this.neu3d?.removeByRid(n_rid);
+          }
+  
+        }, 200); // Delay period for checking double click
+
+      },
+      cellMouseOver: (e: any, cell: any) => {
+        const { rid } = cell.getData();
+        if (this.neu3d?.isInWorkspace(rid)) {
+          this.neu3d.neu3d.highlight(rid);
+        }
+      },
+      cellDblClick: (e: any, cell: any) => {
+        const { rid } = cell.getData();
+        if (this.neu3d?.isInWorkspace(rid)) {
+          this.neu3d.neu3d.togglePin(rid);
         }
       },
     },
@@ -232,19 +248,43 @@ export class ConnTable {
       title: 'Synapse',
       field: 'synapse_in_workspace',
       hozAlign: 'center' as ColumnDefinitionAlign,
-      headerTooltip: 'Toggle to add the group of synapses\n.Hover to highlight this groups of synapses in workspace if exists',
-      tooltip: true,
+      headerTooltip: 'Toggle to add the group of synapses. Hover to highlight this groups of synapses in workspace if exists. Double Click to pin/unpin.',
       headerSort: true,
       sorter: 'boolean',
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
-        const { s_rid, syn_rid } = cell.getData();
-        if (!this.neu3d?.isInWorkspace(syn_rid)) {
-          // not in workspace
-          this.neu3d?.addByRid(s_rid);
-        } else {
-          this.neu3d?.removeByRid(s_rid);
+        if (synapseSingleClickTimeout) {
+          // Second click (double click) registered
+          clearTimeout(synapseSingleClickTimeout);
+          synapseSingleClickTimeout = null;
+          return;
+        }
+      
+        // First click
+        synapseSingleClickTimeout = setTimeout(() => {
+          synapseSingleClickTimeout = null;
+          // Single click event handling code
+          const { s_rid, syn_rid } = cell.getData();
+          if (!this.neu3d?.isInWorkspace(syn_rid)) {
+            // not in workspace
+            this.neu3d?.addByRid(s_rid);
+          } else {
+            this.neu3d?.removeByRid(s_rid);
+          }
+  
+        }, 200); // Delay period for checking double click
+      },
+      cellMouseOver: (e: any, cell: any) => {
+        const { syn_rid } = cell.getData();
+        if (this.neu3d?.isInWorkspace(syn_rid)) {
+          this.neu3d.neu3d.highlight(syn_rid);
+        }
+      },
+      cellDblClick: (e: any, cell: any) => {
+        const { syn_rid } = cell.getData();
+        if (this.neu3d?.isInWorkspace(syn_rid)) {
+          this.neu3d.neu3d.togglePin(syn_rid);
         }
       },
     },

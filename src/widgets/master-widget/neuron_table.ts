@@ -40,16 +40,6 @@ export class Neu3DModelTable {
       //paginationSize: 15,
       initialSort: [{ column: 'label', dir: 'desc' }],
       layout: 'fitColumns',
-      cellMouseOver: (e: any, cell: any) => {
-        const { rid } = cell.getData();
-        if (this.neu3d?.isInWorkspace(rid)) {
-          this.neu3d.neu3d.highlight(rid, true);
-        }
-      },
-      rowMouseOut: (e: any, row: any) => {
-        // reset highlight
-        this.neu3d.neu3d.highlight();
-      },
       cellClick: (e: any, cell: any) => {
         this.labShell.activateById(this.panel.id);
       }
@@ -57,6 +47,21 @@ export class Neu3DModelTable {
     this.neuronTabulator.on("tableBuilt", () => {
       this.neuronTabulator.initialized = true;
     });
+    this.neuronTabulator.on("cellMouseOver", (e: any, cell: any) => {
+      const { rid } = cell.getData();
+      if (this.neu3d?.isInWorkspace(rid)) {
+        this.neu3d.neu3d.highlight(rid, true);
+      }
+    });
+
+    this.neuronTabulator.on("rowMouseOut", (e: any, row: any) => {
+      // reset highlight
+      this.neu3d.neu3d.highlight();
+    });
+    this.neuronTabulator.on("cellClick", (e: any, cell: any) => {
+      this.labShell.activateById(this.panel.id);
+    });
+    
 
 
     this.synapseTabulator = new Tabulator(`#${props.synapseContainer}`, {
@@ -68,24 +73,25 @@ export class Neu3DModelTable {
       //paginationSize: 15,
       initialSort: [{ column: 'N', dir: 'desc' }],
       layout: 'fitColumns',
-      cellMouseOver: (e: any, cell: any) => {
-        const { rid } = cell.getData();
-        if (this.neu3d?.isInWorkspace(rid)) {
-          this.neu3d.neu3d.highlight(rid, true);
-        }
-      },
-      rowMouseOut: (e: any, row: any) => {
-        // reset highlight
-        this.neu3d.neu3d.highlight();
-      },
-      cellClick: (e: any, cell: any) => {
-        this.labShell.activateById(this.panel.id);
-      }
     });
     this.synapseTabulator.on("tableBuilt", () => {
       this.synapseTabulator.initialized = true;
     });
 
+    this.synapseTabulator.on("cellMouseOver", (e: any, cell: any) => {
+      const { rid } = cell.getData();
+      if (this.neu3d?.isInWorkspace(rid)) {
+        this.neu3d.neu3d.highlight(rid, true);
+      }
+    });
+    this.synapseTabulator.on("rowMouseOut", (e: any, row: any) => {
+      // reset highlight
+      this.neu3d.neu3d.highlight();
+    });
+    this.synapseTabulator.on("cellClick", (e: any, cell: any) => {
+      this.labShell.activateById(this.panel.id);
+    });
+    
 
     this.meshTabulator = new Tabulator(`#${props.meshContainer}`, {
       reactiveData: true, //enable reactive data
@@ -96,20 +102,22 @@ export class Neu3DModelTable {
       //paginationSize: 15,
       initialSort: [{ column: 'label', dir: 'desc' }],
       layout: 'fitColumns',
-      cellMouseOver: (e: any, cell: any) => {
-        const { rid } = cell.getData();
-        if (this.neu3d?.isInWorkspace(rid)) {
-          this.neu3d.neu3d.highlight(rid, true);
-        }
-      },
-      rowMouseOut: (e: any, row: any) => {
-        // reset highlight
-        this.neu3d.neu3d.highlight();
-      },
-      cellClick: (e: any, cell: any) => {
-        this.labShell.activateById(this.panel.id);
+    });
+
+    this.meshTabulator.on("cellMouseOver", (e: any, cell: any) => {
+      const { rid } = cell.getData();
+      if (this.neu3d?.isInWorkspace(rid)) {
+        this.neu3d.neu3d.highlight(rid, true);
       }
     });
+    this.meshTabulator.on("rowMouseOut", (e: any, row: any) => {
+      // reset highlight
+      this.neu3d.neu3d.highlight();
+    });
+    this.meshTabulator.on("cellClick", (e: any, cell: any) => {
+      this.labShell.activateById(this.panel.id);
+    });
+
     this.meshTabulator.on("tableBuilt", () => {
       this.meshTabulator.initialized = true;
     });
@@ -503,7 +511,6 @@ export class Neu3DModelTable {
       field: 'visibility',
       hozAlign: 'center'as ColumnDefinitionAlign,
       headerTooltip: 'Visibility',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: true,
       sorter: "boolean",
@@ -519,7 +526,6 @@ export class Neu3DModelTable {
       field: 'pinned',
       hozAlign: 'center'as ColumnDefinitionAlign,
       headerTooltip: 'Pin',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: true,
       sorter: "boolean",
@@ -534,7 +540,6 @@ export class Neu3DModelTable {
       title: 'Remove',
       hozAlign: 'center'as ColumnDefinitionAlign,
       headerTooltip: 'Remove from workspace',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: false,
       width: 32,
@@ -549,7 +554,6 @@ export class Neu3DModelTable {
       title: 'Info',
       hozAlign: 'center'as ColumnDefinitionAlign,
       headerTooltip: 'Get more detailed info of the neuron',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: false,
       width: 32,
@@ -612,7 +616,6 @@ export class Neu3DModelTable {
       field: 'visibility',
       hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Visibility',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: true,
       width: 32,
@@ -627,7 +630,6 @@ export class Neu3DModelTable {
       field: 'pinned',
       hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Pin',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: true,
       width: 32,
@@ -641,7 +643,6 @@ export class Neu3DModelTable {
       title: 'Remove',
       hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Remove from workspace',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: false,
       width: 32,
@@ -656,7 +657,6 @@ export class Neu3DModelTable {
       title: 'Info',
       hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Get detailed info about the item',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: false,
       width: 32,
@@ -701,7 +701,6 @@ export class Neu3DModelTable {
       title: 'Remove',
       hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Remove from workspace',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: false,
       width: 32,
@@ -717,7 +716,6 @@ export class Neu3DModelTable {
       field: 'visibility',
       hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Visibility',
-      tooltip: true,
       headerFilter: undefined,
       headerSort: true,
       width: 32,
