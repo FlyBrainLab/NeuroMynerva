@@ -3,7 +3,9 @@
   "version": "0.2.14",
   "description": " NeuroMynerva extension for FlyBrainLab",
   "keywords": [
-    "jupyter",
+    "FlyBrainLab",
+    "Drosophila",
+    "fruit fly",
     "jupyterlab",
     "jupyterlab-extension"
   ],
