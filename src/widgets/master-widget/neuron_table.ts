@@ -2,7 +2,12 @@
 // in a table format
 import * as _ from 'lodash';
 import '@fortawesome/fontawesome-free/js/all.js';
-import {TabulatorFull as Tabulator, ColumnDefinition, ColumnDefinitionAlign, Editor} from "tabulator-tables";
+import {
+  TabulatorFull as Tabulator,
+  ColumnDefinition,
+  ColumnDefinitionAlign,
+  Editor
+} from 'tabulator-tables';
 import 'tabulator-tables/dist/css/tabulator.min.css'; //import Tabulator stylesheet
 import { numberFilter, combinedFilter } from '../../filter';
 import { Neu3DWidget } from '../neu3d-widget';
@@ -10,7 +15,6 @@ import { IDataChangeArgs, IMeshDictItem } from '../neu3d-widget/model';
 import '../../../style/master-widget/master.css';
 import { ILabShell } from '@jupyterlab/application';
 import { FBLPanel } from '../../extension';
-
 
 /**
  * Renderes a single Neu3D panel as a list item with buttons and dropdown
@@ -35,7 +39,7 @@ export class Neu3DModelTable {
       reactiveData: true, //enable reactive data
       data: this.neurons, //link data to table
       columns: this.neuronColumns, //define table columns
-      maxHeight: "250px",
+      maxHeight: '250px',
       //pagination: 'local',
       //paginationSize: 15,
       initialSort: [{ column: 'label', dir: 'desc' }],
@@ -44,81 +48,78 @@ export class Neu3DModelTable {
         this.labShell.activateById(this.panel.id);
       }
     });
-    this.neuronTabulator.on("tableBuilt", () => {
+    this.neuronTabulator.on('tableBuilt', () => {
       this.neuronTabulator.initialized = true;
     });
-    this.neuronTabulator.on("cellMouseOver", (e: any, cell: any) => {
+    this.neuronTabulator.on('cellMouseOver', (e: any, cell: any) => {
       const { rid } = cell.getData();
       if (this.neu3d?.isInWorkspace(rid)) {
         this.neu3d.neu3d.highlight(rid, true);
       }
     });
 
-    this.neuronTabulator.on("rowMouseOut", (e: any, row: any) => {
+    this.neuronTabulator.on('rowMouseOut', (e: any, row: any) => {
       // reset highlight
       this.neu3d.neu3d.highlight();
     });
-    this.neuronTabulator.on("cellClick", (e: any, cell: any) => {
+    this.neuronTabulator.on('cellClick', (e: any, cell: any) => {
       this.labShell.activateById(this.panel.id);
     });
-    
-
 
     this.synapseTabulator = new Tabulator(`#${props.synapseContainer}`, {
       reactiveData: true, //enable reactive data
       data: this.synapses, //link data to table
       columns: this.synapseColumns, //define table columns
-      maxHeight: "250px",
+      maxHeight: '250px',
       //pagination: 'local',
       //paginationSize: 15,
       initialSort: [{ column: 'N', dir: 'desc' }],
-      layout: 'fitColumns',
+      layout: 'fitColumns'
     });
-    this.synapseTabulator.on("tableBuilt", () => {
+    this.synapseTabulator.on('tableBuilt', () => {
       this.synapseTabulator.initialized = true;
     });
 
-    this.synapseTabulator.on("cellMouseOver", (e: any, cell: any) => {
+    this.synapseTabulator.on('cellMouseOver', (e: any, cell: any) => {
       const { rid } = cell.getData();
       if (this.neu3d?.isInWorkspace(rid)) {
         this.neu3d.neu3d.highlight(rid, true);
       }
     });
-    this.synapseTabulator.on("rowMouseOut", (e: any, row: any) => {
+    this.synapseTabulator.on('rowMouseOut', (e: any, row: any) => {
       // reset highlight
       this.neu3d.neu3d.highlight();
     });
-    this.synapseTabulator.on("cellClick", (e: any, cell: any) => {
+    this.synapseTabulator.on('cellClick', (e: any, cell: any) => {
       this.labShell.activateById(this.panel.id);
     });
-    
 
     this.meshTabulator = new Tabulator(`#${props.meshContainer}`, {
       reactiveData: true, //enable reactive data
       data: this.meshes, //link data to table
       columns: this.neuropilColumns, //define table columns
-      maxHeight: "250px",
+      maxHeight: '250px',
       //pagination: 'local',
       //paginationSize: 15,
       initialSort: [{ column: 'label', dir: 'desc' }],
-      layout: 'fitColumns',
+      layout: 'fitColumns'
     });
 
-    this.meshTabulator.on("cellMouseOver", (e: any, cell: any) => {
+    this.meshTabulator.on('cellMouseOver', (e: any, cell: any) => {
       const { rid } = cell.getData();
       if (this.neu3d?.isInWorkspace(rid)) {
         this.neu3d.neu3d.highlight(rid, true);
       }
     });
-    this.meshTabulator.on("rowMouseOut", (e: any, row: any) => {
+    this.meshTabulator.on('rowMouseOut', (e: any, row: any) => {
       // reset highlight
       this.neu3d.neu3d.highlight();
     });
-    this.meshTabulator.on("cellClick", (e: any, cell: any) => {
+    this.meshTabulator.on('cellClick', (e: any, cell: any) => {
       this.labShell.activateById(this.panel.id);
     });
 
-    this.meshTabulator.on("tableBuilt", () => {
+    this.meshTabulator.on('tableBuilt', () => {
       this.meshTabulator.initialized = true;
     });
 
@@ -129,7 +130,7 @@ export class Neu3DModelTable {
         //this.neuronTabulator.setPage(this.neuronTabulator.getPage());
         this.neuronTabulator.restoreRedraw();
       } else {
-        this.neuronTabulator.on("tableBuilt", () => {
+        this.neuronTabulator.on('tableBuilt', () => {
           this.neuronTabulator.redraw();
           //this.neuronTabulator.setPage(this.neuronTabulator.getPage());
           this.neuronTabulator.restoreRedraw();
@@ -143,7 +144,7 @@ export class Neu3DModelTable {
         this.synapseTabulator.redraw();
         this.synapseTabulator.restoreRedraw();
       } else {
-        this.synapseTabulator.on("tableBuilt", () => {
+        this.synapseTabulator.on('tableBuilt', () => {
           this.synapseTabulator.redraw();
           //this.synapseTabulator.setPage(this.synapseTabulator.getPage());
           this.synapseTabulator.restoreRedraw();
@@ -157,7 +158,7 @@ export class Neu3DModelTable {
         this.meshTabulator.redraw();
         this.meshTabulator.restoreRedraw();
       } else {
-        this.meshTabulator.on("tableBuilt", () => {
+        this.meshTabulator.on('tableBuilt', () => {
           this.meshTabulator.redraw();
           //this.meshTabulator.setPage(this.meshTabulator.getPage());
           this.meshTabulator.restoreRedraw();
@@ -194,15 +195,15 @@ export class Neu3DModelTable {
               this.meshTabulator.blockRedraw();
               this.delayedRedrawMesh();
             } else {
-              if (source[rid].class === "Synapse") {
+              if (source[rid].class === 'Synapse') {
                 this.synapses.push({
                   rid: rid,
                   orid: source[rid].orid,
                   class: source[rid].class ?? 'Synapse',
                   uname: source[rid].uname,
                   label: source[rid].label ?? rid,
-                  presynaptic: source[rid].uname.split("--")[0],
-                  postsynaptic: source[rid].uname.split("--")[1],
+                  presynaptic: source[rid].uname.split('--')[0],
+                  postsynaptic: source[rid].uname.split('--')[1],
                   N: source[rid].N,
                   visibility: source[rid].visibility ?? true,
                   pinned: source[rid].pinned ?? false,
@@ -326,12 +327,12 @@ export class Neu3DModelTable {
    * Hide all synapses
    * @param active if true, only hide active synapses in the tabulator
    */
-    hideAllSynapses(active = true): void {
-      const rids: string[] = this.synapseTabulator
-        .getData(active ? 'active' : '')
-        .map((r: any) => r.rid);
-      this.neu3d.neu3d.hide(rids);
-    }
+  hideAllSynapses(active = true): void {
+    const rids: string[] = this.synapseTabulator
+      .getData(active ? 'active' : '')
+      .map((r: any) => r.rid);
+    this.neu3d.neu3d.hide(rids);
+  }
 
   /**
    * Hide all meshes
@@ -355,11 +356,11 @@ export class Neu3DModelTable {
     this.neu3d.neu3d.show(rids);
   }
 
-   /**
+  /**
    * Show all synapses
    * @param active if true, only show active synapses in the tabulator
    */
-   showAllSynapses(active = true): void {
+  showAllSynapses(active = true): void {
     const rids: string[] = this.synapseTabulator
       .getData(active ? 'active' : '')
       .map((r: any) => r.rid);
@@ -425,14 +426,18 @@ export class Neu3DModelTable {
    * Parse data from neu3d widget
    * @param neu3d
    */
-  parseData(neu3d: Neu3DWidget): { neurons: Array<any>; synapses: Array<any>; meshes: Array<any> } {
+  parseData(neu3d: Neu3DWidget): {
+    neurons: Array<any>;
+    synapses: Array<any>;
+    meshes: Array<any>;
+  } {
     const neurons: Array<any> = [];
     const synapses: Array<any> = [];
     const meshes: Array<any> = [];
     for (const row of Object.entries(neu3d.model.data)) {
       const rid = row[0];
       const mesh = row[1] as IMeshDictItem;
-      const { label, visibility, pinned, background, uname, N} = mesh;
+      const { label, visibility, pinned, background, uname, N } = mesh;
       if (background) {
         meshes.push({
           rid: rid,
@@ -442,7 +447,7 @@ export class Neu3DModelTable {
           label: label ?? rid,
           visibility: visibility,
           background: background ?? true,
-          N: N ?? 0,
+          N: N ?? 0
         });
       } else {
         if (mesh.class === 'Synapse') {
@@ -454,12 +459,11 @@ export class Neu3DModelTable {
             label: label ?? rid,
             N: N ?? 0,
             presynaptic: uname.split('--')[0],
-            postsynaptic:  uname.split('--')[1],
+            postsynaptic: uname.split('--')[1],
             visibility: visibility,
             pinned: pinned,
             background: background ?? false
           });
-
         } else {
           neurons.push({
             rid: rid,
@@ -470,7 +474,7 @@ export class Neu3DModelTable {
             visibility: visibility,
             pinned: pinned,
             background: background ?? false,
-            N: N ?? 0,
+            N: N ?? 0
           });
         }
       }
@@ -498,7 +502,7 @@ export class Neu3DModelTable {
     {
       title: 'Class',
       field: 'class',
-      hozAlign: 'center'as ColumnDefinitionAlign,
+      hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'The type of morphology. Either Neuron or NeuronFragment',
       tooltip: true,
       sorter: 'alphanum',
@@ -509,11 +513,11 @@ export class Neu3DModelTable {
     {
       title: 'Vis',
       field: 'visibility',
-      hozAlign: 'center'as ColumnDefinitionAlign,
+      hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Visibility',
       headerFilter: undefined,
       headerSort: true,
-      sorter: "boolean",
+      sorter: 'boolean',
       width: 32,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -524,11 +528,11 @@ export class Neu3DModelTable {
     {
       title: 'Pin',
       field: 'pinned',
-      hozAlign: 'center'as ColumnDefinitionAlign,
+      hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Pin',
       headerFilter: undefined,
       headerSort: true,
-      sorter: "boolean",
+      sorter: 'boolean',
       width: 32,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
@@ -538,7 +542,7 @@ export class Neu3DModelTable {
     },
     {
       title: 'Remove',
-      hozAlign: 'center'as ColumnDefinitionAlign,
+      hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Remove from workspace',
       headerFilter: undefined,
       headerSort: false,
@@ -552,7 +556,7 @@ export class Neu3DModelTable {
     },
     {
       title: 'Info',
-      hozAlign: 'center'as ColumnDefinitionAlign,
+      hozAlign: 'center' as ColumnDefinitionAlign,
       headerTooltip: 'Get more detailed info of the neuron',
       headerFilter: undefined,
       headerSort: false,
@@ -571,7 +575,7 @@ export class Neu3DModelTable {
   /**
    * Schema for all columns.
    */
-  readonly synapseColumns : ColumnDefinition[] = [
+  readonly synapseColumns: ColumnDefinition[] = [
     {
       title: 'Presynaptic',
       field: 'presynaptic',
@@ -582,7 +586,7 @@ export class Neu3DModelTable {
       minWidth: 80,
       headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
-      headerFilterFunc: combinedFilter,
+      headerFilterFunc: combinedFilter
       //frozen: true
     },
     {
@@ -595,20 +599,21 @@ export class Neu3DModelTable {
       sorter: 'alphanum',
       headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
-      headerFilterFunc: combinedFilter,
+      headerFilterFunc: combinedFilter
       //frozen: true
     },
     {
       title: 'Number',
       field: 'N',
       hozAlign: 'center' as ColumnDefinitionAlign,
-      headerTooltip: 'The number of synapses between presynaptic and postsynaptic item.',
+      headerTooltip:
+        'The number of synapses between presynaptic and postsynaptic item.',
       tooltip: true,
       sorter: 'number',
       width: 55,
       headerFilter: true as Editor,
       headerFilterPlaceholder: '>= N',
-      headerFilterFunc: numberFilter,
+      headerFilterFunc: numberFilter
       //frozen: true
     },
     {
@@ -674,7 +679,7 @@ export class Neu3DModelTable {
   /**
    * Schema for all columns.
    */
-  readonly neuropilColumns : ColumnDefinition[] = [
+  readonly neuropilColumns: ColumnDefinition[] = [
     {
       title: 'Name',
       field: 'label',
@@ -740,4 +745,3 @@ export class Neu3DModelTable {
   readonly delayedRedrawSynapse: any;
   readonly delayedRedrawMesh: any;
 }
-

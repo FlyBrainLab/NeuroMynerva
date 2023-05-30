@@ -25,7 +25,7 @@ export interface IMeshDictBaseItem {
   background?: boolean;
   color?: number[];
   pinned?: boolean;
-  N : number;
+  N?: number;
   type?: 'morphology_json' | 'general_json' | string; // type, used to keep track of morphology json objects
   morph_type?: 'swc' | 'mesh' | string; // specify mesh with faces and vertices enabled will parse background
   class?: 'Neuron' | 'Neuropil' | 'Synapse' | 'NeuronFragment' | string;
@@ -423,7 +423,7 @@ namespace Private {
           pinned: mesh['pinned'],
           filetype: mesh['filetype'],
           filename: mesh['filename'],
-          N: mesh['N'] ?? 0,
+          N: mesh['N'] ?? 0
         };
       } else if (mesh.dataStr) {
         return {
@@ -439,7 +439,7 @@ namespace Private {
           pinned: mesh['pinned'],
           filetype: mesh['filetype'],
           dataStr: mesh['dataStr'],
-          N: mesh['N'] ?? 0,
+          N: mesh['N'] ?? 0
         };
       } else if (
         ['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => {

@@ -297,7 +297,7 @@ namespace FBLWidgetReact {
         if (this.neu3dTables.neuronTabulator.initialized) {
           this.neu3dTables.neuronTabulator.redraw();
         } else {
-          this.neu3dTables.neuronTabulator.on("tableBuilt", () => {
+          this.neu3dTables.neuronTabulator.on('tableBuilt', () => {
             this.neu3dTables.neuronTabulator.redraw();
           });
         }
@@ -305,7 +305,7 @@ namespace FBLWidgetReact {
         if (this.neu3dTables.synapseTabulator.initialized) {
           this.neu3dTables.synapseTabulator.redraw();
         } else {
-          this.neu3dTables.synapseTabulator.on("tableBuilt", () => {
+          this.neu3dTables.synapseTabulator.on('tableBuilt', () => {
             this.neu3dTables.synapseTabulator.redraw();
           });
         }
@@ -313,7 +313,7 @@ namespace FBLWidgetReact {
         if (this.neu3dTables.meshTabulator.initialized) {
           this.neu3dTables.meshTabulator.redraw();
         } else {
-          this.neu3dTables.meshTabulator.on("tableBuilt", () => {
+          this.neu3dTables.meshTabulator.on('tableBuilt', () => {
             this.neu3dTables.meshTabulator.redraw();
           });
         }
@@ -364,9 +364,7 @@ namespace FBLWidgetReact {
                   <CollapsibleSection
                     title={
                       <>
-                        <span className={ITEM_LABEL_CLASS}>
-                          Neurons
-                        </span>
+                        <span className={ITEM_LABEL_CLASS}>Neurons</span>
                         <div
                           className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`}
                         >
@@ -408,9 +406,7 @@ namespace FBLWidgetReact {
                             onClick={() => {
                               this.neu3dTables.removeAllNeurons(true);
                             }}
-                            tooltip={
-                              'Remove All Active Unpinned Neurons'
-                            }
+                            tooltip={'Remove All Active Unpinned Neurons'}
                           />
                         </div>
                       </>
@@ -425,9 +421,7 @@ namespace FBLWidgetReact {
                   <CollapsibleSection
                     title={
                       <>
-                        <span className={ITEM_LABEL_CLASS}>
-                          Synapses
-                        </span>
+                        <span className={ITEM_LABEL_CLASS}>Synapses</span>
                         <div
                           className={`${COLLAPSIBLE_SECTION_HEADER_BUTTONS}`}
                         >
@@ -469,9 +463,7 @@ namespace FBLWidgetReact {
                             onClick={() => {
                               this.neu3dTables.removeAllSynapses(true);
                             }}
-                            tooltip={
-                              'Remove All Active Unpinned Synapses'
-                            }
+                            tooltip={'Remove All Active Unpinned Synapses'}
                           />
                         </div>
                       </>

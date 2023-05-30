@@ -45,61 +45,84 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
       {
         query: 'show $string$ neurons',
         effect: 'Shows neurons with a name that contains the string.',
-        examples: ['"show $MBON$ neurons", or simply "show $MBON$", will query any neuron whose name contain the string *MBON*']
+        examples: [
+          '"show $MBON$ neurons", or simply "show $MBON$", will query any neuron whose name contain the string *MBON*'
+        ]
       },
       {
         query: 'show /rstring/r neurons',
         effect:
           'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
-        examples: ['"show /rM(.*)d1(.*)/r neurons", or simply "show /rM(.*)d1(.*)/r" will show neurons whose name starts with M and has d1.']
+        examples: [
+          '"show /rM(.*)d1(.*)/r neurons", or simply "show /rM(.*)d1(.*)/r" will show neurons whose name starts with M and has d1.'
+        ]
       },
       {
-        query: 'show neurons in|that innervate|that arborize in neuropil/subregion',
-        effect: 'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
-        examples: ['"show neurons in left antennal lobe", or using abbreviations "show neurons in left AL"',
-                   '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb"']
+        query:
+          'show neurons in|that innervate|that arborize in neuropil/subregion',
+        effect:
+          'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
+        examples: [
+          '"show neurons in left antennal lobe", or using abbreviations "show neurons in left AL"',
+          '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb"'
+        ]
       },
       {
         query: 'show local neurons in neuropil',
-        effect: ' Shows the neurons that has only inputs and outputs within the neuropil (note that due to lack of data in some datasets, some neurons are only traced in one neuropil and thus are classified local neuron by default).',
+        effect:
+          ' Shows the neurons that has only inputs and outputs within the neuropil (note that due to lack of data in some datasets, some neurons are only traced in one neuropil and thus are classified local neuron by default).',
         examples: ['"show local neurons in antennal lobe"']
       },
       {
-        query: 'show neurons with|that have inputs|outputs in neuropil/subregion',
-        effect: 'More specific then the previous query on the inputs or outputs.',
-        examples: ['"show neurons with inputs in left AL"',
-                   '"show neurons with inputs in right antennal lobe and outputs in right mushroom body", or equivalently "show neurons projecting from right antennal lobe to right mushroom body"',
-                   '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.']
+        query:
+          'show neurons with|that have inputs|outputs in neuropil/subregion',
+        effect:
+          'More specific then the previous query on the inputs or outputs.',
+        examples: [
+          '"show neurons with inputs in left AL"',
+          '"show neurons with inputs in right antennal lobe and outputs in right mushroom body", or equivalently "show neurons projecting from right antennal lobe to right mushroom body"',
+          '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.'
+        ]
       },
       {
         query: 'show neurons presynaptic|postsynaptic to',
-        effect: 'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
-        examples: ['"show neurons presynaptic to broad local neurons in right antennal lobe"',
-                   '"show $DAN$ presynaptic to $MBON-d1$ in right MB"']
+        effect:
+          'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
+        examples: [
+          '"show neurons presynaptic to broad local neurons in right antennal lobe"',
+          '"show $DAN$ presynaptic to $MBON-d1$ in right MB"'
+        ]
       },
       {
         query: 'show presynaptic|postsynaptic neurons',
-        effect: 'Shows the neurons that are presynaptic or postsynaptic to the neurons already in workspace.',
-        examples: ['"show presynaptic neurons"',
-                   '"show postsynaptic neurons with at least 10 synapses"']
+        effect:
+          'Shows the neurons that are presynaptic or postsynaptic to the neurons already in workspace.',
+        examples: [
+          '"show presynaptic neurons"',
+          '"show postsynaptic neurons with at least 10 synapses"'
+        ]
       },
       {
         query: 'show neurotransmitter neurons',
         effect: 'Shows the neurons that express the neurotramsitter.',
-        examples: ['"show GABAergic neurons in AL"',
-                   '"show cholinergic presynaptic neurons"',
-                   '"show glutamatergic local neurons in AL"']
+        examples: [
+          '"show GABAergic neurons in AL"',
+          '"show cholinergic presynaptic neurons"',
+          '"show glutamatergic local neurons in AL"'
+        ]
       },
       {
         query: 'show /:referenceId:[4414184, 10673895]',
         effect:
-          'Shows the neurons whose referenceId in the original dataset is in the list. It can be used similar to \$ \\$ and regular expression and combined with other types of criteria.',
+          'Shows the neurons whose referenceId in the original dataset is in the list. It can be used similar to $ \\$ and regular expression and combined with other types of criteria.',
         examples: ['"show /:referenceId:[4414184, 10673895]"']
       },
       {
         query: 'color red',
         effect: 'Colors the neurons/synapses added in the most recent query.',
-        examples: ['"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.']
+        examples: [
+          '"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.'
+        ]
       }
     ]
   },
@@ -131,36 +154,51 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
       {
         query: 'show $string$ neurons',
         effect: 'Shows neurons with a name that contains the string.',
-        examples: ['"show $T4a$ neurons", or simply "show $T4a$", will query any neuron whose name contain the string *T4a*']
+        examples: [
+          '"show $T4a$ neurons", or simply "show $T4a$", will query any neuron whose name contain the string *T4a*'
+        ]
       },
       {
         query: 'show /rstring/r neurons',
-        effect: 'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
-        examples: ['"show /rTm2-[A-C]/r neurons", or simply "show /rTm2-[A-C]/r" will show the Tm2 neurons in the A, B, C columns']
+        effect:
+          'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
+        examples: [
+          '"show /rTm2-[A-C]/r neurons", or simply "show /rTm2-[A-C]/r" will show the Tm2 neurons in the A, B, C columns'
+        ]
       },
       {
-        query: 'show neurons with|that have inputs|outputs in neuropil/subregion',
-        effect: 'More specific then the previous query on the inputs or outputs.',
+        query:
+          'show neurons with|that have inputs|outputs in neuropil/subregion',
+        effect:
+          'More specific then the previous query on the inputs or outputs.',
         examples: ['"show neurons in column A with outputs in m10"']
       },
       {
         query: 'show neurons presynaptic|postsynaptic to',
-        effect: 'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
-        examples: ['"show neurons presynaptic to $T4a-fb-home$"',
-                   '"show Pm2 postsynaptic to Mi1 with at least 5 synapses"']
+        effect:
+          'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
+        examples: [
+          '"show neurons presynaptic to $T4a-fb-home$"',
+          '"show Pm2 postsynaptic to Mi1 with at least 5 synapses"'
+        ]
       },
       {
         query: 'show presynaptic|postsynaptic neurons',
-        effect: 'Shows the neurons that are presynaptic or postsynaptic to the neurons already in workspace.',
-        examples: ['"show presynaptic neurons,"',
-                   '"show postsynaptic neurons with at least 10 synapses"',
-                   '"show postynaptic Dm1"']
+        effect:
+          'Shows the neurons that are presynaptic or postsynaptic to the neurons already in workspace.',
+        examples: [
+          '"show presynaptic neurons,"',
+          '"show postsynaptic neurons with at least 10 synapses"',
+          '"show postynaptic Dm1"'
+        ]
       },
       {
         query: 'show neurotransmitter neurons',
         effect: 'Shows the neurons that express the neurotramsitter',
-        examples: ['"show GABAergic neurons"',
-                   '"show cholinergic presynaptic neurons"']
+        examples: [
+          '"show GABAergic neurons"',
+          '"show cholinergic presynaptic neurons"'
+        ]
       },
       {
         query: 'show /:referenceId:[30465, 7892]',
@@ -171,7 +209,9 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
       {
         query: 'color red',
         effect: 'Colors the neurons/synapses added in the most recent query.',
-        examples: ['"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.']
+        examples: [
+          '"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.'
+        ]
       }
     ]
   },
@@ -185,22 +225,31 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
       {
         query: 'show $string$ neurons',
         effect: 'Shows neurons with a name that contains the string.',
-        examples: ['"show $E0585$ neurons", or simply "show $E0585$", will query any neuron whose name contain the string *E0585*.']
+        examples: [
+          '"show $E0585$ neurons", or simply "show $E0585$", will query any neuron whose name contain the string *E0585*.'
+        ]
       },
       {
         query: 'show /rstring/r neurons',
         effect:
           'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
-        examples: ['"show /r(.*)TH-F-[1-2](.*)2/r neurons", or simply "show /r(.*)TH-F-[1-2](.*)2/r" will show dopaminergic neurons (TH gene) with the FlyCircuit ID number starting with 1 or 2 and end with 2']
+        examples: [
+          '"show /r(.*)TH-F-[1-2](.*)2/r neurons", or simply "show /r(.*)TH-F-[1-2](.*)2/r" will show dopaminergic neurons (TH gene) with the FlyCircuit ID number starting with 1 or 2 and end with 2'
+        ]
       },
       {
-        query: 'show neurons in|that innervate|that arborize in neuropil/subregion',
-        effect: 'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
-        examples: ['"show neurons in ellipsoid body", or using abbreviations "show neurons in EB"',
-                   '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb".']
+        query:
+          'show neurons in|that innervate|that arborize in neuropil/subregion',
+        effect:
+          'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
+        examples: [
+          '"show neurons in ellipsoid body", or using abbreviations "show neurons in EB"',
+          '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb".'
+        ]
       },
       {
-        query: 'show neurons with|that have inputs|outputs in neuropil/subregion',
+        query:
+          'show neurons with|that have inputs|outputs in neuropil/subregion',
         effect:
           'More specific then the previous query on the inputs or outputs.',
         examples: ['"show local neurons in ellipsoid body"']
@@ -209,31 +258,38 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
         query: 'show local neurons in neuropil',
         effect:
           'Shows the neurons that has only inputs and outputs within the neuropil (note that due to lack of data in some datasets, some neurons are only traced in one neuropil and thus are classified local neuron by default).',
-        examples: ['"show neurons with inputs in OPTU"',
-                   '"show neurons with inputs in right antennal lobe and outputs in right lateral horn", or equivalently "show neurons projecting from right antennal lobe to right lateral horn,"',
-                   '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.']
+        examples: [
+          '"show neurons with inputs in OPTU"',
+          '"show neurons with inputs in right antennal lobe and outputs in right lateral horn", or equivalently "show neurons projecting from right antennal lobe to right lateral horn,"',
+          '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.'
+        ]
       },
       {
         query: 'show neurons presynaptic|postsynaptic to',
         effect:
           'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
-        examples: ['"show neurons presynaptic to $TH-F-700014$ in right medulla"',
-                   '"show $Cha$ presynaptic to $TH-F-700014$"']
+        examples: [
+          '"show neurons presynaptic to $TH-F-700014$ in right medulla"',
+          '"show $Cha$ presynaptic to $TH-F-700014$"'
+        ]
       },
       {
         query: 'show presynaptic|postsynaptic neurons',
         effect:
           ' Shows the neurons that are presynaptic or postsynaptic to the neurons already in workspace.',
-        examples: ['"show presynaptic neurons"',
-                   '"show postsynaptic neurons with at least 10 synapses."']
+        examples: [
+          '"show presynaptic neurons"',
+          '"show postsynaptic neurons with at least 10 synapses."'
+        ]
       },
       {
         query: 'show neurotransmitter neurons',
-        effect:
-          'Shows the neurons that express a specified neurotramsitter.',
-        examples: ['"show GABAergic neurons in EB"',
-                   '"show cholinergic presynaptic neurons"',
-                   '"show glutamatergic local neurons in AL"']
+        effect: 'Shows the neurons that express a specified neurotramsitter.',
+        examples: [
+          '"show GABAergic neurons in EB"',
+          '"show cholinergic presynaptic neurons"',
+          '"show glutamatergic local neurons in AL"'
+        ]
       },
       {
         query: 'show /:referenceId:[VGlut-F-000001, Cha-F-100201]',
@@ -244,7 +300,9 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
       {
         query: 'color red',
         effect: 'Colors the neurons/synapses added in the most recent query.',
-        examples: ['"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.']
+        examples: [
+          '"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.'
+        ]
       }
     ]
   },
@@ -263,21 +321,29 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
       },
       {
         query: 'show $string$ neurons',
-        effect:
-          'Shows neurons with a name that contains the string.',
-        examples: ['"show $PEG$ neurons", or simply "show $PEG$", will query any neuron whose name contain the string *PEG*.']
+        effect: 'Shows neurons with a name that contains the string.',
+        examples: [
+          '"show $PEG$ neurons", or simply "show $PEG$", will query any neuron whose name contain the string *PEG*.'
+        ]
       },
       {
         query: 'show /rstring/r neurons',
-        effect: 'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
-        examples: ['"show /r(.*)PEG(.*)R1(.*)/r neurons", or simply "show /r(.*)PEG(.*)R1(.*)/r" will show the PEG neurons that innervate PB glomerulus R1.']
+        effect:
+          'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
+        examples: [
+          '"show /r(.*)PEG(.*)R1(.*)/r neurons", or simply "show /r(.*)PEG(.*)R1(.*)/r" will show the PEG neurons that innervate PB glomerulus R1.'
+        ]
       },
       {
-        query: 'show neurons in|that innervate|that arborize in neuropil/subregion',
-        effect: 'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
-        examples: ['"show neurons in ellipsoid body", or using abbreviations "show neurons in EB"',
-                   '"show PEG neurons that arborize in PB glomerulus r9"',
-                   '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb".']
+        query:
+          'show neurons in|that innervate|that arborize in neuropil/subregion',
+        effect:
+          'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
+        examples: [
+          '"show neurons in ellipsoid body", or using abbreviations "show neurons in EB"',
+          '"show PEG neurons that arborize in PB glomerulus r9"',
+          '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb".'
+        ]
       },
       {
         query: 'show local neurons in neuropil',
@@ -286,40 +352,49 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
         examples: ['"show local neurons in ellipsoid body"']
       },
       {
-        query: 'show neurons with|that have inputs|outputs in neuropil/subregion',
+        query:
+          'show neurons with|that have inputs|outputs in neuropil/subregion',
         effect:
           'More specific then the previous query on the inputs or outputs.',
-        examples: ['"show neurons with inputs in AME"',
-                   '"show ER3w neurons that have outputs in EB"',
-                   '"show neurons with inputs in right antennal lobe and outputs in right lateral horn", or equivalently "show neurons projecting from right antennal lobe to right lateral horn"',
-                   '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.']
+        examples: [
+          '"show neurons with inputs in AME"',
+          '"show ER3w neurons that have outputs in EB"',
+          '"show neurons with inputs in right antennal lobe and outputs in right lateral horn", or equivalently "show neurons projecting from right antennal lobe to right lateral horn"',
+          '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.'
+        ]
       },
       {
         query: 'show neurons presynaptic|postsynaptic to',
         effect:
           'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
-        examples: ['"show neurons presynaptic to TuBu05"',
-                   `"show $aMe$ presynaptic to KCs that innervate alpha'1 compartment"`,
-                   '"show DAN postsynaptic to MBONs with at least 30 synapses"']
+        examples: [
+          '"show neurons presynaptic to TuBu05"',
+          `"show $aMe$ presynaptic to KCs that innervate alpha'1 compartment"`,
+          '"show DAN postsynaptic to MBONs with at least 30 synapses"'
+        ]
       },
       {
         query: 'show presynaptic|postsynaptic neurons',
         effect:
           'Shows the neurons that are presynaptic or postsynaptic to the neurons already in workspace.',
-        examples: ['"show presynaptic neurons"',
-                   '"show postsynaptic neurons with at least 10 synapses"',
-                   '"show postynaptic MBON that innervate gamma lobe with at least 5 synapses". This searches for MBONs that satisfy: 1) postsyantpic to the neurons in the workspace with at least 5 synapses and 2) innervate gamma lobe of the mushroom body.']
+        examples: [
+          '"show presynaptic neurons"',
+          '"show postsynaptic neurons with at least 10 synapses"',
+          '"show postynaptic MBON that innervate gamma lobe with at least 5 synapses". This searches for MBONs that satisfy: 1) postsyantpic to the neurons in the workspace with at least 5 synapses and 2) innervate gamma lobe of the mushroom body.'
+        ]
       },
       {
         query: 'show /:referenceId:[5813014882, 912147912, 880875861]',
         effect:
-          'Shows the neurons whose referenceId in the original dataset is in the list. It can be used similar to \$ \\$ and regular expression and combined with other types of criteria.',
+          'Shows the neurons whose referenceId in the original dataset is in the list. It can be used similar to $ \\$ and regular expression and combined with other types of criteria.',
         examples: ['"show /:referenceId:[5813014882, 912147912, 880875861]"']
       },
       {
         query: 'color red',
         effect: 'Colors the neurons/synapses added in the most recent query.',
-        examples: ['"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.']
+        examples: [
+          '"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.'
+        ]
       }
     ]
   },
@@ -338,21 +413,29 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
       },
       {
         query: 'show $string$ neurons',
-        effect:
-          'Shows neurons with a name that contains the string.',
-        examples: ['"show $PEG$ neurons", or simply "show $PEG$", will query any neuron whose name contain the string *PEG*.']
+        effect: 'Shows neurons with a name that contains the string.',
+        examples: [
+          '"show $PEG$ neurons", or simply "show $PEG$", will query any neuron whose name contain the string *PEG*.'
+        ]
       },
       {
         query: 'show /rstring/r neurons',
-        effect: 'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
-        examples: ['"show /r(.*)PEG(.*)R1(.*)/r neurons", or simply "show /r(.*)PEG(.*)R1(.*)/r" will show the PEG neurons that innervate PB glomerulus R1.']
+        effect:
+          'Show neurons whose name matches the regular expressing string (This requires some knowledge of how the neurons are named in each dataset).',
+        examples: [
+          '"show /r(.*)PEG(.*)R1(.*)/r neurons", or simply "show /r(.*)PEG(.*)R1(.*)/r" will show the PEG neurons that innervate PB glomerulus R1.'
+        ]
       },
       {
-        query: 'show neurons in|that innervate|that arborize in neuropil/subregion',
-        effect: 'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
-        examples: ['"show neurons in ellipsoid body", or using abbreviations "show neurons in EB"',
-                   '"show PEG neurons that arborize in PB glomerulus r9"',
-                   '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb".']
+        query:
+          'show neurons in|that innervate|that arborize in neuropil/subregion',
+        effect:
+          'Shows neurons that has output or input in a neuropil or a subregion of a neuropil.',
+        examples: [
+          '"show neurons in ellipsoid body", or using abbreviations "show neurons in EB"',
+          '"show PEG neurons that arborize in PB glomerulus r9"',
+          '"show neurons that innervate right al and right mb". Note that this is different from "show neurons that innervate right al or right mb".'
+        ]
       },
       {
         query: 'show local neurons in neuropil',
@@ -361,40 +444,49 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
         examples: ['"show local neurons in ellipsoid body"']
       },
       {
-        query: 'show neurons with|that have inputs|outputs in neuropil/subregion',
+        query:
+          'show neurons with|that have inputs|outputs in neuropil/subregion',
         effect:
           'More specific then the previous query on the inputs or outputs.',
-        examples: ['"show neurons with inputs in AME"',
-                   '"show ER3w neurons that have outputs in EB"',
-                   '"show neurons with inputs in right antennal lobe and outputs in right lateral horn", or equivalently "show neurons projecting from right antennal lobe to right lateral horn"',
-                   '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.']
+        examples: [
+          '"show neurons with inputs in AME"',
+          '"show ER3w neurons that have outputs in EB"',
+          '"show neurons with inputs in right antennal lobe and outputs in right lateral horn", or equivalently "show neurons projecting from right antennal lobe to right lateral horn"',
+          '"show neurons that connect right AL and right MB". Includes both the neurons that has inputs in AL and outputs in MB, and those has inputs in MB and outputs in AL.'
+        ]
       },
       {
         query: 'show neurons presynaptic|postsynaptic to',
         effect:
           'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
-        examples: ['"show neurons presynaptic to TuBu05"',
-                   `"show $aMe$ presynaptic to KCs that innervate alpha'1 compartment"`,
-                   '"show DAN postsynaptic to MBONs with at least 30 synapses"']
+        examples: [
+          '"show neurons presynaptic to TuBu05"',
+          `"show $aMe$ presynaptic to KCs that innervate alpha'1 compartment"`,
+          '"show DAN postsynaptic to MBONs with at least 30 synapses"'
+        ]
       },
       {
         query: 'show presynaptic|postsynaptic neurons',
         effect:
           'Shows the neurons that are presynaptic or postsynaptic to the neurons already in workspace.',
-        examples: ['"show presynaptic neurons"',
-                   '"show postsynaptic neurons with at least 10 synapses"',
-                   '"show postynaptic MBON that innervate gamma lobe with at least 5 synapses". This searches for MBONs that satisfy: 1) postsyantpic to the neurons in the workspace with at least 5 synapses and 2) innervate gamma lobe of the mushroom body.']
+        examples: [
+          '"show presynaptic neurons"',
+          '"show postsynaptic neurons with at least 10 synapses"',
+          '"show postynaptic MBON that innervate gamma lobe with at least 5 synapses". This searches for MBONs that satisfy: 1) postsyantpic to the neurons in the workspace with at least 5 synapses and 2) innervate gamma lobe of the mushroom body.'
+        ]
       },
       {
         query: 'show /:referenceId:[5813014882, 912147912, 880875861]',
         effect:
-          'Shows the neurons whose referenceId in the original dataset is in the list. It can be used similar to \$ \\$ and regular expression and combined with other types of criteria.',
+          'Shows the neurons whose referenceId in the original dataset is in the list. It can be used similar to $ \\$ and regular expression and combined with other types of criteria.',
         examples: ['"show /:referenceId:[5813014882, 912147912, 880875861]"']
       },
       {
         query: 'color red',
         effect: 'Colors the neurons/synapses added in the most recent query.',
-        examples: ['"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.']
+        examples: [
+          '"show A neurons", then "add B neurons", then "color red" will color B neurons red. "color A neurons 0000FF" will then color A neurons blue.'
+        ]
       }
     ]
   },
