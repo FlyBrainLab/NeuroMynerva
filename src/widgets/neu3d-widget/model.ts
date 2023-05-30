@@ -25,9 +25,10 @@ export interface IMeshDictBaseItem {
   background?: boolean;
   color?: number[];
   pinned?: boolean;
+  N?: number;
   type?: 'morphology_json' | 'general_json' | string; // type, used to keep track of morphology json objects
   morph_type?: 'swc' | 'mesh' | string; // specify mesh with faces and vertices enabled will parse background
-  class?: 'Neuron' | 'Neuropil' | 'Synapse' | string;
+  class?: 'Neuron' | 'Neuropil' | 'Synapse' | 'NeuronFragment' | string;
 }
 
 export interface IMeshDictSWCItem extends IMeshDictBaseItem {
@@ -361,6 +362,7 @@ namespace Private {
       sample: mesh['sample'],
       parent: mesh['parent'],
       identifier: mesh['identifier'],
+      N: mesh['N'] ?? 0,
       x: mesh['x'],
       y: mesh['y'],
       z: mesh['z'],
@@ -387,7 +389,8 @@ namespace Private {
       vertices: mesh['vertices'],
       type: 'morphology_json',
       morph_type: 'mesh',
-      class: mesh['class'] ?? 'Neuropil'
+      class: mesh['class'] ?? 'Neuropil',
+      N: mesh['N'] ?? 0
     };
   }
 
@@ -419,7 +422,8 @@ namespace Private {
           color: parseColor(mesh['color']),
           pinned: mesh['pinned'],
           filetype: mesh['filetype'],
-          filename: mesh['filename']
+          filename: mesh['filename'],
+          N: mesh['N'] ?? 0
         };
       } else if (mesh.dataStr) {
         return {
@@ -434,7 +438,8 @@ namespace Private {
           color: parseColor(mesh['color']),
           pinned: mesh['pinned'],
           filetype: mesh['filetype'],
-          dataStr: mesh['dataStr']
+          dataStr: mesh['dataStr'],
+          N: mesh['N'] ?? 0
         };
       } else if (
         ['sample', 'parent', 'identifier', 'x', 'y', 'z', 'r'].every(l => {
@@ -453,6 +458,7 @@ namespace Private {
           background: mesh['background'],
           color: parseColor(mesh['color']),
           pinned: mesh['pinned'],
+          N: mesh['N'] ?? 0,
           sample: mesh['sample'],
           parent: mesh['parent'],
           identifier: mesh['identifier'],

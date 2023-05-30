@@ -1126,6 +1126,10 @@ namespace Private {
     searchWrapper.appendChild(searchInput);
     searchWrapper.appendChild(searchButton);
 
+    const TextStyle1: React.CSSProperties = {
+      color: '#2288A5'
+    };
+
     neu3d.clientConnect.connect((_, hasClient) => {
       if (hasClient) {
         searchInput.disabled = false;
@@ -1182,13 +1186,25 @@ namespace Private {
       }
       const hint_ul = hints.map((h, idx) => (
         <li key={idx}>
-          <b>{h.query}</b>
-          {`: ${h.effect}`}
+          <b>
+            <span style={TextStyle1}>{h.query}</span>
+          </b>
+          {`: ${h.effect} Examples:`}
+          <ul>
+            {h.examples.map((k: string, idb: number) => (
+              <li key={idb}> {colorTextInsideQuotes(k, '#428833')} </li>
+            ))}
+          </ul>
         </li>
       ));
       let hint_header = <p>Connect to a Processor to see example queries.</p>;
       if (hint_ul.length > 0) {
-        hint_header = <p>Here are a list of example queries you can try:</p>;
+        hint_header = (
+          <p>
+            Next, we explain the rules for defining the criterion of the query,
+            using the verb show as an example.
+          </p>
+        );
       }
       showDialog({
         title: 'Quick Query Reference',
@@ -1200,6 +1216,80 @@ namespace Private {
               combining various attributes of query targets, you can create some
               very powerful queries.
             </p>
+            <ul>
+              Your queries should start with a verb; the verbs supported right
+              now are:
+              <li>
+                <b>
+                  <span style={TextStyle1}>show</span>
+                </b>
+                : clear workspace and then show the queried neurons,
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>add</span>
+                </b>
+                : add to the workspace the neurons queried,
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>remove</span>
+                </b>
+                : remove from the workspace the queried neuron,
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>keep</span>
+                </b>
+                : keep in the workspace only the neurons that meet the criterion
+                of the query,
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>hide</span>
+                </b>
+                : hide the neurons that meet the criterion of the query (this
+                does not remove them from workspace, but reduce their
+                visibility),
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>pin</span>
+                </b>
+                : pin the neurons that meet the criterion of the query. Pinned
+                neurons are automatically highlighted, and cannot be removed by
+                the "trash can" button on top of the NeuroNLP window.
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>unpin</span>
+                </b>
+                : unpin the neurons that meet the criterion of the query,
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>color</span>
+                </b>
+                : color the neurons that meet the criterion of the query with a
+                user defined color (can be hex color code, e.g., FF0000 for
+                red), or these predefined colors.
+              </li>
+            </ul>
+            <ul>
+              Additionally, the following single word commands are supported:
+              <li>
+                <b>
+                  <span style={TextStyle1}>clear</span>
+                </b>
+                : clear up the workspace, removing all neurons and synapses,
+              </li>
+              <li>
+                <b>
+                  <span style={TextStyle1}>undo</span>
+                </b>
+                : undo your last query.
+              </li>
+            </ul>
             {hint_header}
             <ul> {hint_ul}</ul>
           </>
@@ -1210,4 +1300,28 @@ namespace Private {
     footer.appendChild(searchWrapper);
     return footer;
   }
+}
+
+function colorTextInsideQuotes(text: string, color: string): JSX.Element {
+  const quotedTextRegex = /"(.*?)"/g;
+  const parts: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  let match;
+  while ((match = quotedTextRegex.exec(text)) !== null) {
+    const matchedText = match[0];
+    const group = match[1];
+    const startIndex = match.index;
+    const endIndex = startIndex + matchedText.length;
+
+    parts.push(text.substring(lastIndex, startIndex));
+    parts.push(
+      <b>
+        <span style={{ color }}>{group}</span>
+      </b>
+    );
+    lastIndex = endIndex;
+  }
+  parts.push(text.substring(lastIndex));
+
+  return <p>{parts}</p>;
 }

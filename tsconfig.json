@@ -16,7 +16,7 @@
     "strict": true,
     "strictNullChecks": false,
     "target": "es2017",
-    "types": ["tabulator-tables"],
+    "types": [],
     "typeRoots": ["types", "node_modules/@types"]
   },
   "include": ["src/widgets/**/*.tsx", "src/widgets/**/*.ts", "src/*"]
