@@ -69,11 +69,11 @@ const defaultFilters = {
     if (typeof filterVal === 'string') {
       try {
         const filter = new RegExp(filterVal);
+        return filter.test(rowVal);
       } catch (error) {
         return false;
       }
     }
-    return filter.test(rowVal);
   },
   //contains the string
   like: function (
