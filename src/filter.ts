@@ -1,5 +1,5 @@
 // copied from tabulator-tables/src/js/modules/Filter/defaults/filters.js
-let defaultFilters = {
+const defaultFilters = {
   //equal to
   '=': function (
     filterVal: string,
@@ -7,7 +7,7 @@ let defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal == filterVal ? true : false;
+    return rowVal === filterVal ? true : false;
   },
 
   //less than
@@ -57,7 +57,7 @@ let defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal != filterVal ? true : false;
+    return rowVal !== filterVal ? true : false;
   },
 
   regex: function (
@@ -66,9 +66,9 @@ let defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    if (typeof filterVal == 'string') {
+    if (typeof filterVal === 'string') {
       try {
-        var filter = new RegExp(filterVal);
+        const filter = new RegExp(filterVal);
       } catch (error) {
         return false;
       }
@@ -102,7 +102,7 @@ let defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    var keywords = filterVal
+    let keywords = filterVal
         .toLowerCase()
         .split(
           typeof filterParams.separator === 'undefined'
@@ -168,9 +168,9 @@ export function numberFilter(
   if (isNumeric(filterVal)) {
     return defaultFilters['>='](filterVal, rowVal, rowData, filterParams);
   } else {
-    var lastCharacters = filterVal.trim().match(/\d+$/);
+    let lastCharacters = filterVal.trim().match(/\d+$/);
     if (lastCharacters !== null) {
-      var operator = getStringWithoutNumber(filterVal);
+      const operator = getStringWithoutNumber(filterVal);
 
       if (operator === '=') {
         return defaultFilters['='](
