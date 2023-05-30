@@ -369,7 +369,7 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
           'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
         examples: [
           '"show neurons presynaptic to TuBu05"',
-          `"show $aMe$ presynaptic to KCs that innervate alpha'1 compartment"`,
+          '"show $aMe$ presynaptic to KCs that innervate alpha\'1 compartment"',
           '"show DAN postsynaptic to MBONs with at least 30 synapses"'
         ]
       },
@@ -461,7 +461,7 @@ export const PRESETS: { [name in PRESETS_NAMES]: PresetEntry } = {
           'Shows the neurons that are presynaptic or postsynaptic to the neurons defined after the word to.',
         examples: [
           '"show neurons presynaptic to TuBu05"',
-          `"show $aMe$ presynaptic to KCs that innervate alpha'1 compartment"`,
+          '"show $aMe$ presynaptic to KCs that innervate alpha\'1 compartment"',
           '"show DAN postsynaptic to MBONs with at least 30 synapses"'
         ]
       },

@@ -2,7 +2,12 @@
  * Connectivity table that uses tabulator class to render connectivity data object
  */
 import '@fortawesome/fontawesome-free/js/all.js';
-import {TabulatorFull as Tabulator, ColumnDefinition, ColumnDefinitionAlign, Editor} from "tabulator-tables";
+import {
+  TabulatorFull as Tabulator,
+  ColumnDefinition,
+  ColumnDefinitionAlign,
+  Editor
+} from 'tabulator-tables';
 import 'tabulator-tables/dist/css/tabulator.min.css'; //import Tabulator stylesheet
 import { Neu3DWidget } from '../neu3d-widget';
 import { IDataChangeArgs, Neu3DModel } from '../neu3d-widget/model';
@@ -26,24 +31,24 @@ export class ConnTable {
       reactiveData: true,
       data: this.data, //link data to table
       columns: this.columns, //define table columns
-      maxHeight: "200px",
+      maxHeight: '200px',
       //pagination: 'local',
       //paginationSize: 8,
       // page: 3,
       initialSort: [{ column: 'number', dir: 'desc' }],
-      layout: 'fitColumns',
+      layout: 'fitColumns'
     });
-    this.tabulator.on("rowMouseOut", (e: any, row: any) => {
+    this.tabulator.on('rowMouseOut', (e: any, row: any) => {
       // reset highlight
       this.neu3d.neu3d.highlight();
     });
 
-    this.tabulator.on("tableBuilt", () => {
+    this.tabulator.on('tableBuilt', () => {
       this.tabulator.initialized = true;
     });
 
     if (!this.hasSynMorph(this.data)) {
-      this.tabulator.on("tableBuilt", () => {
+      this.tabulator.on('tableBuilt', () => {
         this.tabulator.hideColumn('synapse_in_workspace');
       });
     }
@@ -200,21 +205,21 @@ export class ConnTable {
       title: 'Neuron',
       field: 'neuron_in_workspace',
       hozAlign: 'center' as ColumnDefinitionAlign,
-      headerTooltip: 'Toggle to add the synaptic partner. Hover to highlight existing neurons in workspace. Double Click to pin.',
+      headerTooltip:
+        'Toggle to add the synaptic partner. Hover to highlight existing neurons in workspace. Double Click to pin.',
       headerFilter: undefined,
       headerSort: true,
       sorter: 'boolean',
       width: 50,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
-
         if (singleClickTimeout) {
           // Second click (double click) registered
           clearTimeout(singleClickTimeout);
           singleClickTimeout = null;
           return;
         }
-      
+
         // First click
         singleClickTimeout = setTimeout(() => {
           singleClickTimeout = null;
@@ -227,9 +232,7 @@ export class ConnTable {
           } else {
             this.neu3d?.removeByRid(n_rid);
           }
-  
         }, 200); // Delay period for checking double click
-
       },
       cellMouseOver: (e: any, cell: any) => {
         const { rid } = cell.getData();
@@ -242,13 +245,14 @@ export class ConnTable {
         if (this.neu3d?.isInWorkspace(rid)) {
           this.neu3d.neu3d.togglePin(rid);
         }
-      },
+      }
     },
     {
       title: 'Synapse',
       field: 'synapse_in_workspace',
       hozAlign: 'center' as ColumnDefinitionAlign,
-      headerTooltip: 'Toggle to add the group of synapses. Hover to highlight this groups of synapses in workspace if exists. Double Click to pin/unpin.',
+      headerTooltip:
+        'Toggle to add the group of synapses. Hover to highlight this groups of synapses in workspace if exists. Double Click to pin/unpin.',
       headerSort: true,
       sorter: 'boolean',
       width: 50,
@@ -260,7 +264,7 @@ export class ConnTable {
           synapseSingleClickTimeout = null;
           return;
         }
-      
+
         // First click
         synapseSingleClickTimeout = setTimeout(() => {
           synapseSingleClickTimeout = null;
@@ -272,7 +276,6 @@ export class ConnTable {
           } else {
             this.neu3d?.removeByRid(s_rid);
           }
-  
         }, 200); // Delay period for checking double click
       },
       cellMouseOver: (e: any, cell: any) => {
@@ -286,7 +289,7 @@ export class ConnTable {
         if (this.neu3d?.isInWorkspace(syn_rid)) {
           this.neu3d.neu3d.togglePin(syn_rid);
         }
-      },
+      }
     },
     {
       title: 'Name',
@@ -297,7 +300,7 @@ export class ConnTable {
       sorter: 'alphanum',
       headerFilter: true as Editor,
       headerFilterPlaceholder: 'filter name',
-      headerFilterFunc: combinedFilter,
+      headerFilterFunc: combinedFilter
     },
     {
       title: 'Number',
@@ -309,8 +312,8 @@ export class ConnTable {
       headerFilter: true as Editor,
       headerFilterPlaceholder: '>= N',
       headerFilterFunc: numberFilter,
-      width: 55,
-    },
+      width: 55
+    }
   ];
 
   data: IConnDataItem[];

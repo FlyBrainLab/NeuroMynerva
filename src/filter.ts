@@ -102,7 +102,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    let keywords = filterVal
+    const keywords = filterVal
         .toLowerCase()
         .split(
           typeof filterParams.separator === 'undefined'
@@ -168,7 +168,7 @@ export function numberFilter(
   if (isNumeric(filterVal)) {
     return defaultFilters['>='](filterVal, rowVal, rowData, filterParams);
   } else {
-    let lastCharacters = filterVal.trim().match(/\d+$/);
+    const lastCharacters = filterVal.trim().match(/\d+$/);
     if (lastCharacters !== null) {
       const operator = getStringWithoutNumber(filterVal);
 
