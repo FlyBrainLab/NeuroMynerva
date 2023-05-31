@@ -61,16 +61,16 @@ justify-content: center;
 
 .jp-FBL-Info-Conn-Table .tabulator-col .tabulator-col-title {
     font-size: 10px;
-    padding-right: 0px !important;
+    padding-right: 5px !important;
 }
 
 .jp-FBL-Info-Conn-Table .tabulator-header-filter input {
     font-size: 10px;
 }
 
-.jp-FBL-Info-Conn-Table .tabulator-col-sorter {
+/* .jp-FBL-Info-Conn-Table .tabulator-col-sorter {
     visibility: hidden;
-}
+} */
 
 .jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="none"] .tabulator-col-title {
     font-weight: normal;
@@ -78,13 +78,13 @@ justify-content: center;
     text-decoration: none;
 }
 
-.jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="asc"] .tabulator-col-title {
+.jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="ascending"] .tabulator-col-title {
     font-weight: bold;
     font-style: italic;
     text-decoration: overline;
 }
 
-.jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="desc"] .tabulator-col-title {
+.jp-FBL-Info-Conn-Table .tabulator-col[aria-sort="descending"] .tabulator-col-title {
     font-weight: bold;
     font-style: oblique;
     text-decoration: underline;
