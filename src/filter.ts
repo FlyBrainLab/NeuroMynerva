@@ -7,7 +7,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal === filterVal ? true : false;
+    return Number(rowVal) === Number(filterVal) ? true : false;
   },
 
   //less than
@@ -17,7 +17,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal < filterVal ? true : false;
+    return Number(rowVal) < Number(filterVal) ? true : false;
   },
 
   //less than or equal to
@@ -27,7 +27,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal <= filterVal ? true : false;
+    return Number(rowVal) <= Number(filterVal) ? true : false;
   },
 
   //greater than
@@ -37,7 +37,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal > filterVal ? true : false;
+    return Number(rowVal) > Number(filterVal) ? true : false;
   },
 
   //greater than or equal to
@@ -47,7 +47,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal >= filterVal ? true : false;
+    return Number(rowVal) >= Number(filterVal) ? true : false;
   },
 
   //not equal to
@@ -57,7 +57,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal !== filterVal ? true : false;
+    return Number(rowVal) !== Number(filterVal) ? true : false;
   },
 
   regex: function (
@@ -171,7 +171,6 @@ export function numberFilter(
     const lastCharacters = filterVal.trim().match(/\d+$/);
     if (lastCharacters !== null) {
       const operator = getStringWithoutNumber(filterVal);
-
       if (operator === '=') {
         return defaultFilters['='](
           lastCharacters[0],

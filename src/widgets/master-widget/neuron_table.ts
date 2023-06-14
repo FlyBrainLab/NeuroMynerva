@@ -42,6 +42,7 @@ export class Neu3DModelTable {
       maxHeight: '250px',
       //pagination: 'local',
       //paginationSize: 15,
+      headerSortClickElement: 'icon',
       initialSort: [{ column: 'label', dir: 'desc' }],
       layout: 'fitColumns',
       cellClick: (e: any, cell: any) => {
@@ -73,6 +74,7 @@ export class Neu3DModelTable {
       maxHeight: '250px',
       //pagination: 'local',
       //paginationSize: 15,
+      headerSortClickElement: 'icon',
       initialSort: [{ column: 'N', dir: 'desc' }],
       layout: 'fitColumns'
     });
@@ -101,6 +103,7 @@ export class Neu3DModelTable {
       maxHeight: '250px',
       //pagination: 'local',
       //paginationSize: 15,
+      headerSortClickElement: 'icon',
       initialSort: [{ column: 'label', dir: 'desc' }],
       layout: 'fitColumns'
     });
@@ -610,7 +613,7 @@ export class Neu3DModelTable {
         'The number of synapses between presynaptic and postsynaptic item.',
       tooltip: true,
       sorter: 'number',
-      width: 55,
+      width: 60,
       headerFilter: true as Editor,
       headerFilterPlaceholder: '>= N',
       headerFilterFunc: numberFilter

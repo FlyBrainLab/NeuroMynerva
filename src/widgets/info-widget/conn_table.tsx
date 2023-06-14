@@ -36,7 +36,8 @@ export class ConnTable {
       //paginationSize: 8,
       // page: 3,
       initialSort: [{ column: 'number', dir: 'desc' }],
-      layout: 'fitColumns'
+      layout: 'fitColumns',
+      headerSortClickElement: 'icon'
     });
     this.tabulator.on('rowMouseOut', (e: any, row: any) => {
       // reset highlight
@@ -210,7 +211,7 @@ export class ConnTable {
       headerFilter: undefined,
       headerSort: true,
       sorter: 'boolean',
-      width: 50,
+      width: 55,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
         if (singleClickTimeout) {
@@ -255,7 +256,7 @@ export class ConnTable {
         'Toggle to add the group of synapses. Hover to highlight this groups of synapses in workspace if exists. Double Click to pin/unpin.',
       headerSort: true,
       sorter: 'boolean',
-      width: 50,
+      width: 55,
       formatter: 'tickCross',
       cellClick: (e: any, cell: any) => {
         if (synapseSingleClickTimeout) {
@@ -312,7 +313,7 @@ export class ConnTable {
       headerFilter: true as Editor,
       headerFilterPlaceholder: '>= N',
       headerFilterFunc: numberFilter,
-      width: 55
+      width: 60
     }
   ];
 

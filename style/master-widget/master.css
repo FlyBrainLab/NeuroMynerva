@@ -167,16 +167,16 @@ td.Neuron-Table-Buttons {
 
 .tabulator-col .tabulator-col-title {
     font-size: 10px;
-    padding-right: 0px !important;
+    padding-right: 5px !important;
 }
 
 .tabulator-header-filter input {
     font-size: 10px;
 }
 
-.jp-FBL-Master-Neu3D-Table .tabulator-col-sorter {
+/* .jp-FBL-Master-Neu3D-Table .tabulator-col-sorter {
     visibility: hidden;
-}
+} */
 
 .jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="none"] .tabulator-col-title {
     font-weight: normal;
@@ -184,13 +184,13 @@ td.Neuron-Table-Buttons {
     text-decoration: none;
 }
 
-.jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="asc"] .tabulator-col-title {
+.jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="ascending"] .tabulator-col-title {
     font-weight: bold;
     font-style: italic;
     text-decoration: overline;
 }
 
-.jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="desc"] .tabulator-col-title {
+.jp-FBL-Master-Neu3D-Table .tabulator-col[aria-sort="descending"] .tabulator-col-title {
     font-weight: bold;
     font-style: oblique;
     text-decoration: underline;
