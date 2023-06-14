@@ -7,7 +7,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal === filterVal ? true : false;
+    return rowVal == filterVal ? true : false;
   },
 
   //less than
@@ -57,7 +57,7 @@ const defaultFilters = {
     rowData: string,
     filterParams: any
   ): boolean {
-    return rowVal !== filterVal ? true : false;
+    return rowVal != filterVal ? true : false;
   },
 
   regex: function (
