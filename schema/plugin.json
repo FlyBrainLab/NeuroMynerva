@@ -297,6 +297,129 @@
               }
             }
           }
+        },
+        {
+          "NAME": "adult(MANC)",
+          "AUTH": {
+            "ssl": true,
+            "authentication": true,
+            "ca_cert_file": "isrgrootx1.pem",
+            "intermediate_cert_file": "letsencryptauthorityx3.pem"
+          },
+          "USER": {
+            "user": "guest",
+            "secret": "guestpass"
+          },
+          "SERVER": {
+            "IP": "manc.neuronlp.fruitflybrain.org",
+            "dataset": ["manc"],
+            "realm": "realm1"
+          },
+          "DEBUG": {
+            "debug": false
+          },
+          "PRESETS": {
+            "preset": "",
+            "neu3dSettings": {
+              "resetPosition": {
+                "x": -692.66,
+                "y": 504.06,
+                "z": 1340.8
+              },
+              "upVector": {
+                "x": 0.4230,
+                "y": -0.8500,
+                "z": 0.1780
+              },
+              "cameraTarget": {
+                "x": 177.593,
+                "y": 223.606,
+                "z": 329.8387
+              }
+            }
+          }
+        },
+        {
+          "NAME": "adult(FlyWire)",
+          "AUTH": {
+            "ssl": true,
+            "authentication": true,
+            "ca_cert_file": "isrgrootx1.pem",
+            "intermediate_cert_file": "letsencryptauthorityx3.pem"
+          },
+          "USER": {
+            "user": "guest",
+            "secret": "guestpass"
+          },
+          "SERVER": {
+            "IP": "flywire.neuronlp.fruitflybrain.org",
+            "dataset": ["flywire"],
+            "realm": "realm1"
+          },
+          "DEBUG": {
+            "debug": false
+          },
+          "PRESETS": {
+            "preset": "",
+            "neu3dSettings": {
+              "resetPosition": {
+                "x":439.05,
+                "y":250.04,
+                "z":-1214.848
+              },
+              "upVector": {
+                "x":-0.0554,
+                "y":-0.3314,
+                "z":-0.7209
+              },
+              "cameraTarget": {
+                "x": 499.24,
+                "y": 254.14,
+                "z": 134.86
+              }
+            }
+          }
+        },
+        {
+          "NAME": "adult(OpticLobe)",
+          "AUTH": {
+            "ssl": true,
+            "authentication": true,
+            "ca_cert_file": "isrgrootx1.pem",
+            "intermediate_cert_file": "letsencryptauthorityx3.pem"
+          },
+          "USER": {
+            "user": "guest",
+            "secret": "guestpass"
+          },
+          "SERVER": {
+            "IP": "opticlobe.neuronlp.fruitflybrain.org",
+            "dataset": ["fib19"],
+            "realm": "realm1"
+          },
+          "DEBUG": {
+            "debug": false
+          },
+          "PRESETS": {
+            "preset": "",
+            "neu3dSettings": {
+              "resetPosition": {
+                "x": 68.578,
+                "y": -509.057,
+                "z": 37.219
+              },
+              "upVector": {
+                "x": -0.0014458,
+                "y": 0.58125,
+                "z": -0.771583
+              },
+              "cameraTarget": {
+                "x": 72.86,
+                "y": 40.27,
+                "z": 99.97
+              }
+            }
+          }
         }
       ]
     }
