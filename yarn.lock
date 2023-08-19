@@ -6287,10 +6287,10 @@ neo-async@^2.6.0, neo-async@^2.6.2:
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.2.tgz#b4aafb93e3aeb2d8174ca53cf163ab7d7308305f"
   integrity sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==
 
-neu3d@~1.1.3:
-  version "1.1.3"
-  resolved "https://registry.yarnpkg.com/neu3d/-/neu3d-1.1.3.tgz#11312ea6a097dea9dcad1296fcdcb760d2685348"
-  integrity sha512-kQa3VnpAsJPjqGvt3XJfTNe79NdRo5anB+CcLfHBmEDkW7/zeFEFQT8cce2TDJzlOt37+9hT8/tmrsvEcjgb8g==
+neu3d@~1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/neu3d/-/neu3d-1.1.4.tgz#1c5668304cfeaebd84e4864458b8262a1e4af9a9"
+  integrity sha512-6YTb3MF5G4pkE2wmnJswHEePoRk3PM+zx0qnmcRc28njIlt9lFMp5nXrr6gTezaYTxO0kfd3ewhcWxjkn82Wdw==
   dependencies:
     "@fortawesome/fontawesome-free" "^5.15.4"
     bootstrap "^5.2.3"
