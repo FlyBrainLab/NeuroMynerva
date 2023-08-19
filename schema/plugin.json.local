@@ -179,7 +179,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "",
+            "preset": "adult(MANC)",
             "neu3dSettings": {
               "resetPosition": {
                 "x": -692.66,
@@ -220,7 +220,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "",
+            "preset": "adult(FlyWire)",
             "neu3dSettings": {
               "resetPosition": {
                 "x":439.05,
@@ -261,7 +261,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "",
+            "preset": "adult(OpticLobe)",
             "neu3dSettings": {
               "resetPosition": {
                 "x": 68.578,

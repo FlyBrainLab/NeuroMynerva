@@ -87,7 +87,11 @@
                 "",
                 "adult(flycircuit)",
                 "larva(l1em)",
-                "adult(hemibrain)"
+                "adult(hemibrain)",
+                "adult(MANC)",
+                "adult(FlyWire)",
+                "adult(medulla)",
+                "adult(OpticLobe)"
               ]
             },
             "neu3dSettings" :{
@@ -152,7 +156,7 @@
             "secret": "guestpass"
           },
           "SERVER": {
-            "IP": "neuronlp.fruitflybrain.org",
+            "IP": "flycircuit.neuronlp.fruitflybrain.org",
             "dataset": ["default"],
             "realm": "realm1"
           },
@@ -278,7 +282,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "",
+            "preset": "adult(medulla)",
             "neu3dSettings": {
               "resetPosition": {
                 "x": 212.0,
@@ -319,7 +323,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "",
+            "preset": "adult(MANC)",
             "neu3dSettings": {
               "resetPosition": {
                 "x": -692.66,
@@ -360,7 +364,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "",
+            "preset": "adult(FlyWire)",
             "neu3dSettings": {
               "resetPosition": {
                 "x":439.05,
@@ -401,7 +405,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "",
+            "preset": "adult(OpticLobe)",
             "neu3dSettings": {
               "resetPosition": {
                 "x": 68.578,
