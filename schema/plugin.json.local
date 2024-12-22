@@ -1,6 +1,6 @@
 {
     "fbl-processors": [{
-            "NAME": "larva(l1em)",
+            "NAME": "larva female (l1em)",
             "AUTH": {
                 "ssl": false,
                 "authentication": true,
@@ -20,7 +20,7 @@
                 "debug": false
             },
             "PRESETS": {
-                "preset": "larva(l1em)",
+                "preset": "larva female (l1em)",
                 "neu3dSettings": {
                     "resetPosition": {
                         "x": 42.05716,
@@ -41,7 +41,7 @@
             }
         },
         {
-            "NAME": "adult(flycircuit)",
+            "NAME": "adult female (flycircuit)",
             "AUTH": {
                 "ssl": false,
                 "authentication": true,
@@ -61,7 +61,7 @@
                 "debug": false
             },
             "PRESETS": {
-                "preset": "adult(flycircuit)",
+                "preset": "adult female (flycircuit)",
                 "neu3dSettings": {
                     "resetPosition": {
                         "x": 0.0,
@@ -77,7 +77,7 @@
             }
         },
         {
-            "NAME": "adult(hemibrain)",
+            "NAME": "adult female (hemibrain)",
             "AUTH": {
                 "ssl": false,
                 "authentication": true,
@@ -97,7 +97,7 @@
                 "debug": false
             },
             "PRESETS": {
-                "preset": "adult(hemibrain)",
+                "preset": "adult female (hemibrain)",
                 "neu3dSettings": {
                     "resetPosition": {
                         "x": 191.128,
@@ -118,7 +118,7 @@
             }
         },
         {
-            "NAME": "adult(medulla)",
+            "NAME": "adult female (medulla)",
             "AUTH": {
                 "ssl": false,
                 "authentication": true,
@@ -138,7 +138,7 @@
                 "debug": false
             },
             "PRESETS": {
-                "preset": "",
+                "preset": "adult female (medulla)",
                 "neu3dSettings": {
                     "resetPosition": {
                         "x": 212.0,
@@ -159,7 +159,7 @@
             }
         },
         {
-          "NAME": "adult(MANC)",
+          "NAME": "adult male (MANC)",
           "AUTH": {
             "ssl": false,
             "authentication": true,
@@ -179,7 +179,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "adult(MANC)",
+            "preset": "adult male (MANC)",
             "neu3dSettings": {
               "resetPosition": {
                 "x": -692.66,
@@ -200,7 +200,7 @@
           }
         },
         {
-          "NAME": "adult(FlyWire)",
+          "NAME": "adult female (FlyWire)",
           "AUTH": {
             "ssl": false,
             "authentication": true,
@@ -220,7 +220,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "adult(FlyWire)",
+            "preset": "adult female (FlyWire)",
             "neu3dSettings": {
               "resetPosition": {
                 "x":439.05,
@@ -241,7 +241,7 @@
           }
         },
         {
-          "NAME": "adult(OpticLobe)",
+          "NAME": "adult female (OpticLobe - fib19)",
           "AUTH": {
             "ssl": false,
             "authentication": true,
@@ -261,7 +261,7 @@
             "debug": false
           },
           "PRESETS": {
-            "preset": "adult(OpticLobe)",
+            "preset": "adult female (OpticLobe - fib19)",
             "neu3dSettings": {
               "resetPosition": {
                 "x": 68.578,
@@ -277,6 +277,49 @@
                 "x": 72.86,
                 "y": 40.27,
                 "z": 99.97
+              }
+            }
+          }
+        },
+        {
+          "NAME": "adult male (OpticLobe)",
+          "AUTH": {
+            "ssl": false,
+            "authentication": true,
+            "ca_cert_file": "isrgrootx1.pem",
+            "intermediate_cert_file": "letsencryptauthorityx3.pem"
+          },
+          "USER": {
+            "user": "guest",
+            "secret": "guestpass"
+          },
+          "SERVER": {
+            "IP": "localhost:8081",
+            "dataset": [
+                "optic_lobe"
+            ],
+            "realm": "realm1"
+          },
+          "DEBUG": {
+            "debug": false
+          },
+          "PRESETS": {
+            "preset": "adult male (OpticLobe)",
+            "neu3dSettings": {
+              "resetPosition": {
+                "x": 263.4034,
+                "y": 1055.6604,
+                "z": 331.2811
+              },
+              "upVector": {
+                "x": -0.43259,
+                "y": -0.02783,
+                "z": -0.56753
+              },
+              "cameraTarget": {
+                "x": 137.648,
+                "y": 262.644,
+                "z": 261.946
               }
             }
           }
